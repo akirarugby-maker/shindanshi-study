@@ -3,646 +3,1039 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>中小企業診断士試験 学習ツール</title>
+<title>中小企業診断士 一次試験 学習アプリ</title>
 <style>
-  :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #22263a;
-    --border: #2e334d;
-    --text: #e8eaf0;
-    --text-muted: #8892a4;
-    --accent: #5b7fff;
-    --accent-hover: #7b9aff;
-    --success: #4caf6e;
-    --error: #e05555;
-    --warning: #f0a732;
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-  /* Layout */
-  .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
-
-  /* Sidebar */
-  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
-  .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
-  .sidebar-logo h1 { font-size: 14px; font-weight: 700; color: var(--accent); line-height: 1.4; }
-  .sidebar-logo p { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-
-  .sidebar-nav { padding: 16px 0; }
-  .nav-section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; padding: 8px 20px 4px; }
-  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; cursor: pointer; transition: background 0.15s; font-size: 13px; color: var(--text-muted); }
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active { background: rgba(91, 127, 255, 0.15); color: var(--accent); border-right: 2px solid var(--accent); }
-  .nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-
-  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 4px; }
-  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
-
-  .nav-stats { padding: 3px 20px 0 38px; font-size: 10px; color: var(--text-muted); }
-
-  /* Main content */
-  .main { padding: 32px; overflow-y: auto; }
-  .page { display: none; }
-  .page.active { display: block; }
-
-  /* Home */
-  .home-header { margin-bottom: 32px; }
-  .home-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-  .home-header p { color: var(--text-muted); font-size: 14px; }
-
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-  .stat-card .label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-  .stat-card .value { font-size: 28px; font-weight: 700; color: var(--accent); }
-  .stat-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-  .subject-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .subject-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all 0.2s; }
-  .subject-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-  .subject-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-  .subject-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-  .subject-card h3 { font-size: 14px; font-weight: 600; }
-  .subject-card .progress-bar { margin-top: 8px; }
-  .subject-card .stats-row { display: flex; gap: 16px; margin-top: 10px; font-size: 11px; color: var(--text-muted); }
-
-  /* Mode selector */
-  .mode-selector { display: flex; gap: 12px; margin-bottom: 28px; }
-  .mode-btn { flex: 1; padding: 14px; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; text-align: center; transition: all 0.2s; color: var(--text); }
-  .mode-btn:hover { border-color: var(--accent); }
-  .mode-btn.active { border-color: var(--accent); background: rgba(91, 127, 255, 0.1); }
-  .mode-btn .mode-icon { font-size: 24px; margin-bottom: 6px; }
-  .mode-btn .mode-name { font-size: 13px; font-weight: 600; }
-  .mode-btn .mode-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-  /* Flashcard */
-  .flashcard-area { max-width: 640px; margin: 0 auto; }
-  .flashcard-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: var(--text-muted); font-size: 13px; }
-  .flashcard { width: 100%; min-height: 260px; perspective: 1000px; cursor: pointer; margin-bottom: 24px; }
-  .flashcard-inner { position: relative; width: 100%; min-height: 260px; transition: transform 0.5s; transform-style: preserve-3d; }
-  .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
-  .flashcard-front, .flashcard-back { position: absolute; width: 100%; min-height: 260px; backface-visibility: hidden; border-radius: var(--radius); padding: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-  .flashcard-front { background: var(--surface); border: 1px solid var(--border); }
-  .flashcard-back { background: var(--surface2); border: 1px solid var(--accent); transform: rotateY(180deg); }
-  .flashcard-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; }
-  .flashcard-term { font-size: 22px; font-weight: 700; line-height: 1.4; }
-  .flashcard-def { font-size: 15px; line-height: 1.7; color: var(--text); }
-  .flashcard-hint { font-size: 12px; color: var(--text-muted); margin-top: 16px; }
-
-  .fc-controls { display: flex; gap: 12px; justify-content: center; }
-  .btn { padding: 10px 22px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: var(--accent-hover); }
-  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
-  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-success { background: var(--success); color: #fff; }
-  .btn-error { background: var(--error); color: #fff; }
-
-  /* Quiz */
-  .quiz-area { max-width: 680px; margin: 0 auto; }
-  .quiz-progress { margin-bottom: 24px; }
-  .quiz-progress-text { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-  .quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 20px; }
-  .quiz-question h3 { font-size: 16px; font-weight: 600; line-height: 1.6; }
-  .quiz-subject-tag { display: inline-block; font-size: 10px; color: var(--text-muted); background: var(--surface2); padding: 3px 10px; border-radius: 99px; margin-bottom: 14px; }
-
-  .choices { display: flex; flex-direction: column; gap: 10px; }
-  .choice { padding: 14px 18px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.15s; display: flex; gap: 12px; align-items: flex-start; }
-  .choice:hover:not(.disabled) { border-color: var(--accent); background: rgba(91, 127, 255, 0.08); }
-  .choice.correct { border-color: var(--success); background: rgba(76, 175, 110, 0.12); color: var(--success); }
-  .choice.wrong { border-color: var(--error); background: rgba(224, 85, 85, 0.12); color: var(--error); }
-  .choice.disabled { cursor: default; }
-  .choice-letter { min-width: 22px; height: 22px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-  .choice.correct .choice-letter { background: var(--success); color: #fff; }
-  .choice.wrong .choice-letter { background: var(--error); color: #fff; }
-
-  .explanation { background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 16px; margin-top: 16px; font-size: 13px; line-height: 1.7; color: var(--text-muted); display: none; }
-  .explanation.show { display: block; }
-  .explanation strong { color: var(--text); }
-
-  .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-
-  /* Results */
-  .results { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; text-align: center; max-width: 480px; margin: 40px auto; }
-  .results .score { font-size: 64px; font-weight: 700; color: var(--accent); line-height: 1; }
-  .results .score-label { font-size: 14px; color: var(--text-muted); margin: 8px 0 24px; }
-  .results .breakdown { display: flex; justify-content: center; gap: 32px; margin-bottom: 28px; }
-  .results .breakdown-item { text-align: center; }
-  .results .breakdown-item .val { font-size: 24px; font-weight: 700; }
-  .results .breakdown-item .lbl { font-size: 11px; color: var(--text-muted); }
-
-  /* Study guide */
-  .guide-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-  .guide-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .guide-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-  .guide-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-  .guide-chevron { color: var(--text-muted); transition: transform 0.2s; font-size: 12px; }
-  .guide-card.open .guide-chevron { transform: rotate(180deg); }
-  .guide-body { display: none; padding: 0 20px 20px; }
-  .guide-card.open .guide-body { display: block; }
-
-  .key-points { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-  .key-points li { display: flex; gap: 10px; font-size: 13px; line-height: 1.6; }
-  .key-points li::before { content: "→"; color: var(--accent); flex-shrink: 0; font-weight: 700; margin-top: 1px; }
-
-  .formula-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin: 8px 0; font-family: monospace; font-size: 13px; color: var(--warning); }
-
-  .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin: 16px 0 8px; }
-
-  /* Page header */
-  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-  .page-header h2 { font-size: 20px; font-weight: 700; }
-  .subject-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
-  .filter-btn { padding: 5px 14px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 12px; transition: all 0.15s; }
-  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-
-  /* Responsive */
-  @media (max-width: 900px) {
-    .app { grid-template-columns: 1fr; }
-    .sidebar { height: auto; position: static; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .subject-grid { grid-template-columns: 1fr; }
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Sans','Meiryo',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+header{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:16px 24px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+header h1{font-size:1.4rem;font-weight:700}
+header p{font-size:.85rem;opacity:.85;margin-top:4px}
+nav{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;overflow-x:auto}
+nav button{flex:1;min-width:120px;padding:14px 8px;border:none;background:transparent;font-size:.9rem;font-weight:600;color:#64748b;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+nav button.active{color:#2563eb;border-bottom-color:#2563eb;background:#eff6ff}
+nav button:hover:not(.active){background:#f8fafc;color:#334155}
+.tab-content{display:none;padding:20px;max-width:900px;margin:0 auto}
+.tab-content.active{display:block}
+/* Roadmap */
+.roadmap-intro{background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border-left:4px solid #2563eb}
+.roadmap-intro h2{color:#2563eb;margin-bottom:8px}
+.subject-card{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;display:flex;gap:16px;align-items:flex-start;box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:5px solid #2563eb;transition:transform .2s}
+.subject-card:hover{transform:translateX(4px)}
+.subject-num{background:#2563eb;color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0}
+.subject-info h3{font-size:1rem;color:#1e293b;margin-bottom:6px}
+.subject-info p{font-size:.85rem;color:#64748b;line-height:1.6}
+.subject-meta{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.badge{padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
+.badge-hours{background:#dbeafe;color:#1d4ed8}
+.badge-diff{background:#fef3c7;color:#92400e}
+.badge-diff.hard{background:#fee2e2;color:#991b1b}
+.badge-diff.medium{background:#fef3c7;color:#92400e}
+.badge-diff.easy{background:#d1fae5;color:#065f46}
+.study-tip{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;margin-top:20px}
+.study-tip h3{color:#065f46;margin-bottom:8px}
+.study-tip ul{padding-left:20px;font-size:.9rem;line-height:1.8;color:#166534}
+/* Slides */
+.subject-selector{background:#fff;border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.subject-selector h3{margin-bottom:10px;color:#334155;font-size:.95rem}
+.subject-btns{display:flex;flex-wrap:wrap;gap:8px}
+.subject-btns button{padding:7px 14px;border-radius:8px;border:2px solid #e2e8f0;background:#f8fafc;font-size:.82rem;cursor:pointer;transition:all .2s;font-weight:500;color:#475569}
+.subject-btns button.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.slide-container{background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,.1);min-height:400px;position:relative}
+.slide-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.slide-num{background:#2563eb;color:#fff;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600}
+.slide-progress{flex:1;background:#e2e8f0;height:6px;border-radius:3px;overflow:hidden}
+.slide-progress-bar{height:100%;background:#2563eb;transition:width .3s}
+.slide h2{font-size:1.3rem;color:#1e293b;margin-bottom:16px;line-height:1.5}
+.slide-body{font-size:.95rem;line-height:1.8;color:#334155}
+.slide-body p{margin-bottom:12px}
+.analogy-box{background:#eff6ff;border-radius:10px;padding:16px;margin:16px 0;border-left:4px solid #2563eb}
+.analogy-box .icon{font-size:1.4rem;margin-bottom:6px}
+.analogy-box h4{color:#1d4ed8;margin-bottom:6px;font-size:.9rem}
+.key-points{background:#f0fdf4;border-radius:10px;padding:16px;margin-top:16px;border:1px solid #bbf7d0}
+.key-points h4{color:#065f46;margin-bottom:10px;font-size:.9rem}
+.key-points ul{padding-left:18px;font-size:.88rem;line-height:1.9;color:#166534}
+.slide-nav{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0}
+.slide-nav button{padding:10px 24px;border-radius:8px;border:none;cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s}
+.btn-prev{background:#f1f5f9;color:#475569}
+.btn-prev:hover{background:#e2e8f0}
+.btn-next{background:#2563eb;color:#fff}
+.btn-next:hover{background:#1d4ed8}
+.btn-prev:disabled,.btn-next:disabled{opacity:.4;cursor:not-allowed}
+.slide-counter{font-size:.85rem;color:#64748b}
+/* Flashcards */
+.fc-controls{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.fc-stats{background:#fff;border-radius:10px;padding:12px 16px;display:flex;gap:20px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.fc-stat{text-align:center}
+.fc-stat .num{font-size:1.3rem;font-weight:700}
+.fc-stat .label{font-size:.75rem;color:#64748b}
+.fc-stat .num.green{color:#10b981}
+.fc-stat .num.amber{color:#f59e0b}
+.fc-stat .num.blue{color:#2563eb}
+.card-area{perspective:1000px;margin-bottom:20px}
+.card{width:100%;min-height:280px;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .5s}
+.card.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;width:100%;min-height:280px;backface-visibility:hidden;border-radius:16px;padding:30px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.card-front{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff}
+.card-back{background:#fff;transform:rotateY(180deg);border:2px solid #e2e8f0}
+.card-front .card-label{font-size:.8rem;opacity:.7;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.card-front .card-term{font-size:1.4rem;font-weight:700;line-height:1.5}
+.card-front .card-hint{font-size:.8rem;opacity:.6;margin-top:12px}
+.card-back .card-label{font-size:.8rem;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.card-back .card-def{font-size:.95rem;line-height:1.7;color:#334155;margin-bottom:12px}
+.card-back .card-example{font-size:.85rem;color:#2563eb;background:#eff6ff;padding:8px 12px;border-radius:8px;width:100%}
+.card-actions{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+.card-actions button{padding:12px 28px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:.95rem;transition:all .2s}
+.btn-knew{background:#10b981;color:#fff}
+.btn-knew:hover{background:#059669}
+.btn-again{background:#f59e0b;color:#fff}
+.btn-again:hover{background:#d97706}
+.fc-nav{display:flex;justify-content:space-between;align-items:center}
+.fc-nav button{padding:8px 20px;border-radius:8px;border:2px solid #e2e8f0;background:#fff;cursor:pointer;font-weight:600;color:#475569;transition:all .2s}
+.fc-nav button:hover{background:#f1f5f9}
+/* Quiz */
+.quiz-header{background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.quiz-score{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px}
+.score-item{text-align:center;background:#f8fafc;border-radius:8px;padding:10px 16px}
+.score-item .num{font-size:1.4rem;font-weight:700;color:#2563eb}
+.score-item .label{font-size:.75rem;color:#64748b}
+.question-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.q-num{font-size:.8rem;color:#2563eb;font-weight:600;margin-bottom:8px}
+.q-text{font-size:1rem;font-weight:600;line-height:1.7;margin-bottom:20px;color:#1e293b}
+.options{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.option{padding:14px 18px;border-radius:10px;border:2px solid #e2e8f0;background:#f8fafc;cursor:pointer;font-size:.9rem;line-height:1.5;transition:all .2s;text-align:left}
+.option:hover:not(:disabled){border-color:#2563eb;background:#eff6ff}
+.option.correct{border-color:#10b981;background:#d1fae5;color:#065f46}
+.option.wrong{border-color:#ef4444;background:#fee2e2;color:#991b1b}
+.option:disabled{cursor:default}
+.feedback{padding:16px;border-radius:10px;margin-bottom:16px;font-size:.9rem;line-height:1.7}
+.feedback.correct{background:#d1fae5;border:1px solid #6ee7b7;color:#065f46}
+.feedback.wrong{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b}
+.quiz-nav{display:flex;justify-content:flex-end;gap:12px}
+.btn-primary{padding:10px 24px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s}
+.btn-primary:hover{background:#1d4ed8}
+.btn-secondary{padding:10px 24px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s}
+.btn-secondary:hover{background:#e2e8f0}
+.quiz-complete{text-align:center;padding:40px 20px}
+.quiz-complete .big-score{font-size:3rem;font-weight:700;color:#2563eb;margin:16px 0}
+.quiz-complete p{color:#64748b;margin-bottom:20px}
+@media(max-width:600px){
+  header h1{font-size:1.1rem}
+  .tab-content{padding:12px}
+  .subject-card{flex-direction:column}
+  .slide-container{padding:18px}
+  .card-face{padding:20px}
+  .question-card{padding:18px}
+}
+/* YouTube Quick Subject Buttons */
+.yt-quick{background:#fff;border-radius:14px;padding:20px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.yt-quick h3{font-size:.95rem;font-weight:700;color:#334155;margin-bottom:14px}
+.yt-quick-btns{display:flex;flex-direction:column;gap:10px}
+.yt-subj-btn{display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:12px;border:none;cursor:pointer;color:#fff;text-align:left;transition:all .2s;box-shadow:0 2px 6px rgba(0,0,0,.15);width:100%}
+.yt-subj-btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.2);opacity:.93}
+.yt-subj-btn .sq-num{background:rgba(255,255,255,.25);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex-shrink:0}
+.yt-subj-btn .sq-info{flex:1}
+.yt-subj-btn .sq-name{font-size:.95rem;font-weight:700}
+.yt-subj-btn .sq-hint{font-size:.75rem;opacity:.82;font-weight:400;margin-top:1px}
+.yt-subj-btn .sq-arrow{font-size:1.1rem;opacity:.8}
+.yt-divider{display:flex;align-items:center;gap:10px;margin:20px 0 16px;color:#94a3b8;font-size:.82rem;font-weight:600}
+.yt-divider::before,.yt-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+/* YouTube Search Tab */
+.yt-intro{background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border-left:4px solid #ef4444;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.yt-intro h2{color:#ef4444;margin-bottom:6px}
+.yt-intro p{color:#64748b;font-size:.9rem;line-height:1.6}
+.yt-subject-block{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.yt-subject-block h3{font-size:1rem;font-weight:700;color:#1e293b;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.yt-subject-block .yt-desc{font-size:.82rem;color:#64748b;margin-bottom:12px}
+.yt-topics{display:flex;flex-wrap:wrap;gap:8px}
+.yt-btn{padding:8px 14px;border-radius:20px;border:none;cursor:pointer;font-size:.83rem;font-weight:600;transition:all .2s;display:flex;align-items:center;gap:5px;color:#fff}
+.yt-btn:hover{opacity:.85;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.yt-custom{background:#fff;border-radius:12px;padding:20px;margin-top:8px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.yt-custom h3{font-size:.95rem;font-weight:700;color:#334155;margin-bottom:10px}
+.yt-custom-row{display:flex;gap:8px;flex-wrap:wrap}
+.yt-custom-row input{flex:1;min-width:180px;padding:10px 14px;border-radius:8px;border:2px solid #e2e8f0;font-size:.9rem;outline:none}
+.yt-custom-row input:focus{border-color:#ef4444}
+.yt-custom-row button{padding:10px 20px;background:#ef4444;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;white-space:nowrap}
+.yt-custom-row button:hover{background:#dc2626}
 </style>
 </head>
 <body>
-<div class="app">
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <h1>中小企業診断士<br>学習ツール</h1>
-      <p>1次試験 7科目対応</p>
-    </div>
-    <nav class="sidebar-nav">
-      <div class="nav-section-label">メニュー</div>
-      <div class="nav-item active" onclick="showPage('home')">
-        <span>🏠</span> ホーム
-      </div>
-      <div class="nav-item" onclick="showPage('flashcard')">
-        <span>🃏</span> フラッシュカード
-      </div>
-      <div class="nav-item" onclick="showPage('quiz')">
-        <span>📝</span> 問題演習
-      </div>
-      <div class="nav-item" onclick="showPage('guide')">
-        <span>📚</span> 科目別要点
-      </div>
+<header>
+  <h1>📚 中小企業診断士 一次試験 学習アプリ</h1>
+  <p>7科目を体系的に学習できる総合学習ツール</p>
+</header>
+<nav id="mainNav">
+  <button class="active" onclick="showTab('roadmap')">🗺️ ロードマップ</button>
+  <button onclick="showTab('slides')">📖 スライド学習</button>
+  <button onclick="showTab('flashcards')">🃏 フラッシュカード</button>
+  <button onclick="showTab('quiz')">✏️ 問題演習</button>
+  <button onclick="showTab('youtube')">📺 YouTube検索</button>
+</nav>
 
-      <div class="nav-section-label" style="margin-top:16px">科目別進捗</div>
-      <div id="sidebar-subjects"></div>
-    </nav>
-  </aside>
-
-  <!-- Main -->
-  <main class="main">
-    <!-- Home -->
-    <div class="page active" id="page-home">
-      <div class="home-header">
-        <h2>学習ダッシュボード</h2>
-        <p>今日も一歩ずつ合格に近づこう！</p>
-      </div>
-      <div class="stats-grid" id="home-stats"></div>
-      <div class="page-header">
-        <h2>科目を選んで学習する</h2>
-      </div>
-      <div class="subject-grid" id="home-subjects"></div>
-    </div>
-
-    <!-- Flashcard -->
-    <div class="page" id="page-flashcard">
-      <div class="page-header">
-        <h2>🃏 フラッシュカード</h2>
-      </div>
-      <div class="subject-filter" id="fc-filter"></div>
-      <div class="flashcard-area" id="fc-area">
-        <div class="flashcard-meta">
-          <span id="fc-counter">1 / 0</span>
-          <span id="fc-subject-name" style="color:var(--text-muted);font-size:12px"></span>
-        </div>
-        <div class="flashcard" id="flashcard" onclick="flipCard()">
-          <div class="flashcard-inner">
-            <div class="flashcard-front">
-              <div class="flashcard-label">用語</div>
-              <div class="flashcard-term" id="fc-term">科目を選択してください</div>
-              <div class="flashcard-hint">クリックで答えを見る</div>
-            </div>
-            <div class="flashcard-back">
-              <div class="flashcard-label">解説</div>
-              <div class="flashcard-def" id="fc-def"></div>
-            </div>
-          </div>
-        </div>
-        <div class="fc-controls">
-          <button class="btn btn-error" onclick="fcResult(false)">✗ もう一度</button>
-          <button class="btn btn-outline" onclick="fcPrev()">← 前へ</button>
-          <button class="btn btn-outline" onclick="fcNext()">次へ →</button>
-          <button class="btn btn-success" onclick="fcResult(true)">✓ 覚えた！</button>
-        </div>
+<!-- TAB 1: ROADMAP -->
+<div id="tab-roadmap" class="tab-content active">
+  <div class="roadmap-intro">
+    <h2>🗺️ 学習ロードマップ</h2>
+    <p>中小企業診断士一次試験は7科目。推奨学習順序と目安時間を確認しましょう。</p>
+  </div>
+  <div class="subject-card" style="border-color:#10b981">
+    <div class="subject-num" style="background:#10b981">1</div>
+    <div class="subject-info">
+      <h3>企業経営理論</h3>
+      <p>経営戦略・マーケティング・組織論の基礎。他科目の土台となる考え方が満載。まず最初に学ぶことで、全体像が見えてきます。SWOT分析、PPM、4Pなど、実務でも使える概念を学べます。</p>
+      <div class="subject-meta">
+        <span class="badge badge-hours">⏱️ 約120時間</span>
+        <span class="badge badge-diff medium">難易度：普通</span>
+        <span class="badge" style="background:#dcfce7;color:#166534">最初に学ぶべき</span>
       </div>
     </div>
-
-    <!-- Quiz -->
-    <div class="page" id="page-quiz">
-      <div class="page-header">
-        <h2>📝 問題演習</h2>
-        <button class="btn btn-primary" onclick="startQuiz()">新しいクイズ開始</button>
+  </div>
+  <div class="subject-card" style="border-color:#2563eb">
+    <div class="subject-num">2</div>
+    <div class="subject-info">
+      <h3>財務・会計</h3>
+      <p>BS・PL・CFの読み方から財務分析、原価計算まで。数字が苦手な人も多い科目ですが、診断士の核心スキルです。計算問題が多く、繰り返し練習が必要です。</p>
+      <div class="subject-meta">
+        <span class="badge badge-hours">⏱️ 約150時間</span>
+        <span class="badge badge-diff hard">難易度：高い</span>
+        <span class="badge" style="background:#dbeafe;color:#1e40af">合格のカギ</span>
       </div>
-      <div class="subject-filter" id="quiz-filter"></div>
-      <div id="quiz-container"></div>
     </div>
-
-    <!-- Study Guide -->
-    <div class="page" id="page-guide">
-      <div class="page-header">
-        <h2>📚 科目別要点まとめ</h2>
+  </div>
+  <div class="subject-card" style="border-color:#8b5cf6">
+    <div class="subject-num" style="background:#8b5cf6">3</div>
+    <div class="subject-info">
+      <h3>経済学・経済政策</h3>
+      <p>ミクロ経済学（需要と供給）、マクロ経済学（GDP・景気）、財政・金融政策。グラフの読み方が重要です。大学で経済を学んだ人には比較的取り組みやすい科目です。</p>
+      <div class="subject-meta">
+        <span class="badge badge-hours">⏱️ 約100時間</span>
+        <span class="badge badge-diff medium">難易度：普通</span>
       </div>
-      <div class="guide-grid" id="guide-container"></div>
     </div>
-  </main>
+  </div>
+  <div class="subject-card" style="border-color:#f59e0b">
+    <div class="subject-num" style="background:#f59e0b">4</div>
+    <div class="subject-info">
+      <h3>運営管理</h3>
+      <p>製造業の生産管理と小売業の店舗管理の2本柱。QC・IE・在庫管理・SCMなど実務的な内容が多い。製造業や流通業出身者には馴染みやすい科目です。</p>
+      <div class="subject-meta">
+        <span class="badge badge-hours">⏱️ 約100時間</span>
+        <span class="badge badge-diff medium">難易度：普通</span>
+      </div>
+    </div>
+  </div>
+  <div class="subject-card" style="border-color:#ef4444">
+    <div class="subject-num" style="background:#ef4444">5</div>
+    <div class="subject-info">
+      <h3>経営法務</h3>
+      <p>会社法・契約法・知的財産権・労働法など。法律の知識が問われます。暗記が中心ですが範囲が広く、法律初学者には難しい科目。毎年難易度の変動が大きいです。</p>
+      <div class="subject-meta">
+        <span class="badge badge-hours">⏱️ 約80時間</span>
+        <span class="badge badge-diff hard">難易度：高い</span>
+      </div>
+    </div>
+  </div>
+  <div class="subject-card" style="border-color:#06b6d4">
+    <div class="subject-num" style="background:#06b6d4">6</div>
+    <div class="subject-info">
+      <h3>経営情報システム</h3>
+      <p>コンピュータ・ネットワーク・データベース・セキュリティ・システム開発。IT系出身者には有利な科目。近年AIやクラウドに関する問題も増えています。</p>
+      <div class="subject-meta">
+        <span class="badge badge-hours">⏱️ 約80時間</span>
+        <span class="badge badge-diff easy">難易度：易しい</span>
+        <span class="badge" style="background:#cffafe;color:#164e63">IT知識があれば楽</span>
+      </div>
+    </div>
+  </div>
+  <div class="subject-card" style="border-color:#84cc16">
+    <div class="subject-num" style="background:#84cc16">7</div>
+    <div class="subject-info">
+      <h3>中小企業経営・中小企業政策</h3>
+      <p>日本の中小企業の現状・支援機関・政策・補助金制度。毎年最新の中小企業白書から出題されます。最後に学ぶことで試験直前の暗記に適しています。</p>
+      <div class="subject-meta">
+        <span class="badge badge-hours">⏱️ 約60時間</span>
+        <span class="badge badge-diff easy">難易度：易しい</span>
+        <span class="badge" style="background:#ecfccb;color:#365314">試験直前に仕上げ</span>
+      </div>
+    </div>
+  </div>
+  <div class="study-tip">
+    <h3>💡 学習のコツ</h3>
+    <ul>
+      <li>合計学習時間の目安：<strong>約1,000〜1,200時間</strong>（1〜2年計画）</li>
+      <li>一次試験の合格基準：各科目40点以上、かつ<strong>平均60点以上</strong></li>
+      <li>科目合格制度あり：60点以上の科目は<strong>3年間免除</strong>可能</li>
+      <li>財務・会計と企業経営理論を得意科目にすると二次試験でも有利</li>
+      <li>毎日少しずつ（1〜2時間）継続学習が合格への近道</li>
+    </ul>
+  </div>
+</div>
+
+<!-- TAB 2: SLIDES -->
+<div id="tab-slides" class="tab-content">
+  <div class="subject-selector">
+    <h3>📚 科目を選んでください</h3>
+    <div class="subject-btns" id="slideSubjectBtns">
+      <button class="active" onclick="selectSlideSubject(0,this)">経済学</button>
+      <button onclick="selectSlideSubject(1,this)">財務・会計</button>
+      <button onclick="selectSlideSubject(2,this)">企業経営理論</button>
+      <button onclick="selectSlideSubject(3,this)">運営管理</button>
+      <button onclick="selectSlideSubject(4,this)">経営法務</button>
+      <button onclick="selectSlideSubject(5,this)">経営情報</button>
+      <button onclick="selectSlideSubject(6,this)">中小企業</button>
+    </div>
+  </div>
+  <div class="slide-container">
+    <div class="slide-header">
+      <span class="slide-num" id="slideNumLabel">スライド 1/6</span>
+      <div class="slide-progress"><div class="slide-progress-bar" id="slideProgressBar" style="width:16.7%"></div></div>
+    </div>
+    <div id="slideContent"></div>
+    <div class="slide-nav">
+      <button class="btn-prev" id="btnPrev" onclick="changeSlide(-1)" disabled>← 前へ</button>
+      <span class="slide-counter" id="slideCounter">1 / 6</span>
+      <button class="btn-next" id="btnNext" onclick="changeSlide(1)">次へ →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 3: FLASHCARDS -->
+<div id="tab-flashcards" class="tab-content">
+  <div class="subject-selector">
+    <h3>🃏 科目を選んでください</h3>
+    <div class="subject-btns" id="fcSubjectBtns">
+      <button class="active" onclick="selectFCSubject(0,this)">全科目</button>
+      <button onclick="selectFCSubject(1,this)">経済学</button>
+      <button onclick="selectFCSubject(2,this)">財務・会計</button>
+      <button onclick="selectFCSubject(3,this)">企業経営理論</button>
+      <button onclick="selectFCSubject(4,this)">運営管理</button>
+      <button onclick="selectFCSubject(5,this)">経営法務</button>
+      <button onclick="selectFCSubject(6,this)">経営情報</button>
+      <button onclick="selectFCSubject(7,this)">中小企業</button>
+    </div>
+  </div>
+  <div class="fc-stats">
+    <div class="fc-stat"><div class="num blue" id="fcTotal">0</div><div class="label">総枚数</div></div>
+    <div class="fc-stat"><div class="num green" id="fcKnew">0</div><div class="label">分かった</div></div>
+    <div class="fc-stat"><div class="num amber" id="fcAgain">0</div><div class="label">もう一度</div></div>
+    <div class="fc-stat"><div class="num" id="fcRemain" style="color:#2563eb">0</div><div class="label">残り</div></div>
+  </div>
+  <div class="card-area">
+    <div class="card" id="flashCard" onclick="flipCard()">
+      <div class="card-face card-front">
+        <div class="card-label">用語</div>
+        <div class="card-term" id="fcTerm">ローディング中...</div>
+        <div class="card-hint">タップして答えを確認</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="card-label">解説</div>
+        <div class="card-def" id="fcDef"></div>
+        <div class="card-example" id="fcExample"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card-actions" id="cardActions" style="display:none">
+    <button class="btn-knew" onclick="markCard(true)">✅ 分かった</button>
+    <button class="btn-again" onclick="markCard(false)">🔄 もう一度</button>
+  </div>
+  <div class="fc-nav">
+    <button onclick="prevCard()">← 前のカード</button>
+    <span id="fcCounter" style="font-size:.85rem;color:#64748b">1 / 1</span>
+    <button onclick="nextCard()">次のカード →</button>
+  </div>
+</div>
+
+<!-- TAB 4: QUIZ -->
+<div id="tab-quiz" class="tab-content">
+  <div class="quiz-header">
+    <div class="subject-selector" style="padding:0;box-shadow:none;background:transparent;margin:0">
+      <h3 style="margin-bottom:10px">✏️ 科目を選んでください</h3>
+      <div class="subject-btns" id="quizSubjectBtns">
+        <button class="active" onclick="selectQuizSubject(0,this)">全科目</button>
+        <button onclick="selectQuizSubject(1,this)">経済学</button>
+        <button onclick="selectQuizSubject(2,this)">財務・会計</button>
+        <button onclick="selectQuizSubject(3,this)">企業経営理論</button>
+        <button onclick="selectQuizSubject(4,this)">運営管理</button>
+        <button onclick="selectQuizSubject(5,this)">経営法務</button>
+        <button onclick="selectQuizSubject(6,this)">経営情報</button>
+        <button onclick="selectQuizSubject(7,this)">中小企業</button>
+      </div>
+    </div>
+    <div class="quiz-score" id="quizScore">
+      <div class="score-item"><div class="num" id="qCorrect">0</div><div class="label">正解</div></div>
+      <div class="score-item"><div class="num" id="qTotal2">0</div><div class="label">解答済</div></div>
+      <div class="score-item"><div class="num" id="qPercent">-%</div><div class="label">正答率</div></div>
+    </div>
+  </div>
+  <div id="quizArea"></div>
+</div>
+
+<!-- TAB 5: YOUTUBE SEARCH -->
+<div id="tab-youtube" class="tab-content">
+  <div class="yt-intro">
+    <h2>📺 YouTube動画で学ぶ</h2>
+    <p>ボタンを押すと「中小企業診断士 ＜科目名／トピック＞ わかりやすい 解説」でYouTube検索が開きます。スライドで基礎を学んだ後、動画で理解を深めましょう。</p>
+  </div>
+
+  <!-- QUICK: 7 subject buttons -->
+  <div class="yt-quick">
+    <h3>🚀 科目をワンタップで検索</h3>
+    <div class="yt-quick-btns">
+      <button class="yt-subj-btn" style="background:linear-gradient(135deg,#10b981,#059669)" onclick="openYoutube('経済学・経済政策')">
+        <div class="sq-num">1</div><div class="sq-info"><div class="sq-name">経済学・経済政策</div><div class="sq-hint">需要と供給・GDP・財政政策・金融政策・為替</div></div><div class="sq-arrow">▶</div>
+      </button>
+      <button class="yt-subj-btn" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)" onclick="openYoutube('財務・会計')">
+        <div class="sq-num">2</div><div class="sq-info"><div class="sq-name">財務・会計</div><div class="sq-hint">BS・PL・CF・財務分析・原価計算・損益分岐点</div></div><div class="sq-arrow">▶</div>
+      </button>
+      <button class="yt-subj-btn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)" onclick="openYoutube('企業経営理論')">
+        <div class="sq-num">3</div><div class="sq-info"><div class="sq-name">企業経営理論</div><div class="sq-hint">SWOT・PPM・マーケティング4P・STP・組織設計</div></div><div class="sq-arrow">▶</div>
+      </button>
+      <button class="yt-subj-btn" style="background:linear-gradient(135deg,#d97706,#b45309)" onclick="openYoutube('運営管理')">
+        <div class="sq-num">4</div><div class="sq-info"><div class="sq-name">運営管理</div><div class="sq-hint">JIT・QC・在庫管理・SCM・5S・店舗管理</div></div><div class="sq-arrow">▶</div>
+      </button>
+      <button class="yt-subj-btn" style="background:linear-gradient(135deg,#dc2626,#b91c1c)" onclick="openYoutube('経営法務')">
+        <div class="sq-num">5</div><div class="sq-info"><div class="sq-name">経営法務</div><div class="sq-hint">会社法・知的財産権・労働基準法・倒産手続き</div></div><div class="sq-arrow">▶</div>
+      </button>
+      <button class="yt-subj-btn" style="background:linear-gradient(135deg,#0891b2,#0e7490)" onclick="openYoutube('経営情報システム')">
+        <div class="sq-num">6</div><div class="sq-info"><div class="sq-name">経営情報システム</div><div class="sq-hint">IT基礎・ネットワーク・DB・セキュリティ・ERP</div></div><div class="sq-arrow">▶</div>
+      </button>
+      <button class="yt-subj-btn" style="background:linear-gradient(135deg,#65a30d,#4d7c0f)" onclick="openYoutube('中小企業経営・中小企業政策')">
+        <div class="sq-num">7</div><div class="sq-info"><div class="sq-name">中小企業経営・中小企業政策</div><div class="sq-hint">中小企業の定義・支援機関・補助金・事業承継</div></div><div class="sq-arrow">▶</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="yt-divider">さらに詳しいトピックで検索</div>
+
+  <div class="yt-subject-block">
+    <h3><span style="background:#10b981;color:#fff;padding:2px 10px;border-radius:12px;font-size:.8rem">1</span> 経済学・経済政策</h3>
+    <div class="yt-desc">ミクロ・マクロ経済学、財政・金融政策、為替</div>
+    <div class="yt-topics">
+      <button class="yt-btn" style="background:#10b981" onclick="openYoutube('需要と供給')">▶ 需要と供給</button>
+      <button class="yt-btn" style="background:#10b981" onclick="openYoutube('均衡価格 需要曲線 供給曲線')">▶ 均衡価格</button>
+      <button class="yt-btn" style="background:#10b981" onclick="openYoutube('GDP 景気循環')">▶ GDP・景気循環</button>
+      <button class="yt-btn" style="background:#10b981" onclick="openYoutube('財政政策 乗数効果')">▶ 財政政策</button>
+      <button class="yt-btn" style="background:#10b981" onclick="openYoutube('金融政策 日銀')">▶ 金融政策</button>
+      <button class="yt-btn" style="background:#10b981" onclick="openYoutube('為替レート 円高 円安')">▶ 為替・円高円安</button>
+      <button class="yt-btn" style="background:#10b981" onclick="openYoutube('比較優位 貿易')">▶ 比較優位</button>
+      <button class="yt-btn" style="background:#10b981" onclick="openYoutube('価格弾力性')">▶ 価格弾力性</button>
+    </div>
+  </div>
+
+  <div class="yt-subject-block">
+    <h3><span style="background:#2563eb;color:#fff;padding:2px 10px;border-radius:12px;font-size:.8rem">2</span> 財務・会計</h3>
+    <div class="yt-desc">財務三表、財務分析、原価計算</div>
+    <div class="yt-topics">
+      <button class="yt-btn" style="background:#2563eb" onclick="openYoutube('貸借対照表 BS 読み方')">▶ 貸借対照表（BS）</button>
+      <button class="yt-btn" style="background:#2563eb" onclick="openYoutube('損益計算書 PL 読み方')">▶ 損益計算書（PL）</button>
+      <button class="yt-btn" style="background:#2563eb" onclick="openYoutube('キャッシュフロー計算書')">▶ CF計算書</button>
+      <button class="yt-btn" style="background:#2563eb" onclick="openYoutube('財務分析 ROE ROA 自己資本比率')">▶ 財務分析・ROE</button>
+      <button class="yt-btn" style="background:#2563eb" onclick="openYoutube('損益分岐点 固定費 変動費')">▶ 損益分岐点</button>
+      <button class="yt-btn" style="background:#2563eb" onclick="openYoutube('原価計算 直接原価計算')">▶ 原価計算</button>
+      <button class="yt-btn" style="background:#2563eb" onclick="openYoutube('財務三表 つながり')">▶ 財務三表のつながり</button>
+      <button class="yt-btn" style="background:#2563eb" onclick="openYoutube('流動比率 当座比率 安全性分析')">▶ 安全性分析</button>
+    </div>
+  </div>
+
+  <div class="yt-subject-block">
+    <h3><span style="background:#8b5cf6;color:#fff;padding:2px 10px;border-radius:12px;font-size:.8rem">3</span> 企業経営理論</h3>
+    <div class="yt-desc">経営戦略、マーケティング、組織論</div>
+    <div class="yt-topics">
+      <button class="yt-btn" style="background:#8b5cf6" onclick="openYoutube('SWOT分析')">▶ SWOT分析</button>
+      <button class="yt-btn" style="background:#8b5cf6" onclick="openYoutube('PPM ボストンコンサルティング')">▶ PPM</button>
+      <button class="yt-btn" style="background:#8b5cf6" onclick="openYoutube('ポーター 競争戦略 差別化')">▶ 競争戦略</button>
+      <button class="yt-btn" style="background:#8b5cf6" onclick="openYoutube('マーケティング 4P')">▶ マーケティング4P</button>
+      <button class="yt-btn" style="background:#8b5cf6" onclick="openYoutube('STP セグメンテーション ターゲティング ポジショニング')">▶ STP分析</button>
+      <button class="yt-btn" style="background:#8b5cf6" onclick="openYoutube('組織設計 機能別組織 事業部制')">▶ 組織設計</button>
+      <button class="yt-btn" style="background:#8b5cf6" onclick="openYoutube('バリューチェーン ポーター')">▶ バリューチェーン</button>
+      <button class="yt-btn" style="background:#8b5cf6" onclick="openYoutube('コアコンピタンス 経営資源')">▶ コアコンピタンス</button>
+    </div>
+  </div>
+
+  <div class="yt-subject-block">
+    <h3><span style="background:#f59e0b;color:#fff;padding:2px 10px;border-radius:12px;font-size:.8rem">4</span> 運営管理</h3>
+    <div class="yt-desc">生産管理、QC、在庫管理、物流</div>
+    <div class="yt-topics">
+      <button class="yt-btn" style="background:#f59e0b" onclick="openYoutube('ジャストインタイム トヨタ生産方式')">▶ JIT・トヨタ生産方式</button>
+      <button class="yt-btn" style="background:#f59e0b" onclick="openYoutube('品質管理 QC PDCA')">▶ 品質管理・QC</button>
+      <button class="yt-btn" style="background:#f59e0b" onclick="openYoutube('在庫管理 定量発注 定期発注')">▶ 在庫管理</button>
+      <button class="yt-btn" style="background:#f59e0b" onclick="openYoutube('ABC分析 パレート図')">▶ ABC分析</button>
+      <button class="yt-btn" style="background:#f59e0b" onclick="openYoutube('SCM サプライチェーン管理')">▶ SCM</button>
+      <button class="yt-btn" style="background:#f59e0b" onclick="openYoutube('5S活動 IE インダストリアルエンジニアリング')">▶ 5S・IE</button>
+      <button class="yt-btn" style="background:#f59e0b" onclick="openYoutube('マーチャンダイジング 店舗管理')">▶ 店舗管理・MD</button>
+      <button class="yt-btn" style="background:#f59e0b" onclick="openYoutube('ラインバランシング 生産計画')">▶ 生産計画</button>
+    </div>
+  </div>
+
+  <div class="yt-subject-block">
+    <h3><span style="background:#ef4444;color:#fff;padding:2px 10px;border-radius:12px;font-size:.8rem">5</span> 経営法務</h3>
+    <div class="yt-desc">会社法、知的財産権、労働法、倒産法</div>
+    <div class="yt-topics">
+      <button class="yt-btn" style="background:#ef4444" onclick="openYoutube('会社法 株式会社 仕組み')">▶ 会社法</button>
+      <button class="yt-btn" style="background:#ef4444" onclick="openYoutube('特許権 実用新案 知的財産')">▶ 特許・実用新案</button>
+      <button class="yt-btn" style="background:#ef4444" onclick="openYoutube('商標権 著作権 違い')">▶ 商標・著作権</button>
+      <button class="yt-btn" style="background:#ef4444" onclick="openYoutube('労働基準法 36協定')">▶ 労働基準法</button>
+      <button class="yt-btn" style="background:#ef4444" onclick="openYoutube('民事再生 会社更生 倒産')">▶ 倒産・再建手続き</button>
+      <button class="yt-btn" style="background:#ef4444" onclick="openYoutube('契約 クーリングオフ 消費者保護')">▶ 契約・消費者保護</button>
+      <button class="yt-btn" style="background:#ef4444" onclick="openYoutube('不正競争防止法 営業秘密')">▶ 不正競争防止法</button>
+      <button class="yt-btn" style="background:#ef4444" onclick="openYoutube('株主総会 取締役会 機関設計')">▶ 機関設計</button>
+    </div>
+  </div>
+
+  <div class="yt-subject-block">
+    <h3><span style="background:#0891b2;color:#fff;padding:2px 10px;border-radius:12px;font-size:.8rem">6</span> 経営情報システム</h3>
+    <div class="yt-desc">IT基礎、ネットワーク、DB、セキュリティ</div>
+    <div class="yt-topics">
+      <button class="yt-btn" style="background:#0891b2" onclick="openYoutube('コンピュータ 仕組み CPU メモリ')">▶ コンピュータ基礎</button>
+      <button class="yt-btn" style="background:#0891b2" onclick="openYoutube('ネットワーク TCP IP 仕組み')">▶ ネットワーク・TCP/IP</button>
+      <button class="yt-btn" style="background:#0891b2" onclick="openYoutube('データベース SQL リレーショナル')">▶ データベース・SQL</button>
+      <button class="yt-btn" style="background:#0891b2" onclick="openYoutube('情報セキュリティ サイバー攻撃')">▶ 情報セキュリティ</button>
+      <button class="yt-btn" style="background:#0891b2" onclick="openYoutube('システム開発 アジャイル ウォーターフォール')">▶ システム開発手法</button>
+      <button class="yt-btn" style="background:#0891b2" onclick="openYoutube('ERP CRM SCM システム')">▶ ERP・CRM</button>
+      <button class="yt-btn" style="background:#0891b2" onclick="openYoutube('クラウド DX デジタルトランスフォーメーション')">▶ クラウド・DX</button>
+      <button class="yt-btn" style="background:#0891b2" onclick="openYoutube('プロジェクトマネジメント WBS PERT')">▶ プロジェクト管理</button>
+    </div>
+  </div>
+
+  <div class="yt-subject-block">
+    <h3><span style="background:#65a30d;color:#fff;padding:2px 10px;border-radius:12px;font-size:.8rem">7</span> 中小企業経営・中小企業政策</h3>
+    <div class="yt-desc">中小企業の定義・現状・支援制度・補助金</div>
+    <div class="yt-topics">
+      <button class="yt-btn" style="background:#65a30d" onclick="openYoutube('中小企業 定義 中小企業基本法')">▶ 中小企業の定義</button>
+      <button class="yt-btn" style="background:#65a30d" onclick="openYoutube('中小企業 現状 課題 日本経済')">▶ 中小企業の現状</button>
+      <button class="yt-btn" style="background:#65a30d" onclick="openYoutube('ものづくり補助金 申請')">▶ ものづくり補助金</button>
+      <button class="yt-btn" style="background:#65a30d" onclick="openYoutube('IT導入補助金 小規模事業者持続化補助金')">▶ IT・持続化補助金</button>
+      <button class="yt-btn" style="background:#65a30d" onclick="openYoutube('事業承継 M&A 後継者')">▶ 事業承継</button>
+      <button class="yt-btn" style="background:#65a30d" onclick="openYoutube('経営革新計画 認定')">▶ 経営革新計画</button>
+      <button class="yt-btn" style="background:#65a30d" onclick="openYoutube('よろず支援拠点 商工会議所')">▶ 支援機関</button>
+      <button class="yt-btn" style="background:#65a30d" onclick="openYoutube('日本政策金融公庫 融資 創業')">▶ 政策金融・創業融資</button>
+    </div>
+  </div>
+
+  <div class="yt-custom">
+    <h3>🔍 キーワードを自由に入力して検索</h3>
+    <div class="yt-custom-row">
+      <input type="text" id="ytCustomInput" placeholder="例：損益分岐点、SWOT分析..." onkeydown="if(event.key==='Enter')openYoutubeCustom()">
+      <button onclick="openYoutubeCustom()">▶ YouTube検索</button>
+    </div>
+  </div>
 </div>
 
 <script>
-// ========== State ==========
-let data = null;
-let progress = JSON.parse(localStorage.getItem('chusho_progress') || '{}');
-let fcState = { subject: null, cards: [], index: 0, flipped: false };
-let quizState = { questions: [], index: 0, answered: false, results: [] };
-let selectedSubjects = new Set();
+// ===================== DATA =====================
 
-const SUBJECT_EMOJIS = ['📊','💰','🏢','⚙️','⚖️','💻','🏪'];
+const slidesData = [
+// Subject 0: 経済学・経済政策
+[
+{title:"経済学って何？",content:`<p>経済学とは、<strong>限られた資源をどう使うか</strong>を研究する学問です。お金・時間・物は有限なので、「どれを選ぶか」という意思決定が常に発生します。</p><p>経済学には主に2種類あります。<strong>ミクロ経済学</strong>は個々の家庭や企業の行動を分析し、<strong>マクロ経済学</strong>は国全体の経済（GDP・物価・失業率など）を分析します。</p>`,analogy:{icon:"🏪",title:"コンビニで考えてみよう",text:"コンビニに行くと、おにぎりとサンドイッチどちらを買うか迷いますよね？これが「資源（お金）の配分」の問題。値段が100円上がったら売れる数が減る—これが需要と価格の関係です。"},points:["経済学＝希少な資源の最適配分を研究する学問","ミクロ経済学：個別の消費者・企業の行動分析","マクロ経済学：国全体のGDP・物価・雇用の分析","機会費用：何かを選んだときに諦めたものの価値"]},
+{title:"価格はどう決まる？",content:`<p><strong>需要曲線</strong>は「価格が下がるほど買いたい量が増える」関係を示します（右下がりの線）。<strong>供給曲線</strong>は「価格が上がるほど売りたい量が増える」関係（右上がりの線）。</p><p>この2つが交差する点が<strong>均衡価格</strong>です。市場では自然とこの価格に近づいていきます（「神の見えざる手」）。需要や供給が変化すると均衡点が移動し、価格や数量が変わります。</p>`,analogy:{icon:"🍎",title:"りんごの価格で考えよう",text:"豊作でりんごが大量に出回ると（供給増）→価格が下がる。一方、健康ブームでりんごが人気に（需要増）→価格が上がる。この2つの力がバランスする点が市場価格です。"},points:["需要曲線：価格↑→需要量↓（右下がり）","供給曲線：価格↑→供給量↑（右上がり）","均衡価格：需要量＝供給量となる価格","価格弾力性：価格変化に対する需要量の変化の敏感さ"]},
+{title:"景気って何？",content:`<p><strong>GDP（国内総生産）</strong>とは、1年間に国内で生み出された財・サービスの付加価値の合計。景気の良さを測る最重要指標です。</p><p>景気は「拡張期→後退期→谷→回復期」を繰り返す<strong>景気サイクル（景気循環）</strong>があります。好景気では雇用が増え物価も上昇（インフレ）し、不景気では失業が増え物価が下落（デフレ）しやすくなります。</p>`,analogy:{icon:"🎢",title:"景気はジェットコースター",text:"ジェットコースターのように景気は上がったり下がったり。頂上（好景気）では仕事も多くお金も回るが、物価も上がる。谷底（不景気）では仕事が減り財布が痛む。政府と日銀はこの振れを小さくしようとします。"},points:["GDP＝消費＋投資＋政府支出＋（輸出－輸入）","景気循環：拡張→後退→谷→回復の4局面","インフレ：物価上昇（景気過熱時）","デフレ：物価下落（景気低迷時）—日本は長らくデフレ"]},
+{title:"政府の経済政策（財政政策）",content:`<p><strong>財政政策</strong>は政府が税金や公共支出を使って景気を調整する政策。不景気なら公共工事を増やし雇用を創出（<strong>拡張的財政政策</strong>）、好景気すぎるなら支出を減らす（<strong>緊縮財政政策</strong>）。</p><p>政府の支出が増えると民間投資が減る「<strong>クラウディングアウト</strong>」という問題も。また景気悪化時に自動的に作動する「<strong>ビルトインスタビライザー</strong>」（累進課税・失業手当）も重要です。</p>`,analogy:{icon:"🏗️",title:"公共工事の例",text:"不景気で仕事がない→政府が道路・橋の工事を発注→建設会社が儲かる→労働者の給料が増える→消費が拡大→景気回復。これが「財政の乗数効果」。1円の政府支出が数円分の経済効果を生むとされます。"},points:["拡張的財政政策：公共投資増・減税→景気刺激","緊縮財政政策：公共投資減・増税→景気抑制","乗数効果：政府支出1の増加がGDPをそれ以上拡大","ビルトインスタビライザー：自動安定化機能"]},
+{title:"日銀の仕事（金融政策）",content:`<p><strong>金融政策</strong>は日本銀行（中央銀行）が金利や通貨供給量を調節して景気を安定させる政策です。日銀は「<strong>物価の安定</strong>」と「<strong>金融システムの安定</strong>」を使命としています。</p><p>景気を刺激したい場合は金利を下げる（低金利政策）ことで企業が借り入れしやすくなります。2013年から始まった<strong>量的・質的金融緩和（アベノミクス）</strong>では国債を大量購入してお金の量を増やしました。</p>`,analogy:{icon:"🚿",title:"お風呂の蛇口に例えると",text:"経済＝お風呂。お湯が少ない（不景気）→蛇口を開く（金利下げ・お金を増やす）→お湯が増えて温まる（景気回復）。熱くなりすぎた（インフレ）→蛇口を絞る（金利上げ）。日銀がこの蛇口役です。"},points:["政策金利：日銀が誘導する短期金利（景気調整の主手段）","公開市場操作：国債の売買でお金の量を調節","量的緩和：大量の国債購入でお金を市場に供給","インフレ目標：日銀は物価上昇率2%を目標"]},
+{title:"世界経済とのつながり（為替・貿易）",content:`<p><strong>為替レート</strong>は円と外国通貨の交換比率。<strong>円高</strong>（1ドル=100円→80円）になると輸出品が海外で高くなり輸出企業には不利、輸入品が安くなり輸入企業に有利。<strong>円安</strong>はその逆です。</p><p><strong>比較優位</strong>の原理：各国が得意なものに特化して貿易すれば全体の生産量が増え、全員が豊かになれます。これが自由貿易の根拠です。WTO・FTA・TPPなどの国際的枠組みも試験に出ます。</p>`,analogy:{icon:"✈️",title:"海外旅行で実感できる為替",text:"1ドル150円のとき、アメリカで10ドルの商品は1,500円分。円高で1ドル100円になれば同じ商品が1,000円分に。日本人旅行者には嬉しいが、日本の輸出企業（自動車など）には打撃。これが為替の影響です。"},points:["円高：円の価値↑→輸出不利・輸入有利","円安：円の価値↓→輸出有利・輸入不利","比較優位：得意分野に特化した貿易で全員が豊かに","経常収支：貿易収支＋サービス収支＋所得収支の合計"]}
+],
+// Subject 1: 財務・会計
+[
+{title:"会計って何？",content:`<p>会計とは<strong>会社の経営状態をお金で記録・報告する仕組み</strong>です。家庭の家計簿と同じく、いくら稼いで、いくら使って、今いくら残っているかを整理します。</p><p>会計には2種類あります。<strong>財務会計</strong>（外部の株主・銀行向けに財務諸表を作成）と<strong>管理会計</strong>（社内の経営判断のためのデータ集計）。診断士試験では両方が問われます。</p>`,analogy:{icon:"📒",title:"家計簿で考えよう",text:"家計簿では「今月の収入・支出」と「今の貯金残高」を管理しますよね。会社の場合、「収入・支出」→損益計算書(PL)、「今の財産と借金」→貸借対照表(BS)、「現金の動き」→キャッシュフロー計算書(CF)になります。"},points:["財務会計：株主・銀行など外部利害関係者向け","管理会計：経営者・管理者など社内意思決定向け","財務三表：BS（貸借対照表）・PL（損益計算書）・CF計算書","会計期間：通常1年間（4月〜翌3月が多い）"]},
+{title:"貸借対照表（BS）",content:`<p><strong>貸借対照表（Balance Sheet）</strong>は決算日時点の「財産の状態」を示します。左側（借方）に<strong>資産</strong>（財産）、右側（貸方）に<strong>負債</strong>（借金）と<strong>純資産</strong>（自己資本）を記載。必ず「資産合計＝負債＋純資産」になります。</p><p>流動資産（1年以内に現金化できる資産）・固定資産（長期保有）の区分や、流動負債・固定負債の区分も重要。<strong>自己資本比率</strong>＝純資産÷総資産で、高いほど財務が健全です。</p>`,analogy:{icon:"🏠",title:"家を買う場面で考えよう",text:"5,000万円の家（資産）を、頭金2,000万円（純資産・自己資本）とローン3,000万円（負債）で購入。これがBSの構造です。左側の資産5,000万円＝右側の負債3,000万円＋純資産2,000万円。自己資本比率＝40%。"},points:["資産＝負債＋純資産（常に成立する等式）","流動資産：現金・売掛金・在庫など1年以内に現金化","固定資産：建物・機械・土地など長期保有の資産","自己資本比率＝純資産÷総資産×100（高いほど安全）"]},
+{title:"損益計算書（PL）",content:`<p><strong>損益計算書（Profit & Loss Statement）</strong>は1会計期間の「儲け・損」の記録です。売上高から各種費用を差し引いて最終的な当期純利益を計算します。</p><p>重要な利益概念：<strong>売上総利益</strong>（粗利）＝売上高－売上原価、<strong>営業利益</strong>＝売上総利益－販売費及び一般管理費、<strong>経常利益</strong>＝営業利益±営業外損益、<strong>当期純利益</strong>＝税引前利益－法人税等。</p>`,analogy:{icon:"📊",title:"ラーメン屋さんの成績表",text:"売上1,000万円（お客さんが払った金額）－食材費400万円＝粗利600万円。さらに家賃・光熱費・人件費200万円を引くと営業利益400万円。借入利息50万円を引くと経常利益350万円。税金を引いた残りが純利益です。"},points:["売上総利益（粗利）＝売上高－売上原価","営業利益＝粗利－販管費（本業の儲け）","経常利益＝営業利益±営業外損益（毎年の実力値）","当期純利益＝最終的な利益（株主への配当の源泉）"]},
+{title:"キャッシュフロー計算書",content:`<p><strong>キャッシュフロー計算書（CF計算書）</strong>は実際の現金の動きを記録。利益があっても倒産する「<strong>黒字倒産</strong>」を防ぐために重要です（売掛金が回収できないと手元現金が不足）。</p><p>3区分：<strong>営業活動CF</strong>（本業の現金収支）、<strong>投資活動CF</strong>（設備投資・資産売却）、<strong>財務活動CF</strong>（借入・返済・配当）。健全な企業は営業CFがプラス、投資CFがマイナス（積極投資）が理想的です。</p>`,analogy:{icon:"💧",title:"水道の蛇口と排水口",text:"利益は「帳簿上の水位」、キャッシュは「実際に流れる水」。売上を上げても代金をもらうまでは手元に水（現金）がない。一方で材料費や人件費は先に払う。この時間差が黒字倒産を引き起こします。"},points:["営業活動CF：本業でどれだけ現金を稼いだか（プラスが健全）","投資活動CF：設備投資など（成長投資中はマイナスが普通）","財務活動CF：借入・返済・株式発行","フリーCF＝営業活動CF＋投資活動CF（企業の真の稼ぐ力）"]},
+{title:"財務分析",content:`<p>財務分析とは財務諸表の数字から会社の健全性・収益性・効率性を評価すること。<strong>収益性分析</strong>（ROE・ROA・売上高利益率）、<strong>安全性分析</strong>（流動比率・自己資本比率）、<strong>効率性分析</strong>（総資本回転率）などがあります。</p><p><strong>ROE</strong>（自己資本利益率）＝当期純利益÷自己資本×100は株主から見た投資効率。<strong>流動比率</strong>＝流動資産÷流動負債×100（200%以上が理想）は短期の支払い能力を示します。</p>`,analogy:{icon:"🔍",title:"健康診断に例えよう",text:"人間の健康診断で血糖値・コレステロール・血圧を測るように、会社にも財務の健康診断があります。流動比率は「手元資金で1年以内の借金を払えるか」。自己資本比率は「借金に頼らない自立度」を測ります。"},points:["ROE（自己資本利益率）＝純利益÷自己資本×100（高いほど良い）","ROA（総資産利益率）＝純利益÷総資産×100","流動比率＝流動資産÷流動負債×100（200%以上が安全）","損益分岐点比率＝損益分岐点売上÷実際売上×100（低いほど安全）"]},
+{title:"原価計算の基本",content:`<p>原価計算とは製品・サービスのコスト（原価）を計算する方法。<strong>固定費</strong>は売上に関係なくかかるコスト（家賃・正社員給与）。<strong>変動費</strong>は売上に比例して増減するコスト（材料費・外注費）。</p><p><strong>損益分岐点（BEP）</strong>は利益がゼロになる売上高。BEP＝固定費÷（1－変動費率）。この点を超えた売上が利益になります。固定費を下げるか利益率を上げれば損益分岐点が下がり安全性が高まります。</p>`,analogy:{icon:"🍕",title:"ピザ屋で損益分岐点を理解",text:"ピザ屋の固定費：家賃10万円＋人件費20万円＝30万円/月。1枚1,000円のピザで材料費400円（変動費率40%）。損益分岐点＝30万÷（1－0.4）＝50万円。つまり月50枚（50万円）売れればトントン、それ以上が利益です。"},points:["固定費：売上に関係なく発生（家賃・減価償却費・固定給）","変動費：売上に比例（材料費・運送費・歩合給）","損益分岐点＝固定費÷（1－変動費率）","安全余裕率＝（実売上－BEP売上）÷実売上×100"]}
+],
+// Subject 2: 企業経営理論
+[
+{title:"経営戦略とは",content:`<p>経営戦略とは<strong>「どこで戦い、どう勝つか」</strong>を決める会社の大方針。「目標（ビジョン）→戦略→戦術→実行」の順で考えます。</p><p>戦略の階層は3段階：<strong>全社戦略</strong>（どの事業に参入するか）、<strong>事業戦略</strong>（その事業でどう競争するか）、<strong>機能戦略</strong>（マーケティング・生産・人事などの個別戦略）。ポーターの<strong>基本競争戦略</strong>（コストリーダーシップ・差別化・集中）も頻出です。</p>`,analogy:{icon:"⚔️",title:"スポーツの試合に例えよう",text:"サッカーで「今日はカウンター攻撃で行こう」という作戦が戦略。「右サイドから攻めよう」は戦術。実際に試合でプレーするのが実行。経営も同じく、大局的な方針（戦略）→具体的手段（戦術）→日々の業務（実行）の順で考えます。"},points:["全社戦略：PPM・多角化戦略・垂直統合","事業戦略：コストリーダーシップ・差別化・集中戦略","コアコンピタンス：競合に真似できない中核能力","バリューチェーン：価値を生み出す活動の連鎖（ポーター）"]},
+{title:"SWOT分析",content:`<p><strong>SWOT分析</strong>は会社の現状を4つの視点で整理するフレームワーク。<strong>S</strong>trengths（強み）・<strong>W</strong>eaknesses（弱み）は社内要因、<strong>O</strong>pportunities（機会）・<strong>T</strong>hreats（脅威）は外部環境要因です。</p><p>SWOTを組み合わせて戦略を導く<strong>クロスSWOT</strong>も重要。SO戦略（強みで機会を活かす）、WO戦略（弱みを克服して機会を掴む）、ST戦略（強みで脅威に対抗）、WT戦略（弱み・脅威を最小化）の4戦略を導きます。</p>`,analogy:{icon:"🔭",title:"就活の自己分析に例えよう",text:"就活でも「自分の強み・弱みと、世の中の機会・脅威」を分析しますよね。強み=英語力、機会=グローバル化の進展→「外資系企業に就職」という戦略が導けます。これがSWOTのSO戦略です。"},points:["S（強み）：他社より優れている内部要因","W（弱み）：他社より劣っている内部要因","O（機会）：外部環境の中でプラスになる要因","T（脅威）：外部環境の中でマイナスになる要因"]},
+{title:"PPMと競争戦略",content:`<p><strong>PPM（プロダクト・ポートフォリオ・マネジメント）</strong>はボストン・コンサルティング・グループが開発した事業評価ツール。市場成長率（縦軸）と相対的市場シェア（横軸）で4象限に分類します。</p><p>4象限：<strong>花形（Star）</strong>高成長・高シェア→投資継続、<strong>金のなる木（Cash Cow）</strong>低成長・高シェア→収益源、<strong>問題児（Question Mark）</strong>高成長・低シェア→要判断、<strong>負け犬（Dog）</strong>低成長・低シェア→撤退検討。</p>`,analogy:{icon:"🌱",title:"農場の作物に例えよう",text:"金のなる木＝毎年安定して収穫できる定番野菜（大根・じゃがいも）。花形＝人気急上昇の新野菜（世話が必要だが将来有望）。問題児＝まだ育っていない新作物（これからどうなるか不明）。負け犬＝もう売れなくなった品種。"},points:["PPMで複数事業の資源配分を最適化","金のなる木の利益で花形・問題児に投資","ポーターの5フォース：競合・新規参入・代替品・買手・売手","差別化戦略：価格以外の要素で競合と差をつける"]},
+{title:"マーケティングの基本（4P）",content:`<p>マーケティングとは<strong>「売れる仕組みを作ること」</strong>。コトラーの<strong>4P</strong>は製品戦略の基本フレームワーク。<strong>Product（製品）</strong>・<strong>Price（価格）</strong>・<strong>Place（流通・販路）</strong>・<strong>Promotion（プロモーション・広告）</strong>の4要素を組み合わせます。</p><p>最近は顧客視点の<strong>4C</strong>（Customer Value顧客価値・Cost顧客コスト・Convenience利便性・Communication）も重要。4Pと4Cを対応させて考えることが大切です。</p>`,analogy:{icon:"🍔",title:"マクドナルドの4P",text:"Product＝バーガー・ポテト・ドリンクのセット。Price＝ランチセットなどお得な価格設定。Place＝全国どこにでもある立地の良い店舗網。Promotion＝テレビCM・クーポン・キャンペーン。この4Pのバランスが強さの秘密です。"},points:["Product：品質・機能・デザイン・ブランド・パッケージ","Price：価格設定・割引・支払条件","Place：販売チャネル・在庫・物流","Promotion：広告・販促・人的販売・PR"]},
+{title:"STPとは",content:`<p>STPとはターゲット顧客を特定し、どう認識してもらうかを決める戦略フレームワーク。<strong>Segmentation（市場細分化）</strong>→<strong>Targeting（ターゲット選定）</strong>→<strong>Positioning（ポジショニング）</strong>の3ステップです。</p><p>セグメンテーションの基準は地理的・人口統計的（年齢・性別）・心理的・行動的変数など。ターゲットの選び方は無差別マーケティング・差別化マーケティング・集中マーケティングの3種類。ポジショニングは顧客の頭の中での位置づけです。</p>`,analogy:{icon:"🎯",title:"飲食店の例で考えよう",text:"カフェを開くとき①セグメント：「オフィス街の働く女性30代」と絞る②ターゲット：「健康志向・テイクアウト派」を選ぶ③ポジショニング：「ヘルシー×スピーディー」という位置づけを決める。これがSTPで、4Pより前に決める重要な戦略です。"},points:["Segmentation：地理・デモグラフィック・サイコグラフィック・行動","Targeting：市場全体・差別化・ニッチ集中の3アプローチ","Positioning：競合と差別化した独自の立ち位置を決める","ポジショニングマップ：2軸で競合との位置関係を可視化"]},
+{title:"組織の作り方",content:`<p>組織設計とは「誰が何をするか、誰が誰に報告するか」を決めること。主な組織形態は<strong>機能別組織</strong>（営業部・製造部・人事部など機能で分ける）、<strong>事業部制組織</strong>（製品・地域ごとに自己完結した組織）、<strong>マトリクス組織</strong>（機能部門と事業部門が交差）の3種類。</p><p>スタッフ権限の委譲と統制のバランスも重要。<strong>スパン・オブ・コントロール</strong>（1人が管理できる部下数）が広いと組織が扁平になり、狭いと階層が増えます。</p>`,analogy:{icon:"🏢",title:"学校の組織に例えよう",text:"学校を機能別組織にすると：教務部（授業担当）・生徒指導部（生活担当）・進路指導部（就職担当）。事業部制にすると：中学部・高校部（それぞれが独立して機能を持つ）。大きな学校は後者の方が動きやすいですね。"},points:["機能別組織：専門化のメリット大・部門間調整が課題","事業部制：自律性高い・資源の重複コスト発生","マトリクス組織：柔軟だが指揮命令系統が複雑","コングロマリット：全く異なる多くの事業を持つ複合企業"]}
+],
+// Subject 3: 運営管理
+[
+{title:"生産管理とは",content:`<p>生産管理とは<strong>「よいモノを、安く、早く、必要な量だけ作る」</strong>ための仕組みづくりです。QCD（品質・コスト・納期）の3要素を最適化することが目標。</p><p>生産形態には<strong>受注生産</strong>（注文を受けてから作る→在庫不要）と<strong>見込生産</strong>（需要予測で先に作る→在庫リスクあり）があります。また<strong>ジャスト・イン・タイム（JIT）</strong>はトヨタ生産方式の核心で「必要なものを必要なときに必要な量だけ」生産する思想です。</p>`,analogy:{icon:"🚗",title:"トヨタ生産方式（TPS）",text:"トヨタは「かんばん方式」で在庫ゼロを目指しました。後工程が「かんばん（指示書）」を前工程に渡して初めて生産開始。これにより過剰在庫を排除。「必要なものを必要なときに」がJITの精神です。"},points:["QCD：Quality（品質）・Cost（コスト）・Delivery（納期）","JIT（ジャスト・イン・タイム）：在庫ゼロを目指す生産方式","プル生産：後工程が引き取る量だけ前工程が生産","稼働率＝実際の生産量÷生産能力×100"]},
+{title:"品質管理（QC）",content:`<p>品質管理（Quality Control）とは不良品を減らし、顧客の期待に応える品質を維持・向上させる活動。<strong>TQM（全社的品質管理）</strong>は全部門・全員参加で品質改善に取り組む考え方です。</p><p><strong>QCサークル</strong>は現場の小グループが自主的に品質改善を行う活動。<strong>PDCA</strong>（Plan計画→Do実行→Check評価→Action改善）サイクルを回し続けることが重要。<strong>7つのQC手法</strong>（パレート図・特性要因図など）も頻出です。</p>`,analogy:{icon:"🔧",title:"特性要因図（魚の骨）",text:"品質問題が起きたとき「なぜ？なぜ？」と5回繰り返して真因を探します。例：不良品が多い→なぜ？→加工精度が悪い→なぜ？→機械が古い→なぜ？→メンテナンス不足→なぜ？→担当者が決まっていない。これが根本原因（真因）です。"},points:["PDCA：計画→実行→評価→改善のサイクル","パレート図：不良の原因を多い順に並べた棒グラフ（80-20の法則）","特性要因図：問題（結果）と要因（原因）の関係を魚の骨で表現","6σ（シックスシグマ）：100万個に3.4個以下の不良を目指す"]},
+{title:"在庫管理",content:`<p>在庫管理のポイントは<strong>「持ちすぎず、足りなくならず」</strong>の適正在庫を保つこと。在庫が多すぎると保管コスト・陳腐化リスクが高まり、少なすぎると機会損失（売り逃し）・生産停止リスクがあります。</p><p>発注方式には<strong>定量発注方式</strong>（在庫が一定量に減ったら発注→需要が安定した品目に適合）と<strong>定期発注方式</strong>（決まった時期に発注→需要変動が大きい品目に適合）の2種類。<strong>ABC分析</strong>で在庫品目を重要度でランク分けして管理効率を高めます。</p>`,analogy:{icon:"🛒",title:"スーパーの在庫管理",text:"牛乳は毎日売れる量がほぼ決まっている（定量発注向き）。一方、お歳暮ギフトは季節によって大きく変動（定期発注向き）。ABC分析では高額・高回転の品目（A：重点管理）から安価・低回転品（C：簡略管理）まで分類します。"},points:["定量発注：発注点を設定、在庫がその点を下回ったら発注","定期発注：一定間隔で在庫量を確認して発注","ABC分析：売上高や出荷量で品目をA・B・Cに分類","安全在庫：需要変動や調達リスクに備えた予備在庫"]},
+{title:"店舗管理の基本",content:`<p>小売業の店舗運営管理では<strong>立地</strong>・<strong>商品構成（MD）</strong>・<strong>売場づくり</strong>・<strong>接客サービス</strong>が重要。<strong>商品計画（マーチャンダイジング）</strong>とは何を、いくらで、どれだけ仕入れ、どう陳列するかを決める活動です。</p><p><strong>VMD（ビジュアルマーチャンダイジング）</strong>は視覚的な売場演出。<strong>ゴールデンゾーン</strong>（目線の高さ70〜150cm）が最も売れる陳列場所。<strong>エンドコーナー</strong>（棚の端）・<strong>アイランド陳列</strong>も集客効果が高い手法です。</p>`,analogy:{icon:"🏪",title:"コンビニの売場設計",text:"コンビニでは入口すぐにおにぎり・お弁当（生鮮＆高回転）を配置し、奥に飲料（目的買い品）を配置。お客を店の奥まで歩かせることで、ついで買いを促します。レジ前のホットスナックも衝動買いを狙った配置です。"},points:["商圏分析：店舗を中心とした商品の届く地理的範囲","マーチャンダイジング：品揃え・価格設定・陳列の総合計画","ゴールデンゾーン：目線高さの陳列スペース（最も売れる）","顧客満足度：CS（Customer Satisfaction）向上がリピーター獲得に直結"]},
+{title:"物流とSCM",content:`<p><strong>物流</strong>は商品が生産者から消費者に届くまでの輸送・保管・荷役・包装・流通加工・情報の6機能の総称。<strong>SCM（サプライチェーン・マネジメント）</strong>は原材料調達から最終消費者への販売まで、サプライチェーン全体を最適化する管理手法です。</p><p><strong>3PL（サードパーティ・ロジスティクス）</strong>は物流業務を外部専門業者に委託すること。<strong>クロスドッキング</strong>は倉庫に保管せず入荷した商品をすぐに仕分け出荷する手法で、在庫コストを削減できます。</p>`,analogy:{icon:"🚚",title:"Amazonの配送を例に",text:"Amazonで商品を注文すると：中国工場（生産）→海上輸送（国際物流）→日本の倉庫（保管）→物流センターで仕分け（流通加工）→宅配便（ラストワンマイル）→あなたの手元に。これがSCMの全体像です。"},points:["物流の5大機能：輸送・保管・荷役・包装・流通加工","SCM：原材料調達から消費者まで全工程の一体的管理","ブルウィップ効果：川下の需要変動が川上で増幅される現象","リードタイム：発注から納品までの所要時間（短縮が競争力に）"]},
+{title:"IE（インダストリアルエンジニアリング）",content:`<p><strong>IE（産業工学）</strong>は人・機械・材料・情報を最適に組み合わせ、作業の効率化・改善を科学的に行う技術体系です。製造現場の改善活動の理論的基盤となっています。</p><p><strong>時間研究</strong>（作業時間の測定と標準時間の設定）、<strong>動作研究</strong>（無駄な動きを排除）が2本柱。<strong>5S活動</strong>（整理・整頓・清掃・清潔・躾）は改善の基礎。<strong>ECRS</strong>（排除・結合・交換・簡素化）で作業を改善します。</p>`,analogy:{icon:"⏱️",title:"コンビニのレジ作業改善",text:"レジ作業を秒単位で計測（時間研究）→お客のバッグを置く場所が遠い（動作研究で発見）→レジ台のレイアウトを変更（ECRSのRearrange）→作業時間が30秒短縮。これがIEの実践例です。"},points:["標準時間：正常な作業者が標準的条件で作業する時間","5S：整理・整頓・清掃・清潔・躾（カイゼンの基礎）","ECRS：Eliminate除去・Combine結合・Rearrange交換・Simplify簡素化","ラインバランシング：各工程の作業時間を均等化してボトルネックを解消"]}
+],
+// Subject 4: 経営法務
+[
+{title:"会社法の基本",content:`<p><strong>会社法</strong>は株式会社などの設立・運営・解散に関するルールを定めた法律。会社の形態は<strong>株式会社・合同会社・合名会社・合資会社</strong>の4種類ありますが、試験は特に株式会社が重要です。</p><p>株式会社の特徴：<strong>有限責任</strong>（株主は出資額を限度とした責任のみ）、<strong>株式の自由譲渡</strong>、所有と経営の分離（株主と経営者が異なる）。<strong>機関設計</strong>（株主総会・取締役会・監査役など）のルールも頻出です。</p>`,analogy:{icon:"🏛️",title:"株式会社の仕組み",text:"株式会社は「株主（オーナー）→取締役会（役員会議）→代表取締役（社長）」という構造。株主は利益の配当をもらう代わりに、倒産しても自分が出した株の金額以上は失わない（有限責任）。これが株式会社の最大のメリットです。"},points:["有限責任：株主の損失は出資額まで（個人財産は守られる）","株主総会：最高意思決定機関（年1回の定時総会）","取締役会：業務執行の意思決定機関（3人以上の取締役）","監査役：取締役の業務・会計を監査する機関"]},
+{title:"契約とは何か",content:`<p>契約とは<strong>互いの合意によって生まれる法律上の約束</strong>。原則として口頭でも成立しますが、証明が難しいため書面化が重要です。<strong>申込み＋承諾＝契約成立</strong>が基本ルール。</p><p>重要な契約類型：<strong>売買契約</strong>・<strong>請負契約</strong>（仕事の完成義務）・<strong>委任契約</strong>（事務の処理）・<strong>雇用契約</strong>・<strong>リース契約</strong>・<strong>フランチャイズ契約</strong>など。契約の取り消し事由（詐欺・強迫・錯誤・未成年）や<strong>クーリングオフ制度</strong>も重要。</p>`,analogy:{icon:"🤝",title:"コンビニでの買い物も契約",text:"コンビニでおにぎりを選ぶ（申込み）→レジで支払う（承諾）→契約成立。実はこれも売買契約。もし「賞味期限が切れていた」なら、商品の瑕疵（欠陥）として返品・交換を求める権利が消費者にあります。"},points:["契約自由の原則：何を誰とどんな内容でも（法律の範囲内で）自由","クーリングオフ：一定期間内であれば無条件解除（訪問販売など）","瑕疵担保責任→契約不適合責任（2020年改正）","時効：一定期間が過ぎると権利が消滅（消滅時効）"]},
+{title:"知的財産権①（特許・実用新案）",content:`<p><strong>知的財産権</strong>はアイデア・発明・デザイン・ブランドなどの無形の創造物を保護する権利の総称。大きく<strong>産業財産権</strong>（特許・実用新案・意匠・商標）と<strong>著作権</strong>に分かれます。</p><p><strong>特許権</strong>：自然法則を利用した技術的発明を保護（保護期間20年・出願から）。<strong>実用新案権</strong>：物品の形状・構造・組み合わせの考案を保護（保護期間10年）。先に出願した人が保護される<strong>先願主義</strong>が原則です。</p>`,analogy:{icon:"💡",title:"新しいボールペンの例",text:"「インクが乾きにくい新しいボールペン機構」を発明→特許出願で20年間独占権獲得。ライバル会社は同じ技術を使えない。でも実は「持ちやすい六角形グリップ」程度の工夫なら実用新案で保護する方が早くて安い。"},points:["特許権：技術的発明（高度な進歩性が必要）、保護20年","実用新案：物品の形状・構造の考案（簡易審査）、保護10年","先願主義：同じ発明でも先に出願した人が権利を取得","職務発明：従業員が業務でした発明は会社に権利帰属（改正後）"]},
+{title:"知的財産権②（商標・著作権）",content:`<p><strong>商標権</strong>は商品・サービスの出所を示すマーク（ロゴ・ブランド名）を保護。登録から<strong>10年間</strong>（更新可能で事実上永続）。コカ・コーラのロゴや「iPhone」などが商標の例。<strong>著作権</strong>は思想・感情の表現（小説・音楽・絵画・プログラム）を自動的に保護（登録不要）。保護期間は<strong>著者の死後70年</strong>。</p><p>中小企業の経営では自社ブランド（商標）と独自ノウハウ（営業秘密）の保護が重要です。</p>`,analogy:{icon:"™️",title:"ブランドを守る商標権",text:"あなたが「タピオカ屋さん」を開業し「モチモチ本舗」という名前で人気が出たとします。商標登録しておけば、マネした店に使用停止を求められます。未登録のまま別の人が先に登録したら、あなたが使えなくなる！だから早めの登録が大切。"},points:["商標権：文字・図形・記号・立体形状などのブランド保護","著作権：創作と同時に自動発生（登録不要）、死後70年保護","著作権の制限：引用・学校教育・私的複製などは無断利用可","不正競争防止法：周知表示の模倣・営業秘密の不正取得を規制"]},
+{title:"労働法の基本",content:`<p>労働法は<strong>労働者を守るための法律群</strong>。主要な法律：<strong>労働基準法</strong>（労働条件の最低基準）・<strong>労働契約法</strong>（解雇制限など）・<strong>労働安全衛生法</strong>・<strong>雇用機会均等法</strong>など。</p><p>重要事項：法定労働時間は<strong>週40時間・1日8時間</strong>。残業させるには<strong>36協定（サブロク協定）</strong>が必要。有給休暇は6ヶ月継続勤務・8割以上出勤で<strong>10日付与</strong>（年5日の時季指定義務あり）。解雇は<strong>客観的合理的理由</strong>がなければ無効です。</p>`,analogy:{icon:"👷",title:"アルバイトでも守られる権利",text:"アルバイトでも労基法は適用されます。週30時間以上働くと雇用保険加入義務、週20時間以上・31日以上で雇用保険加入義務も。残業代（時給×1.25倍）・深夜割増（1.25倍）も請求できます。知らないと損する権利が多い！"},points:["法定労働時間：週40時間・1日8時間（超えると割増賃金）","36協定：時間外・休日労働には労使協定と労働基準監督署への届出が必要","最低賃金：地域ごとに設定、下回る賃金は無効","解雇予告：30日前の予告または30日分の解雇予告手当が必要"]},
+{title:"倒産・再建の法律",content:`<p>会社が経営危機に陥ったときの法的手続きには、<strong>清算型</strong>（会社を終わらせる）と<strong>再建型</strong>（会社を立て直す）の2種類があります。</p><p>清算型：<strong>破産手続き</strong>（財産を換金して債権者に配分）。再建型：<strong>民事再生</strong>（中小企業向け・経営陣が続けながら債務を圧縮）、<strong>会社更生</strong>（大企業向け・裁判所が選んだ管財人が再建）。<strong>私的整理</strong>は裁判所を使わず債権者と交渉する方法で、費用や時間が少なくて済みます。</p>`,analogy:{icon:"🆘",title:"身近な例：借金地獄からの再起",text:"個人版の民事再生は「個人再生」。住宅ローンを残しながら他の借金を最大1/5に圧縮できる制度です。会社の民事再生も同様で、「銀行への借金を3割返済することで許してもらい、残りの事業を続ける」という交渉ができます。"},points:["破産：清算型、財産換金配分後に会社消滅","民事再生：再建型・中小企業向け、スポンサー探しにも活用","会社更生：再建型・大企業向け（経営陣交代・旧株主権利消滅）","私的整理：裁判外で債権者と交渉、公表リスクが低い"]}
+],
+// Subject 5: 経営情報システム
+[
+{title:"ITシステムの基本",content:`<p>コンピュータは<strong>CPU（中央処理装置）</strong>・<strong>メモリ（主記憶装置）</strong>・<strong>ストレージ（補助記憶装置）</strong>・<strong>入出力装置</strong>の4要素で構成。CPUが「計算する」、メモリが「一時的に覚える」、ストレージが「永続的に保存する」役割です。</p><p><strong>OS（オペレーティングシステム）</strong>はハードウェアとアプリケーションの橋渡しをするソフトウェア（Windows・macOS・Linuxなど）。処理方式には<strong>バッチ処理</strong>（まとめて処理）と<strong>オンライン処理</strong>（即時処理）があります。</p>`,analogy:{icon:"🧠",title:"コンピュータ＝人間の脳・体",text:"CPU＝脳（計算・判断）、メモリ＝短期記憶（今考えていること）、ストレージ＝長期記憶（過去の知識）、入力装置＝目・耳（情報取込み）、出力装置＝口・手（情報発信）。コンピュータを人体に例えると覚えやすい！"},points:["CPU：計算・制御の中枢（クロック周波数・コア数で性能が変わる）","メモリ（RAM）：作業領域（電源OFF時に消える一時記憶）","ストレージ（SSD/HDD）：永続保存（電源OFFでも保持）","仮想化技術：1台の物理サーバーを複数の仮想サーバーとして使う技術"]},
+{title:"ネットワーク",content:`<p>ネットワークとは複数のコンピュータが通信し合う仕組み。<strong>LAN（構内ネットワーク）</strong>は社内や家庭内のネットワーク。<strong>WAN（広域ネットワーク）</strong>は離れた場所をつなぐ（インターネットはWANの一種）。</p><p>インターネットの仕組みを支える技術：<strong>TCP/IP</strong>（通信プロトコル）、<strong>IPアドレス</strong>（コンピュータの住所）、<strong>DNS</strong>（ドメイン名をIPアドレスに変換）。<strong>VPN</strong>（仮想プライベートネットワーク）は公共インターネット上に安全な専用回線を作る技術でテレワークに活用されます。</p>`,analogy:{icon:"📮",title:"郵便システムに例えよう",text:"IPアドレス＝住所（192.168.1.1などの数字）、DNS＝郵便番号帳（www.google.comを数字の住所に変換）、TCP/IP＝郵便のルール（手紙をどう封筒に入れて送るかの取り決め）。インターネットはこのルールに従った世界規模の郵便システムです。"},points:["IPアドレス：インターネット上の住所（IPv4：32ビット、IPv6：128ビット）","HTTP/HTTPS：Webページを送受信するプロトコル（Sは暗号化あり）","ファイアウォール：外部からの不正アクセスを防ぐ関所","クラウド：インターネット経由でITリソースを提供するサービス"]},
+{title:"データベース",content:`<p><strong>データベース（DB）</strong>は大量のデータを整理・管理するシステム。最も普及している<strong>リレーショナルデータベース（RDB）</strong>は表（テーブル）形式でデータを管理し、<strong>SQL</strong>という言語で操作します。</p><p><strong>正規化</strong>はデータの重複を排除してDB設計を最適化すること（第1〜第3正規形）。<strong>DBMS（データベース管理システム）</strong>がデータの整合性・セキュリティ・同時アクセスを管理。<strong>ACID特性</strong>（原子性・一貫性・独立性・永続性）がトランザクションの信頼性を保証します。</p>`,analogy:{icon:"📁",title:"図書館に例えよう",text:"図書館の本の管理がデータベース。本のタイトル・著者・ISBN・棚番号が「テーブルの列」。一冊の本が「レコード（行）」。「著者が村上春樹の本を探して」→これがSQL（SELECT文）。きちんと整理されているから素早く見つかります。"},points:["RDB（リレーショナルDB）：表形式でデータ管理、SQLで操作","主キー：各レコードを一意に特定するフィールド（例：顧客ID）","外部キー：テーブル間の関連付け（例：注文テーブルの顧客IDが顧客テーブルを参照）","NoSQL：RDB以外のDB（MongoDB等）、大量・非構造化データに向く"]},
+{title:"情報セキュリティ",content:`<p>情報セキュリティの3大要素（CIA）：<strong>機密性（Confidentiality）</strong>許可された人だけアクセス、<strong>完全性（Integrity）</strong>データが改ざんされていない、<strong>可用性（Availability）</strong>必要なときに使える。</p><p>主な脅威：<strong>マルウェア</strong>（ウイルス・ランサムウェア等）、<strong>フィッシング</strong>（偽サイトで情報窃取）、<strong>DoS攻撃</strong>（過負荷をかけてサービス停止）、<strong>SQLインジェクション</strong>（DBへの不正操作）。対策：暗号化・認証・ファイアウォール・IDS/IPS・バックアップ。</p>`,analogy:{icon:"🔐",title:"家のセキュリティに例えよう",text:"機密性＝鍵をかけて泥棒を防ぐ。完全性＝大切なものが盗まれたり壊されたりしていない。可用性＝いつでも家に入れる。ランサムウェアは「家に鍵をかけて（暗号化して）身代金を要求するデジタルの強盗」です。"},points:["マルウェア：ウイルス・ワーム・トロイの木馬・ランサムウェア","フィッシング：偽メール・偽サイトで認証情報を騙し取る手口","暗号化：平文を読めない形（暗号文）に変換（AES・RSAなど）","ISMS：情報セキュリティマネジメントシステム（ISO/IEC 27001）"]},
+{title:"システム開発の流れ",content:`<p>システム開発は一般的に<strong>要件定義→設計→開発（プログラミング）→テスト→リリース→運用・保守</strong>の流れで進みます。</p><p>開発手法には<strong>ウォーターフォールモデル</strong>（各工程を順番に進める・大規模向け）と<strong>アジャイル開発</strong>（短期間で機能を繰り返しリリース・変化に強い）があります。<strong>プロジェクトマネジメント</strong>（WBS・ガントチャート・PERT）で計画・進捗管理を行います。</p>`,analogy:{icon:"🏗️",title:"家の建設に例えよう",text:"家づくりも「設計図作成→地盤工事→基礎→構造→内装→完成→引き渡し」と順番通りに進む（ウォーターフォール）。でも「住んでみたら間取りを変えたい」という変更が頻発するシステムなら、アジャイルで部屋ごとに小さく作って修正する方が効率的。"},points:["ウォーターフォール：上流から順番に開発（変更に弱いが計画しやすい）","アジャイル：短いスプリントで開発・改善を繰り返す","スクラム：アジャイルの代表的フレームワーク","WBS：作業を階層的に分解したプロジェクト計画ツール"]},
+{title:"経営に使うIT（ERP・CRM・SCM）",content:`<p>企業経営を支える代表的な基幹システム：<strong>ERP（企業資源計画）</strong>は販売・購買・在庫・会計・人事を一元管理するシステム（SAP・Oracle等）。<strong>CRM（顧客関係管理）</strong>は顧客情報・購買履歴・問い合わせを管理して顧客満足向上と売上拡大を支援。<strong>SCM（サプライチェーン管理）</strong>は調達〜生産〜物流〜販売の全体最適化。</p><p><strong>BI（ビジネスインテリジェンス）</strong>ツールでデータを分析して経営判断を支援します。</p>`,analogy:{icon:"🏭",title:"製造業での活用例",text:"製造工場のERP導入例：受注データ（CRM）→生産計画（ERP）→材料発注（SCM）→製造→出荷→売上計上（会計ERP）が全部つながる。以前はExcelで各部門バラバラに管理していた情報が一元化され、リアルタイムで経営状況を把握できる。"},points:["ERP：会計・人事・販売・購買・在庫を統合管理（一元化）","CRM：顧客との関係を強化・顧客生涯価値（LTV）を最大化","SCM：サプライチェーン全体の在庫・納期・コストを最適化","DX（デジタルトランスフォーメーション）：ITで事業モデルや組織を変革"]}
+],
+// Subject 6: 中小企業経営・中小企業政策
+[
+{title:"中小企業とは？",content:`<p>中小企業とは<strong>中小企業基本法</strong>で定義された一定規模以下の企業。業種によって定義が異なります。<strong>製造業等</strong>：資本金3億円以下または従業員300人以下。<strong>卸売業</strong>：資本金1億円以下または従業員100人以下。<strong>小売業・サービス業</strong>：資本金5,000万円以下または従業員50人以下（小売）・100人以下（サービス）。</p><p>さらに<strong>小規模事業者</strong>（製造業20人以下、商業・サービス業5人以下）という区分もあります。</p>`,analogy:{icon:"🏪",title:"街の例で考えよう",text:"大企業＝イオンやトヨタ。中小企業＝街の工場・商店街のお店・地元のIT企業。小規模事業者＝家族経営の八百屋や個人の美容室。日本全国の企業数の約99.7%が中小企業。従業員数でも約70%が中小企業で働いています。"},points:["製造業等：資本金3億円以下 または 従業員300人以下","卸売業：資本金1億円以下 または 従業員100人以下","小売業：資本金5,000万円以下 または 従業員50人以下","小規模事業者：製造業20人以下、商業・サービス5人以下"]},
+{title:"中小企業の現状",content:`<p>日本には約358万社の企業があり、そのうち<strong>99.7%が中小企業</strong>。従業員数で見ると全労働者の約<strong>69%</strong>を雇用しています。GDPへの貢献も大きく、日本経済の屋台骨です。</p><p>課題：<strong>人手不足</strong>（少子高齢化）・<strong>後継者難</strong>（廃業の増加）・<strong>デジタル化の遅れ</strong>・<strong>資金調達の困難さ</strong>など。一方で<strong>技術力の高い中小企業</strong>（ニッチトップ企業）も多く、世界シェアを持つ「グローバルニッチトップ企業」も存在します。</p>`,analogy:{icon:"🇯🇵",title:"日本経済の縁の下の力持ち",text:"大企業トヨタが有名でも、その部品を作る中小サプライヤーが1,000社以上関わっています。あなたの地元の有名食品・工芸品も中小企業の製品かもしれません。日本のモノづくりの技術は多くの中小企業の職人技に支えられています。"},points:["企業数の99.7%・従業員の約69%が中小企業","廃業率が開業率を超える年も多く、企業数は減少傾向","中小企業の課題：人手不足・後継者難・デジタル化・資金調達","強みのある中小企業：ニッチトップ・地域ブランド・高い技術力"]},
+{title:"中小企業支援機関",content:`<p>中小企業を支援する主な機関：<strong>中小企業庁</strong>（経済産業省の外局・政策立案）、<strong>日本政策金融公庫</strong>（低利融資）、<strong>中小企業基盤整備機構（中小機構）</strong>（経営支援・研修・インキュベーション）、<strong>よろず支援拠点</strong>（無料の経営相談窓口・全都道府県に設置）。</p><p>民間支援機関：<strong>商工会議所・商工会</strong>（地域の中小企業をサポート・都市部は商工会議所・農村部は商工会）、<strong>中小企業診断士</strong>（経営コンサルタント）。</p>`,analogy:{icon:"🤝",title:"支援機関を使い倒そう",text:"例：新しいカフェを開業したい場合→①よろず支援拠点で無料相談→②日本政策金融公庫で開業資金の低利融資→③地元商工会議所で販促アドバイス→④中小企業診断士を活用して経営計画作成。これらが全部無料〜低コストで使えます！"},points:["よろず支援拠点：無料の経営相談窓口（全国47都道府県）","日本政策金融公庫：政府系金融機関、低利・無担保融資","中小企業基盤整備機構：BCP策定・IT化・海外展開支援","商工会議所：都市部の中小企業支援（経営相談・税務・法務）"]},
+{title:"資金調達支援",content:`<p>中小企業の主な資金調達手段：<strong>金融機関融資</strong>（銀行・信用金庫・信用組合）、<strong>信用保証協会の保証付き融資</strong>（担保なしで融資を受けやすくする）、<strong>日本政策金融公庫の融資</strong>（低利）、<strong>補助金・助成金</strong>（返済不要）。</p><p>主な補助金：<strong>ものづくり補助金</strong>（設備投資）・<strong>小規模事業者持続化補助金</strong>（販路開拓）・<strong>IT導入補助金</strong>（ITツール導入）。助成金（厚生労働省系）は要件を満たせば確実に受給できます。</p>`,analogy:{icon:"💰",title:"補助金と助成金の違い",text:"補助金＝競争あり（審査で採択・不採択が決まる）。例：ものづくり補助金で機械を1,000万円購入→最大500万円が国から戻ってくる。助成金＝条件を満たせば受給（雇用系が多い）。例：高齢者を採用したら「特定求職者雇用開発助成金」が支給される。"},points:["信用保証協会：中小企業の融資を保証（信用補完制度）","ものづくり補助金：革新的な設備投資・試作開発を支援（補助率1/2等）","小規模事業者持続化補助金：販路開拓・業務効率化（上限最大200万円）","IT導入補助金：ITツール・ソフトウェア導入費用を補助"]},
+{title:"経営革新と創業支援",content:`<p><strong>経営革新計画</strong>とは中小企業が「新事業活動」（新製品・新サービス・新販路開拓等）を行う計画を都道府県知事等に承認してもらう制度。承認を受けると低利融資・保証枠拡大などの支援が受けられます。</p><p>創業支援：<strong>創業補助金</strong>・<strong>創業融資（日本政策金融公庫）</strong>・<strong>インキュベーション施設</strong>（安価なオフィスを提供）・<strong>事業承継</strong>支援（後継者問題解決）。2023年の<strong>スタートアップ育成5か年計画</strong>でスタートアップへの政策支援が強化されています。</p>`,analogy:{icon:"🌱",title:"創業支援の流れ",text:"起業を考えたAさんの例：①よろず支援拠点で相談→②事業計画書を作成→③日本政策金融公庫「新規開業資金」で300万円借入→④小規模事業者持続化補助金でHP作成・チラシ制作→⑤地元商工会議所のセミナーで経営ノウハウ習得。支援制度をフル活用！"},points:["経営革新計画：都道府県知事等の承認で各種支援を受けられる","事業継続力強化計画（BCP）：自然災害等への備え計画（認定制度あり）","事業承継税制：後継者への自社株式等の贈与・相続税を猶予・免除","スタートアップ：革新的なビジネスモデルで急成長を目指す新興企業"]},
+{title:"診断士の役割",content:`<p>中小企業診断士は<strong>中小企業の経営課題を解決するプロのコンサルタント</strong>。経営・財務・IT・法務など幅広い知識を持ち、企業の経営診断・助言を行います。国家資格であり、経営コンサルタントの唯一の国家資格です。</p><p>活動の場：<strong>独立開業</strong>（経営コンサルタント）・<strong>企業内診断士</strong>（会社に勤めながら副業・スキルアップ）・<strong>公的支援機関への派遣</strong>（よろず支援拠点など）・<strong>専門家派遣</strong>（中小機構からの派遣）。資格取得後は5年ごとの更新が必要です。</p>`,analogy:{icon:"🩺",title:"企業のかかりつけ医",text:"診断士は「企業のお医者さん」です。具合が悪い（業績低迷・人手不足・デジタル化遅れ）企業を診断し、原因を特定し、処方箋（経営改善計画）を出します。単に問題を指摘するだけでなく、一緒に解決策を実行するパートナーとして経営者に寄り添います。"},points:["唯一の経営コンサルタント国家資格（中小企業支援法に基づく）","一次試験（7科目筆記）→二次試験（事例筆記・口述）→実務補習","5年ごとの資格更新（知識・実務の継続的な研鑽が必要）","中小企業診断士のキャリア：独立・企業内・公的機関支援など多様"]}
+]
+];
 
-// ========== Init ==========
-async function init() {
-  const res = await fetch('questions.json');
-  data = await res.json();
-  data.subjects.forEach((s, i) => {
-    if (!progress[s.id]) progress[s.id] = { quiz_total: 0, quiz_correct: 0, fc_known: 0, fc_total: s.flashcards.length };
-    s.emoji = SUBJECT_EMOJIS[i];
-  });
-  selectedSubjects = new Set(data.subjects.map(s => s.id));
-  renderAll();
+// FLASHCARD DATA
+const flashcardsData = {
+  all: null, // computed
+  subjects: [
+    { name:"経済学・経済政策", cards:[
+      {term:"需要の価格弾力性",def:"価格が1%変化したときに需要量が何%変化するかを示す指標。弾力性が1より大きい（弾力的）と価格変化の影響が大きく、1より小さい（非弾力的）と影響が小さい。",example:"例：贅沢品（宝石）は弾力的、必需品（食塩）は非弾力的"},
+      {term:"均衡価格",def:"需要量と供給量が一致する価格。市場メカニズムにより自然とこの価格に収束する。グラフでは需要曲線と供給曲線の交点。",example:"例：市場で野菜が余れば値下がり→需要が増えて均衡に戻る"},
+      {term:"GDP（国内総生産）",def:"1年間に国内で生産された財・サービスの付加価値の合計。景気の最重要指標。計算式：消費＋投資＋政府支出＋（輸出－輸入）",example:"例：日本のGDPは約500兆円（名目）"},
+      {term:"財政政策",def:"政府が税収や公共支出を調整して景気を安定させる政策。不景気→公共投資増・減税（拡張）、過熱→支出減・増税（緊縮）。",example:"例：リーマンショック後の景気対策・公共工事増加"},
+      {term:"金融政策",def:"日本銀行が政策金利や通貨供給量を操作して物価・景気を安定させる政策。主な手段は政策金利操作と公開市場操作。",example:"例：2013年〜量的・質的金融緩和（アベノミクス）"},
+      {term:"インフレーション",def:"物価水準が継続的に上昇する現象。需要超過インフレ（需要が供給を上回る）とコストプッシュインフレ（生産コスト上昇）がある。",example:"例：2022年〜エネルギー高騰による輸入インフレ"},
+      {term:"比較優位",def:"他国と比べて相対的に得意な財・サービスの生産に特化し貿易することで、全ての国が利益を得られるというリカードの原理。",example:"例：日本が自動車、オーストラリアが小麦に特化して貿易"},
+      {term:"クラウディングアウト",def:"政府が国債を発行して財政支出を増やすと、金利が上昇して民間投資が減少する現象。財政政策の効果を相殺する。",example:"例：国債大量発行→市場金利上昇→民間企業の設備投資が減少"},
+      {term:"乗数効果",def:"政府支出が1単位増加したとき、それが連鎖的な消費増加を通じてGDPをそれ以上増大させる効果。乗数＝1÷（1－限界消費性向）",example:"例：乗数2のとき、100億円の公共投資が200億円のGDP増につながる"},
+      {term:"為替レート",def:"異なる通貨を交換する際の比率。円高（円の価値上昇）は輸出不利・輸入有利。円安（円の価値下落）は輸出有利・輸入不利。",example:"例：1ドル＝150円（円安）→輸出企業の利益増、輸入コスト上昇"},
+      {term:"景気循環",def:"経済活動が拡張（好況）→後退→谷（不況）→回復のサイクルを繰り返す現象。コンドラチェフ（50年）・クズネッツ（20年）・ジュグラー（10年）・キチン（40ヶ月）の4種類。",example:"例：バブル（1980年代）→崩壊（1991年）→失われた10年"},
+      {term:"フィリップス曲線",def:"失業率と物価上昇率（インフレ率）の間に逆相関関係があることを示すグラフ。低失業率→高インフレ、高失業率→低インフレの傾向。",example:"例：完全雇用に近づくと労働者の賃金上昇→物価上昇"}
+    ]},
+    { name:"財務・会計", cards:[
+      {term:"貸借対照表（BS）",def:"決算日時点の財政状態を示す財務諸表。左側（借方）に資産、右側（貸方）に負債と純資産。資産合計＝負債＋純資産が常に成立。",example:"例：総資産100万円＝負債60万円＋純資産40万円"},
+      {term:"損益計算書（PL）",def:"一定期間の経営成績（収益・費用・利益）を示す財務諸表。売上高→売上総利益→営業利益→経常利益→当期純利益の順に計算。",example:"例：売上1,000万－原価600万＝粗利400万－販管費200万＝営業利益200万"},
+      {term:"ROE（自己資本利益率）",def:"自己資本に対する当期純利益の割合。株主が投じた資本をどれだけ効率よく活用したかを示す。ROE＝当期純利益÷自己資本×100",example:"例：純利益10億円÷自己資本100億円＝ROE10%（日本企業平均は約8〜10%）"},
+      {term:"流動比率",def:"流動負債に対する流動資産の比率。1年以内の支払い義務を手元資産で賄えるかを示す安全性指標。流動比率＝流動資産÷流動負債×100（200%以上が理想）",example:"例：流動資産200万÷流動負債100万＝200%（良好）"},
+      {term:"損益分岐点（BEP）",def:"売上高と総費用が等しくなる（利益がゼロになる）売上高。BEP売上高＝固定費÷（1－変動費率）。この点を超えた売上が利益になる。",example:"例：固定費30万・変動費率40%→BEP＝30万÷0.6＝50万円"},
+      {term:"キャッシュフロー計算書",def:"一定期間の現金の動きを「営業活動」「投資活動」「財務活動」の3区分で示す財務諸表。利益があっても倒産する黒字倒産を防ぐために重要。",example:"例：営業CF＋500万、投資CF－300万、財務CF－100万→現金増加100万"},
+      {term:"減価償却",def:"建物・機械等の固定資産は使用とともに価値が減少するため、その取得原価を耐用年数にわたって費用配分する会計処理。",example:"例：100万円の機械（耐用年数5年）→毎年20万円を費用計上（定額法）"},
+      {term:"自己資本比率",def:"総資産に占める自己資本（純資産）の割合。高いほど借入に依存せず財務が安定。自己資本比率＝純資産÷総資産×100",example:"例：純資産40億÷総資産100億＝40%（製造業の優良企業水準）"},
+      {term:"売上総利益（粗利）",def:"売上高から売上原価（仕入れ・製造コスト）を差し引いた利益。業種ごとに粗利率の水準が異なる。粗利率＝売上総利益÷売上高×100",example:"例：スーパー粗利率25%、百貨店35%、ソフトウェア80%"},
+      {term:"EVA（経済的付加価値）",def:"税引後営業利益から資本コスト（投下資本×加重平均資本コスト）を差し引いた実質的な価値創造額。プラスなら株主価値を創造。",example:"例：営業利益10億－資本コスト8億＝EVA2億円（価値創造企業）"},
+      {term:"固定費・変動費",def:"固定費は売上に関係なく発生するコスト（家賃・正社員給与・減価償却）。変動費は売上に比例するコスト（材料費・外注費・販売手数料）。",example:"例：レストランの家賃（固定）・食材費（変動）"},
+      {term:"フリーキャッシュフロー",def:"営業活動CF＋投資活動CFで計算される、企業が自由に使える現金。借入返済・配当・新規投資の原資となる。プラスが多いほど財務基盤が強い。",example:"例：営業CF500万＋投資CF（－200万）＝FCF300万円"}
+    ]},
+    { name:"企業経営理論", cards:[
+      {term:"SWOT分析",def:"企業の内部環境（S強み・W弱み）と外部環境（O機会・T脅威）を整理する戦略立案ツール。4要素を組み合わせてSO・WO・ST・WT戦略を導く。",example:"例：強み（技術力）×機会（新市場）→新技術で海外展開（SO戦略）"},
+      {term:"PPM（プロダクトポートフォリオマネジメント）",def:"市場成長率と相対的市場シェアの2軸で事業を「花形・金のなる木・問題児・負け犬」の4象限に分類するBCG開発のツール。",example:"例：スマートフォン事業（花形）・既存PC事業（金のなる木）"},
+      {term:"コアコンピタンス",def:"競合他社が容易に模倣できない企業固有の中核的な技術・能力・ノウハウ。持続的競争優位の源泉。ハメル＆プラハラードが提唱。",example:"例：ソニーの小型化技術、トヨタのカイゼン文化"},
+      {term:"バリューチェーン",def:"企業が顧客に提供する価値が生み出される一連の活動の連鎖。主活動（製造・販売・物流等）と支援活動（人事・調達・技術開発等）に分類。マイケル・ポーター提唱。",example:"例：農家（原料）→加工→物流→スーパー（販売）→顧客"},
+      {term:"差別化戦略",def:"価格以外の要素（品質・機能・ブランド・デザイン・サービス）で他社と差をつけ競争優位を築く戦略。コストより高い付加価値で顧客の選好を獲得。",example:"例：アップルのiPhone（デザイン・エコシステムで差別化）"},
+      {term:"STP（セグメンテーション・ターゲティング・ポジショニング）",def:"市場を細分化（S）→狙う顧客層を選定（T）→競合との差別化された位置づけを決定（P）するマーケティング戦略のフレームワーク。",example:"例：子育て主婦向け（S・T）、時短・安全食品（P）"},
+      {term:"製品ライフサイクル（PLC）",def:"製品が市場に投入されてから衰退するまでの導入期→成長期→成熟期→衰退期の4段階。各段階に応じたマーケティング戦略が必要。",example:"例：スマホ（成熟期）、AI端末（成長期）"},
+      {term:"リーダー・チャレンジャー・フォロワー・ニッチャー",def:"市場シェアポジションによる競争戦略の類型。リーダー（最大シェア）・チャレンジャー（2位以下で挑戦）・フォロワー（模倣）・ニッチャー（特定分野に特化）。",example:"例：コンビニ：セブン（リーダー）・ローソン（チャレンジャー）"},
+      {term:"アンゾフの成長マトリクス",def:"製品（既存・新規）と市場（既存・新規）の2軸で4つの成長戦略を示すフレームワーク。市場浸透→市場開発→製品開発→多角化の順にリスクが高まる。",example:"例：スタバ（既存製品×新市場）＝市場開発戦略"},
+      {term:"ポーターの5フォース",def:"業界の競争強度を決める5つの力：①競合他社②新規参入の脅威③代替品の脅威④買い手の交渉力⑤売り手の交渉力。この5力が弱い業界ほど収益性が高い。",example:"例：半導体業界：新規参入バリア高・買い手交渉力強"},
+      {term:"事業部制組織",def:"製品・地域・顧客別に自己完結した事業単位を持つ組織構造。各事業部が独立して意思決定できるが、機能の重複によるコスト増が課題。",example:"例：日立製作所の電機・建設機械・IT等の事業部制"},
+      {term:"マトリクス組織",def:"機能別組織と事業部制を組み合わせた二元的な命令系統を持つ組織形態。柔軟性が高いが二重権限による混乱が起きやすい。",example:"例：コンサルティング会社（プロジェクト軸×専門機能軸）"}
+    ]},
+    { name:"運営管理", cards:[
+      {term:"ジャスト・イン・タイム（JIT）",def:"「必要なものを必要なときに必要な量だけ」生産・調達するトヨタ生産方式の核心概念。在庫を最小化し、リードタイムを短縮する。",example:"例：かんばん方式で後工程の需要に応じて前工程が生産"},
+      {term:"PDCA",def:"品質管理・業務改善のサイクル。Plan（計画）→Do（実行）→Check（評価・検証）→Action（改善・標準化）の4段階を継続的に回す。",example:"例：月次目標設定→実行→月末に振り返り→翌月の改善計画"},
+      {term:"5S活動",def:"製造現場の改善の基礎となる活動。整理（不要品除去）・整頓（使いやすい配置）・清掃（きれいにする）・清潔（維持管理）・躾（習慣化）の5要素。",example:"例：工場の工具を定位置に置く・使ったら戻すを徹底"},
+      {term:"ABC分析",def:"在庫品目や顧客を重要度でA・B・Cにランク分けする管理手法。パレートの80-20の法則に基づき、全体の80%の売上/利益を生む20%の品目/顧客（Aランク）に経営資源を集中。",example:"例：上位20%の商品が売上の80%を占める→重点管理"},
+      {term:"損益分岐点（生産管理文脈）",def:"生産量（売上）と総コスト（固定費＋変動費）が等しくなる生産量。これ以上生産すれば利益が出る基準点。稼働率管理の基礎。",example:"例：固定費1,000万・変動費率60%→BEP売上2,500万"},
+      {term:"SCM（サプライチェーン・マネジメント）",def:"原材料の調達から製品が最終消費者に届くまでのサプライチェーン全体を一体的に管理・最適化する手法。在庫圧縮・リードタイム短縮・コスト削減が目的。",example:"例：コンビニが気象データを使って翌日の商品発注量を最適化"},
+      {term:"QC7つ道具",def:"品質管理で使う7つの統計的手法。パレート図・特性要因図（魚の骨）・ヒストグラム・散布図・管理図・層別・チェックシート。",example:"例：不良品の原因分析に特性要因図（なぜなぜ分析）を使用"},
+      {term:"かんばん方式",def:"後工程が前工程に生産指示を出す「引っ張り型」生産管理の仕組み。かんばん（指示票）が在庫補充のトリガーになる。JITを実現するトヨタ生産方式の代表的手法。",example:"例：スーパーの棚が空いたらバックヤードから商品を補充"},
+      {term:"定量発注方式",def:"在庫が一定量（発注点）を下回ったときに一定量を発注する方式。需要が安定している品目に適する。発注点＝リードタイム中の平均需要量＋安全在庫。",example:"例：在庫が10個を下回ったら100個発注する"},
+      {term:"VMD（ビジュアルマーチャンダイジング）",def:"店舗の視覚的な商品演出・陳列計画。ゴールデンゾーン（目線高さ70〜150cm）・エンドコーナー・フェイシングなどを活用して購買を促進。",example:"例：新商品をゴールデンゾーンに配置→売上3倍"},
+      {term:"ECRS",def:"作業改善の4原則。Eliminate（排除：その作業は本当に必要か）・Combine（結合：2つの作業を一つに）・Rearrange（交換：順序・場所を変える）・Simplify（簡素化：もっと簡単にできないか）",example:"例：書類確認と押印を同じ場所で行う（Combine）"},
+      {term:"ブルウィップ効果",def:"サプライチェーンで消費者に近い川下の需要変動が、川上（製造・原材料）に向かうにつれて増幅される現象。情報共有と需要予測の精度向上で緩和できる。",example:"例：コンビニで少し売れ残る→問屋が大量キャンセル→工場が過剰在庫"}
+    ]},
+    { name:"経営法務", cards:[
+      {term:"株主有限責任",def:"株式会社の株主は会社が倒産しても、出資額を上限とした責任しか負わない原則。個人財産は守られる。これが株式会社の最大のメリット。",example:"例：100万円で株を買った人は、会社が倒産しても最大100万円の損失"},
+      {term:"取締役会",def:"株式会社の業務執行の意思決定機関。3名以上の取締役で構成。重要な業務執行の決定と代表取締役の選解任を行う。",example:"例：工場新設（1億円の投資）は取締役会で決議が必要"},
+      {term:"特許権",def:"自然法則を利用した新規・進歩性のある技術的発明を保護する産業財産権。出願から20年間（医薬品は最大25年）保護される。",example:"例：新しい製造方法・機械の構造・化学物質の製法など"},
+      {term:"商標権",def:"自社の商品・サービスと他社を区別するマーク（文字・図形・立体等）を保護する権利。登録から10年（更新可能・半永久的保護）",example:"例：「iPhone」「コカ・コーラ」のロゴマーク"},
+      {term:"著作権",def:"思想・感情を創造的に表現した著作物（小説・音楽・絵画・プログラム等）を保護する権利。創作と同時に自動発生（登録不要）。保護期間は著者の死後70年。",example:"例：マンガ・写真・プログラムコードは著作権で保護"},
+      {term:"クーリングオフ",def:"訪問販売・電話勧誘販売などで契約した場合、一定期間内（訪問販売は8日間）であれば無条件で契約を解除できる制度。",example:"例：自宅に来た営業マンに押し売りされた商品を8日以内にキャンセル"},
+      {term:"36協定（サブロク協定）",def:"労働基準法36条に基づく労使協定。時間外労働・休日労働をさせるには事業所単位で締結し、労働基準監督署に届出が必要。",example:"例：繁忙期に月45時間までの残業を認める36協定を締結"},
+      {term:"民事再生",def:"経営難に陥った企業が裁判所の監督のもとで債務を圧縮しながら事業を継続する再建型倒産手続き。経営陣は原則続投。中小企業によく使われる。",example:"例：借金10億を2億に圧縮する再生計画を債権者が承認"},
+      {term:"不正競争防止法",def:"営業秘密の不正取得・使用、周知な商品表示の模倣、誇大な品質表示などを規制し、公正な競争を確保する法律。",example:"例：退職社員が顧客リストを持ち出す行為は違反"},
+      {term:"有限責任事業組合（LLP）",def:"全組合員が有限責任・内部自治の自由・構成員課税（パス・スルー課税）の3特徴を持つ事業形態。ベンチャー・共同研究に活用。",example:"例：スタートアップ企業の共同出資に利用"},
+      {term:"会社法上の機関",def:"株式会社の意思決定・業務執行・監督を行う機関の総称。株主総会（最高決議機関）・取締役会・代表取締役・監査役・会計監査人等で構成。",example:"例：配当の決議は株主総会、M&Aの承認も株主総会"},
+      {term:"労働契約法",def:"労働契約（雇用関係）の基本ルールを定めた法律。解雇は客観的合理的理由がなければ無効（解雇権濫用法理）、有期雇用の5年超は無期転換請求権が発生。",example:"例：「業績悪化」だけでは解雇できない、整理解雇4要件が必要"}
+    ]},
+    { name:"経営情報システム", cards:[
+      {term:"ERP（Enterprise Resource Planning）",def:"企業の基幹業務（会計・人事・販売・購買・在庫・生産）を統合的に管理するシステム。リアルタイムな情報共有と業務効率化を実現。代表製品：SAP・Oracle",example:"例：受注入力と同時に在庫・生産・売上が連動して更新される"},
+      {term:"CRM（Customer Relationship Management）",def:"顧客情報・購買履歴・問い合わせ履歴を一元管理し、顧客満足向上とリピート率改善を図るシステム・経営手法。",example:"例：通販サイトが購買履歴から「おすすめ商品」を提案"},
+      {term:"暗号化",def:"データを読めない形（暗号文）に変換して不正アクセスから守る技術。共通鍵暗号（AES）と公開鍵暗号（RSA）が代表的。HTTPSはSSL/TLSで通信を暗号化。",example:"例：オンラインバンキングのhttps://は通信が暗号化されている証"},
+      {term:"RDBMS（リレーショナルデータベース管理システム）",def:"テーブル（表）形式でデータを管理し、SQL言語で操作するデータベースシステム。データの整合性・セキュリティ・同時アクセス制御を担う。",example:"例：MySQL・PostgreSQL・Oracle・SQL Serverが代表製品"},
+      {term:"アジャイル開発",def:"短い開発サイクル（スプリント：2〜4週間）を繰り返し、顧客フィードバックを取り入れながら段階的にシステムを完成させる開発手法。変化への対応力が高い。",example:"例：毎月小さな機能をリリース→ユーザーの反応を見て改善"},
+      {term:"ランサムウェア",def:"感染したコンピュータのファイルを暗号化して使用不能にし、復号と引き換えに身代金（ランサム）を要求するマルウェア（悪意あるソフトウェア）。",example:"例：病院のシステムが感染し診療停止→多額の身代金要求"},
+      {term:"クラウドコンピューティング",def:"インターネット経由でサーバー・ストレージ・ソフトウェア等のITリソースをサービスとして利用する形態。IaaS・PaaS・SaaSの3種類がある。",example:"例：AWS・Azure・GCPがIaaS、Salesforce・Freeeがサービス（SaaS）"},
+      {term:"DX（デジタルトランスフォーメーション）",def:"デジタル技術（AI・IoT・クラウド等）を活用して業務プロセス・ビジネスモデル・組織文化を変革し、競争優位性を創出すること。",example:"例：銀行のシステム刷新、製造業のスマートファクトリー化"},
+      {term:"ウォーターフォールモデル",def:"要件定義→基本設計→詳細設計→実装→テスト→運用の各工程を順番に進めるシステム開発手法。計画しやすいが変更対応が困難。",example:"例：大規模な基幹システム刷新（数年プロジェクト）に採用"},
+      {term:"フィッシング詐欺",def:"銀行・通販サイト等を装った偽のメール・SMSで偽サイトに誘導し、ID・パスワード・クレジットカード情報を騙し取るサイバー攻撃。",example:"例：「Amazonアカウントの確認が必要」という偽メール"},
+      {term:"ITガバナンス",def:"企業がITを戦略的に活用し、リスク管理・コンプライアンスを確保するための仕組み・体制。取締役会レベルでITの意思決定を行う。",example:"例：COBIT（ITガバナンスのフレームワーク）"},
+      {term:"BI（ビジネスインテリジェンス）",def:"企業内の大量データを収集・分析・可視化して、経営判断を支援するシステム・手法。ダッシュボードでKPIをリアルタイム表示。",example:"例：売上・在庫・顧客動向を1画面で可視化して経営判断に活用"}
+    ]},
+    { name:"中小企業経営・中小企業政策", cards:[
+      {term:"中小企業基本法",def:"中小企業の定義と国・地方公共団体・大企業の責務を定めた基本法。1963年制定、1999年に大改正。中小企業を「活力ある独立した存在」として積極支援する方針に転換。",example:"例：中小企業の定義（製造業：資本金3億以下または従業員300人以下）"},
+      {term:"よろず支援拠点",def:"経済産業省・中小企業庁が全国47都道府県に設置した無料の経営相談窓口。売上拡大・資金繰り・IT活用・事業承継など多様な経営課題に対応。",example:"例：地元の商工会議所内に設置、予約不要で相談できる"},
+      {term:"ものづくり補助金",def:"中小企業・小規模事業者が行う革新的な設備投資・試作品開発・生産プロセス改善を支援する補助金。通常枠：補助率1/2・上限750万円等。採択率は約40〜50%。",example:"例：新型加工機械を2,000万円で購入→最大750万円補助"},
+      {term:"小規模事業者持続化補助金",def:"小規模事業者が行う販路開拓・業務効率化を支援する補助金。通常枠：補助率2/3・上限50万円。商工会議所・商工会が申請をサポート。",example:"例：チラシ作成・ホームページ制作・看板設置費用に活用"},
+      {term:"事業承継",def:"経営者が企業の経営権・資産・負債・従業員等を後継者に引き継ぐこと。親族内承継・従業員承継・M&A（第三者承継）の3類型がある。後継者難が深刻な社会問題。",example:"例：後継者がいない老舗旅館をM&Aで若い経営者に承継"},
+      {term:"経営革新計画",def:"中小企業が「新事業活動（新製品・新サービス・新販路開拓等）」の取組計画を作成し、都道府県知事等の承認を受ける制度。承認企業は低利融資・保証拡充等の支援を受けられる。",example:"例：伝統工芸品メーカーが海外販路開拓計画を申請・承認"},
+      {term:"信用保証協会",def:"中小企業が金融機関から融資を受ける際に保証人となる公的機関。担保・実績が少ない中小企業が融資を受けやすくする「信用補完制度」の中核。",example:"例：創業1年目で実績なし→信用保証協会の保証で銀行融資が可能に"},
+      {term:"日本政策金融公庫",def:"政府100%出資の政策金融機関。中小企業・農業・教育ローン等を低利・無担保で提供。特に創業期の企業や民間銀行が融資しにくい企業を支援。",example:"例：開業資金1,000万円を無担保・低利（1〜2%）で借入"},
+      {term:"IT導入補助金",def:"中小企業・小規模事業者がITツール（会計ソフト・顧客管理・ECサイト等）を導入する費用を補助する制度。補助率1/2〜2/3。業務効率化・デジタル化を後押し。",example:"例：クラウド会計ソフト導入費20万円→10万円補助"},
+      {term:"中小企業診断士",def:"唯一の経営コンサルタント国家資格。中小企業の経営診断・助言・経営計画策定を行う専門家。一次試験（7科目）→二次試験→実務補習で資格取得。5年ごとに更新。",example:"例：経営革新計画作成支援・金融機関との交渉支援・補助金申請サポート"},
+      {term:"BCP（事業継続計画）",def:"自然災害・感染症・ITシステム障害等の緊急事態が発生しても、事業を継続または早期に復旧するための計画。中小企業庁が認定制度を設けて策定を支援。",example:"例：コロナ禍でのテレワーク対応・工場の代替生産拠点確保計画"},
+      {term:"中小企業白書",def:"経済産業省・中小企業庁が毎年発行する中小企業の現状・課題・政策を網羅した年次報告書。試験に最新の統計データが出題される重要参考資料。",example:"例：中小企業数・開廃業率・DX進捗などの最新統計が記載"}
+    ]}
+  ]
+};
+
+// Compute all cards combined
+flashcardsData.all = flashcardsData.subjects.flatMap((s,si) => s.cards.map(c => ({...c, subject:s.name, subjectIdx:si})));
+
+// QUIZ DATA
+const quizData = {
+  subjects: [
+    { name:"経済学・経済政策", questions:[
+      {q:"価格が1%上昇したとき、需要量が3%減少した。この財の需要の価格弾力性はいくらか？",opts:["0.33","1","3","0.5"],ans:2,exp:"需要の価格弾力性＝需要量の変化率÷価格の変化率＝3%÷1%＝3。弾力性が1より大きいので「弾力的」な財です。"},
+      {q:"次のうち「拡張的財政政策」の例として正しいものはどれか？",opts:["増税と歳出削減","公共投資の増加と減税","政策金利の引き下げ","国債の買いオペレーション"],ans:1,exp:"拡張的財政政策は政府支出の増加（公共投資増）と減税により、景気を刺激する政策です。金利操作は金融政策（日銀の手段）です。"},
+      {q:"GDPの計算式（支出面）として正しいものはどれか？",opts:["消費＋貯蓄＋輸出","消費＋投資＋政府支出＋純輸出","生産額の合計","賃金＋利潤＋地代＋利子"],ans:1,exp:"GDP（支出面）＝民間消費＋民間投資＋政府支出＋（輸出－輸入）。この「純輸出（輸出－輸入）」がポイントです。"},
+      {q:"日本銀行が「量的緩和政策」を行う目的として最も適切なものはどれか？",opts:["財政赤字の削減","物価を下げてデフレを加速","市場にお金を供給し景気を刺激","為替レートを円高に誘導"],ans:2,exp:"量的緩和は国債等を大量購入して市場にお金を供給し、金利を低下させて景気刺激・デフレ脱却を目指す政策。日銀が2013年から実施したアベノミクスの中核策。"},
+      {q:"円高が進んだ場合の影響として正しいものはどれか？",opts:["輸出企業の円換算収益が増加","海外旅行の費用が安くなる","輸入品の価格が上昇","日本からの観光客が増える"],ans:1,exp:"円高（例：1ドル150円→100円）になると、海外でのドル建て価格は同じでも、日本円に換算すると少なくなる。つまり海外旅行が安くなり（外貨が少ない円で買える）輸入品も安くなります。"},
+      {q:"「ビルトインスタビライザー（自動安定化装置）」の例として適切なものはどれか？",opts:["公共工事の発注","中央銀行の公開市場操作","累進課税と失業保険","政府の緊急経済対策"],ans:2,exp:"ビルトインスタビライザーとは、景気変動に応じて自動的に作動する安定化機能。景気悪化時→税収減・失業給付増でショックを緩和。これは政府の裁量的な介入なしに自動で機能します。"},
+      {q:"比較優位の原理に基づく自由貿易の考え方として正しいのはどれか？",opts:["絶対的に優れた国だけが貿易から利益を得る","各国が相対的に得意な財の生産に特化すれば全員が豊かになる","貿易は常に黒字国が赤字国から搾取する","保護関税で自国産業を守るべきだ"],ans:1,exp:"リカードの比較優位論：たとえ全ての財で劣っている国でも、「相対的に得意」な財に特化して貿易することで双方が貿易前より豊かになれる。これが自由貿易の根拠。"},
+      {q:"インフレーションが加速しているとき、中央銀行が取るべき金融政策として適切なものはどれか？",opts:["政策金利を引き下げる","国債を大量に購入する","政策金利を引き上げる","財政支出を拡大するよう政府に要請する"],ans:2,exp:"インフレ加速時（景気過熱）→金利を引き上げる（引き締め的金融政策）。金利上昇により借入コストが増し、消費・投資が抑制されてインフレを鎮静化します。"}
+    ]},
+    { name:"財務・会計", questions:[
+      {q:"固定費が120万円、変動費率が40%のとき、損益分岐点売上高はいくらか？",opts:["200万円","300万円","180万円","240万円"],ans:0,exp:"損益分岐点売上高＝固定費÷（1－変動費率）＝120万÷（1－0.4）＝120万÷0.6＝200万円。この売上を超えた分が利益になります。"},
+      {q:"貸借対照表（BS）において、「流動資産÷流動負債×100」で計算される財務指標は何か？",opts:["自己資本比率","流動比率","総資本回転率","ROE"],ans:1,exp:"流動比率＝流動資産÷流動負債×100。短期的な支払い能力（安全性）を示す指標で、200%以上が理想的とされます。"},
+      {q:"損益計算書で「売上総利益」の計算式として正しいものはどれか？",opts:["売上高－販売費及び一般管理費","売上高－売上原価","営業利益＋営業外収益","経常利益－特別損失"],ans:1,exp:"売上総利益（粗利）＝売上高－売上原価。ここから販売費・一般管理費を引くと営業利益になります。"},
+      {q:"キャッシュフロー計算書の3区分として正しいものはどれか？",opts:["製造活動・販売活動・管理活動CF","営業活動・投資活動・財務活動CF","短期CF・中期CF・長期CF","固定CF・変動CF・特別CF"],ans:1,exp:"CF計算書は①営業活動CF（本業の現金収支）②投資活動CF（設備投資等）③財務活動CF（借入・返済・配当）の3区分。健全企業は営業CFがプラスであることが重要。"},
+      {q:"ROE（自己資本利益率）の計算式として正しいものはどれか？",opts:["営業利益÷総資産×100","当期純利益÷自己資本×100","経常利益÷売上高×100","純資産÷総資本×100"],ans:1,exp:"ROE＝当期純利益÷自己資本×100。株主が投じた資本に対してどれだけ利益を上げたかを示す。一般に10%以上が優良とされます。"},
+      {q:"「黒字倒産」が発生する原因として最も適切なものはどれか？",opts:["売上高が費用を下回った","利益は出ているが現金（キャッシュ）が不足した","自己資本比率が低すぎた","借入金の金利が高すぎた"],ans:1,exp:"黒字倒産は、PLでは利益が出ていても（黒字）、売掛金の回収遅れ等でキャッシュが枯渇して支払いができなくなること。だからCF管理が重要。"},
+      {q:"減価償却に関する記述として正しいものはどれか？",opts:["土地は毎年減価償却費を計上する","建物や機械は耐用年数にわたってコストを分割計上する","減価償却費は実際にキャッシュが出ていく費用である","減価償却は会社が任意に実施できる"],ans:1,exp:"減価償却は建物・機械等の固定資産の取得原価を耐用年数にわたって費用に配分する会計処理。土地は対象外。キャッシュアウトは資産購入時のみで、減価償却時はキャッシュが動かない（非現金費用）。"},
+      {q:"自己資本比率が50%の会社において、総資産が200億円の場合、純資産はいくらか？",opts:["50億円","100億円","150億円","200億円"],ans:1,exp:"自己資本比率＝純資産÷総資産×100なので、純資産＝総資産×自己資本比率＝200億×0.5＝100億円。"}
+    ]},
+    { name:"企業経営理論", questions:[
+      {q:"SWOT分析における「O（機会）」の例として最も適切なものはどれか？",opts:["自社の優れた技術力","競合他社の価格攻勢","高齢化社会による介護市場の拡大","自社の資金力不足"],ans:2,exp:"O（機会）は外部環境の中でプラスに作用する要因。高齢化という社会変化は介護・医療・健康食品等の市場拡大という「機会」になります。"},
+      {q:"ボストン・コンサルティング・グループのPPMで、「高市場成長率・高相対シェア」の事業を何と呼ぶか？",opts:["金のなる木","問題児","花形","負け犬"],ans:2,exp:"花形（Star）＝高成長・高シェア。将来有望だが成長のために多くの投資が必要。金のなる木が稼いだ利益を花形に投資するのがPPMの基本的な資源配分戦略。"},
+      {q:"マーケティングの4Pのうち「Place」が意味するものはどれか？",opts:["製品の価格設定","広告・プロモーション活動","流通チャネル・販売場所","製品の品質・機能"],ans:2,exp:"4PのPlace（場所・流通）は商品をどのチャネル（直販・卸・EC等）でどんな販売場所で売るかを決める要素。流通戦略とも呼ばれます。"},
+      {q:"「コアコンピタンス」を最も正確に説明しているものはどれか？",opts:["市場で最も大きなシェアを持つ強み","競合が容易に模倣できない企業固有の中核能力","財務的に最も収益性の高い事業領域","業界全体に通用する標準的な能力"],ans:1,exp:"コアコンピタンス（ハメル＆プラハラード）は「顧客に特定の利益をもたらし、競合他社が容易に模倣できない企業固有の能力」。持続的競争優位の源泉となります。"},
+      {q:"「STP分析」の正しい順序はどれか？",opts:["ポジショニング→セグメンテーション→ターゲティング","ターゲティング→ポジショニング→セグメンテーション","セグメンテーション→ターゲティング→ポジショニング","ターゲティング→セグメンテーション→ポジショニング"],ans:2,exp:"STP分析の順序：①Segmentation（市場を細分化）→②Targeting（狙う顧客層を選択）→③Positioning（競合との差別化した位置づけを決定）。この順序で行うことが重要。"},
+      {q:"ポーターの競争戦略における「集中戦略」の特徴として正しいものはどれか？",opts:["業界全体を対象に最低価格を実現する","特定の顧客・地域・製品に経営資源を集中する","全顧客に対して独自の付加価値を提供する","コストと差別化を同時に追求する"],ans:1,exp:"集中戦略は、特定のセグメント（ニッチ市場）に絞って、コスト優位または差別化を図る戦略。中小企業が大企業に対抗する際に有効なアプローチです。"},
+      {q:"アンゾフの成長マトリクスにおいて「既存製品×新市場」の成長戦略を何と呼ぶか？",opts:["市場浸透戦略","市場開発戦略","製品開発戦略","多角化戦略"],ans:1,exp:"市場開発戦略（Market Development）＝既存製品のまま新しい市場（新地域・新顧客層）を開拓する戦略。例：国内向け商品を海外に展開する。"},
+      {q:"「機能別組織」と「事業部制組織」を比較した場合の事業部制の特徴として正しいものはどれか？",opts:["専門化によるコスト削減が容易","各事業部の自律性が高く迅速な意思決定が可能","組織全体の統一的な管理がしやすい","機能部門間の情報共有が促進される"],ans:1,exp:"事業部制は製品・地域・顧客別に自己完結した事業単位を持つ。各事業部が独立して意思決定できるため、環境変化への対応が速い。ただし機能の重複によるコスト増が課題。"}
+    ]},
+    { name:"運営管理", questions:[
+      {q:"トヨタ生産方式の「ジャスト・イン・タイム（JIT）」の基本理念として最も正しいものはどれか？",opts:["できるだけ多くの在庫を持って欠品を防ぐ","必要なものを必要なときに必要な量だけ生産する","品質よりもスピードを優先して生産する","大量生産でコストを最小化する"],ans:1,exp:"JITは「必要なものを、必要なときに、必要な量だけ」生産・供給することで在庫を最小化し、リードタイムを短縮するトヨタ生産方式の核心概念。"},
+      {q:"QC（品質管理）の7つ道具のうち、「不良の原因と結果の関係を魚の骨の形で表す」図はどれか？",opts:["パレート図","ヒストグラム","特性要因図","管理図"],ans:2,exp:"特性要因図（石川ダイアグラム・フィッシュボーン図）は問題（特性）の原因となる要因を魚の骨のような形で整理する分析ツール。「なぜなぜ分析」と組み合わせて使用。"},
+      {q:"定量発注方式の特徴として正しいものはどれか？",opts:["一定の時間間隔で発注する","在庫が発注点を下回ったときに一定量を発注する","需要予測に基づいて毎回最適量を発注する","発注量は毎回異なる"],ans:1,exp:"定量発注方式（発注点方式）＝在庫が一定量（発注点）を下回ったときに決まった量を発注。需要が比較的安定した品目に適します。定期発注方式は一定間隔で在庫確認後に発注。"},
+      {q:"SCM（サプライチェーン・マネジメント）の目的として最も適切なものはどれか？",opts:["工場内の生産ラインを効率化する","原材料調達から消費者への販売まで全体を最適化する","顧客との関係を管理してリピートを増やす","会計・人事・販売を統合管理する"],ans:1,exp:"SCMは原材料調達→製造→物流→販売という一連のサプライチェーン全体を一体的に管理・最適化する手法。在庫圧縮・リードタイム短縮・コスト削減が主な目的。"},
+      {q:"ECRS原則のうち「E」が意味するものはどれか？",opts:["Extend（拡張）","Eliminate（排除）","Exchange（交換）","Enhance（強化）"],ans:1,exp:"ECRSはEliminate（排除・その作業は本当に必要か）→Combine（結合・2つを一つに）→Rearrange（交換・順序・場所を変える）→Simplify（簡素化・もっと簡単に）の4原則で作業改善を行うIEの考え方。"},
+      {q:"ABC分析を在庫管理に適用する場合、「Aランク」品目の管理方法として最も適切なものはどれか？",opts:["簡略化した管理で手間を省く","重点的に詳細管理を行う","定期的に廃棄・削減を検討する","他のランクと同一の管理方法をとる"],ans:1,exp:"ABC分析：A（上位20%品目が売上の80%）→重点管理（詳細な在庫記録・頻繁な発注）、B→標準管理、C→簡略管理。パレートの80-20の法則を応用した優先管理手法。"},
+      {q:"製造業における「ボトルネック工程」の説明として正しいものはどれか？",opts:["最も低コストで効率的な工程","全工程の中で処理能力が最も低く、生産全体のスピードを制約する工程","品質基準が最も厳しい工程","自動化が最も進んでいる工程"],ans:1,exp:"ボトルネック工程は生産ライン全体の中で処理能力が最低の工程。水の流れで瓶の首が細い部分が流量を制限するのと同じ。全体の生産量はボトルネックの処理能力で決まるため、改善優先度が最も高い。"},
+      {q:"「5S活動」の5つの要素として正しいものはどれか？",opts:["生産・品質・安全・コスト・納期","計画・実行・確認・改善・標準化","整理・整頓・清掃・清潔・躾","戦略・組織・システム・スキル・スタイル"],ans:2,exp:"5S＝整理（不要品を除去）・整頓（使いやすい配置）・清掃（きれいにする）・清潔（維持する）・躾（習慣化する）。製造現場改善の基本で、安全性・品質・効率向上に直結。"}
+    ]},
+    { name:"経営法務", questions:[
+      {q:"株式会社における「株主有限責任の原則」とはどういうことか？",opts:["株主は会社の全ての負債に無制限の責任を負う","株主は出資額を限度とした責任のみ負う","株主は経営の結果に対して無制限に責任を負う","株主は会社の損失を個人資産で必ず補填する"],ans:1,exp:"株主有限責任の原則：株主が負う責任は自分が出資した金額が上限。会社が倒産しても個人財産は取られない。これが株式会社が資本調達しやすい最大の理由。"},
+      {q:"特許権の保護期間として正しいものはどれか？",opts:["権利者の死後50年","出願日から10年","出願日から20年","登録日から永続的に保護"],ans:2,exp:"特許権の保護期間は出願日から20年（通常）。医薬品・農薬の特許は最大5年の延長が可能で25年まで保護されます。実用新案は出願から10年。"},
+      {q:"「クーリングオフ制度」が適用される取引として正しいものはどれか？",opts:["コンビニでの商品購入","インターネット通販での購入","自宅への訪問販売","百貨店での高額商品の購入"],ans:2,exp:"クーリングオフは訪問販売・電話勧誘販売など消費者が十分な検討なしに契約させられる場面に適用。訪問販売は8日間以内なら無条件解除可能。インターネット通販は原則対象外（特定商取引法の別途規制あり）。"},
+      {q:"著作権に関する説明として正しいものはどれか？",opts:["特許庁に登録しないと保護されない","創作と同時に自動的に発生する","保護期間は著作者の生存中のみ","著作権は財産権のみで人格権はない"],ans:1,exp:"著作権は「創作と同時に自動的に発生する」権利（無方式主義）。登録不要。著作財産権と著作人格権の二つがあり、著作財産権の保護期間は著者の死後70年。"},
+      {q:"「36協定（時間外・休日労働に関する協定）」に関する記述として正しいものはどれか？",opts:["締結すれば時間外労働を無制限に命じることができる","締結せずとも時間外労働は可能","締結後に労働基準監督署に届け出る必要がある","正社員にのみ適用される"],ans:2,exp:"36協定は締結だけでなく労働基準監督署への届出も必要。また2019年の働き方改革で上限規制（月45時間・年360時間が原則上限）が導入されました。"},
+      {q:"会社が経営危機に陥ったとき、経営陣が続投したまま債務を圧縮して事業を継続できる再建型の法的手続きはどれか？",opts:["破産手続き","会社清算","民事再生手続き","強制競売"],ans:2,exp:"民事再生は経営陣が続投したまま裁判所の監督下で事業継続しながら債務を圧縮する再建型手続き。中小企業に多く使われる。会社更生は大企業向けで経営陣が原則交代。"},
+      {q:"「不正競争防止法」が禁止する行為として正しいものはどれか？",opts:["正当な競合他社の製品を宣伝で批判する","退職した従業員が自ら起業する","会社の営業秘密を不正に取得・使用する","安い価格で競合より先に販売する"],ans:2,exp:"不正競争防止法は①周知・著名な商品表示の模倣②営業秘密の不正取得・使用③品質等の誤認惹起行為等を規制。退職者の起業や価格競争は原則自由。"},
+      {q:"労働基準法における法定労働時間として正しいものはどれか？",opts:["週35時間・1日7時間","週40時間・1日8時間","週45時間・1日9時間","週48時間・1日10時間"],ans:1,exp:"労働基準法第32条：労働時間は週40時間・1日8時間が上限（法定労働時間）。これを超える時間外労働には36協定の締結と割増賃金（1.25倍以上）の支払いが必要。"}
+    ]},
+    { name:"経営情報システム", questions:[
+      {q:"「ERP」の正式名称と主な目的として正しいものはどれか？",opts:["External Relationship Platform：顧客との関係管理","Enterprise Resource Planning：基幹業務を統合管理","Electronic Retail Process：電子商取引管理","Efficient Risk Protection：リスク管理システム"],ans:1,exp:"ERP（企業資源計画）は、会計・人事・販売・購買・在庫・生産など企業の基幹業務を一つのシステムで統合管理するソフトウェア。SAP・Oracleが代表製品。"},
+      {q:"インターネットの通信プロトコルとして最も基本的なものはどれか？",opts:["HTTP","TCP/IP","HTML","SQL"],ans:1,exp:"TCP/IPはインターネットの基盤となる通信プロトコル（ルールの集まり）。IPがデータの宛先（住所）を管理し、TCPが確実なデータ転送を保証。HTTPはWebの通信プロトコルでTCP/IPの上で動く。"},
+      {q:"「フィッシング詐欺」の手口として正しいものはどれか？",opts:["コンピュータに無断でソフトをインストールする","偽のメール・サイトでIDやパスワードを騙し取る","大量のデータを送りつけてサーバーをダウンさせる","ファイルを暗号化して身代金を要求する"],ans:1,exp:"フィッシング（Phishing）は、銀行やECサイトを装った偽メールで偽サイトに誘導し、ログイン情報・クレジットカード番号を騙し取る手口。大量データ攻撃はDoS攻撃、身代金はランサムウェア。"},
+      {q:"情報セキュリティの「CIA」が意味する3要素として正しいものはどれか？",opts:["競合・革新・優位性","機密性・完全性・可用性","顧客・革新・分析","中央情報局・国際機関・連合"],ans:1,exp:"情報セキュリティのCIA：Confidentiality（機密性：許可された人だけがアクセスできる）・Integrity（完全性：データが改ざんされていない）・Availability（可用性：必要なときに使える）。"},
+      {q:"「アジャイル開発」の特徴として最も適切なものはどれか？",opts:["要件を最初に全て確定してから開発を始める","短い開発サイクルを繰り返して段階的に機能を完成させる","外部委託で開発期間を最短にする","大規模システム開発で計画通りに進める"],ans:1,exp:"アジャイル開発はスプリント（2〜4週間）を繰り返し、各スプリントで動くソフトウェアをリリース→フィードバック→改善を続ける手法。変化への対応力が高い。"},
+      {q:"「クラウドコンピューティング」のSaaS（Software as a Service）の例として最も適切なものはどれか？",opts:["サーバーの仮想化環境を提供するサービス","開発環境（OS・DB）をネット経由で提供するサービス","ソフトウェアをインターネット経由で利用するサービス","データセンターの建物を貸し出すサービス"],ans:2,exp:"SaaSはソフトウェアをインターネット経由でサービスとして提供。例：Gmail・Salesforce・freee・Office365。ユーザーはインストール不要でブラウザから利用できる。"},
+      {q:"「正規化」をデータベース設計の文脈で説明した場合、最も正しいものはどれか？",opts:["データを圧縮してストレージを節約すること","データの重複を排除して一貫性を保つテーブル設計","データをABC順に並び替えること","暗号化でデータを守ること"],ans:1,exp:"正規化はデータベースのテーブル設計において、データの重複を排除し更新異常を防ぐための設計手法。第1〜第3正規形があり、適切に正規化することでデータの整合性が保たれる。"},
+      {q:"「DX（デジタルトランスフォーメーション）」の説明として最も適切なものはどれか？",opts:["社内のペーパーレス化（紙の電子化）","IT部門を設置してシステム管理を強化すること","デジタル技術を活用してビジネスモデルや組織を変革すること","ERPシステムを導入して業務効率化を図ること"],ans:2,exp:"DXはITによる単なる業務効率化（デジタイゼーション）を超え、デジタル技術でビジネスモデル・組織文化・提供価値そのものを変革すること。ペーパーレスや業務システム導入はDXの入口に過ぎない。"}
+    ]},
+    { name:"中小企業経営・中小企業政策", questions:[
+      {q:"中小企業基本法に基づく「製造業等」の中小企業の定義として正しいものはどれか？",opts:["資本金1億円以下または従業員100人以下","資本金3億円以下または従業員300人以下","資本金5千万円以下または従業員50人以下","資本金10億円以下または従業員1,000人以下"],ans:1,exp:"製造業等の中小企業：資本金3億円以下 または 従業員300人以下。卸売業：1億以下または100人以下。小売業：5,000万以下または50人以下。サービス業：5,000万以下または100人以下。"},
+      {q:"「よろず支援拠点」の説明として正しいものはどれか？",opts:["都道府県が運営する有料の経営コンサルティング機関","中小企業庁が全都道府県に設置した無料の経営相談窓口","商工会議所が独自に運営する会員向けサービス","政府系金融機関の窓口"],ans:1,exp:"よろず支援拠点は経済産業省・中小企業庁が全国47都道府県に設置した無料の経営相談窓口。売上拡大・資金繰り・人材・IT活用・事業承継など幅広い経営課題に対応。"},
+      {q:"「ものづくり補助金」の対象として正しいものはどれか？",opts:["新入社員の採用費用","広告・チラシの制作費","革新的な設備投資・試作品開発・生産プロセス改善","社員旅行・福利厚生費"],ans:2,exp:"ものづくり補助金は中小企業が行う革新的な設備投資・試作品開発・生産プロセス改善を支援（補助率1/2等）。広告費は小規模事業者持続化補助金、採用費は雇用関係助成金が対応。"},
+      {q:"中小企業が金融機関から融資を受ける際、担保・実績が少なくても保証人となってくれる公的機関はどれか？",opts:["日本銀行","財務省","信用保証協会","中小企業基盤整備機構"],ans:2,exp:"信用保証協会は中小企業の融資保証を行う公的機関。担保・信用力が十分でない中小企業も信用保証協会の保証があれば金融機関から融資を受けやすくなる（信用補完制度）。"},
+      {q:"「事業承継」の方法として挙げられる3つのうち、「M&A（第三者承継）」の特徴として正しいものはどれか？",opts:["後継者不在でも事業を継続できる","社内の人材育成に長期間が必要","親族への税負担が最も大きい","従業員のモチベーション低下が課題にならない"],ans:0,exp:"M&A（第三者承継）は後継者がいない場合でも外部の企業・個人に事業を売却して存続させられる。後継者難が深刻な中小企業では有効な選択肢。売却益を得られるメリットもある。"},
+      {q:"「経営革新計画」の承認を受けた中小企業が受けられるメリットとして正しいものはどれか？",opts:["法人税が恒久的に免除される","低利融資・信用保証の特例など各種支援が受けられる","補助金が申請不要で自動的に支給される","中小企業診断士の資格が付与される"],ans:1,exp:"経営革新計画の承認企業は：①低利融資（政策公庫・商工中金）②信用保証の特例③補助金申請時の加点などの支援が受けられる。法人税免除や自動補助金はない。"},
+      {q:"中小企業診断士に関する記述として正しいものはどれか？",opts:["中小企業の資金調達を直接行う金融機関","唯一の経営コンサルタントの国家資格","税務申告を代行できる税務の専門家","中小企業のみ支援できる","法律的な問題を代理で解決する専門家"],ans:1,exp:"中小企業診断士は経営コンサルタントの唯一の国家資格（中小企業支援法に基づく）。経営診断・助言が主業務。税務申告は税理士、法律手続きは弁護士・司法書士が担う。"},
+      {q:"「BCP（事業継続計画）」の説明として最も正しいものはどれか？",opts:["毎年の事業計画・予算計画","緊急事態が発生しても事業を継続または早期復旧するための計画","銀行への返済計画","環境への配慮を示すCSR計画"],ans:1,exp:"BCP（Business Continuity Plan）は自然災害・感染症・サイバー攻撃等の緊急事態が発生しても、重要な業務を継続または早期に再開するための計画。コロナ禍でその重要性が再認識された。"}
+    ]}
+  ]
+};
+
+// ===================== STATE =====================
+let currentSlideSubject = 0;
+let currentSlide = 0;
+let currentFCSubject = 0;
+let currentCard = 0;
+let fcCards = [];
+let fcKnewSet = new Set();
+let fcAgainSet = new Set();
+let cardFlipped = false;
+let currentQuizSubject = 0;
+let quizQuestions = [];
+let currentQuestion = 0;
+let quizCorrect = 0;
+let quizAnswered = 0;
+let answered = false;
+
+// ===================== INIT =====================
+function init() {
+  const saved = JSON.parse(localStorage.getItem('shindanshi_progress') || '{}');
+  if (saved.fcKnew) fcKnewSet = new Set(saved.fcKnew);
+  if (saved.fcAgain) fcAgainSet = new Set(saved.fcAgain);
+  loadSlide();
+  loadFC();
+  loadQuiz();
 }
 
-function saveProgress() { localStorage.setItem('chusho_progress', JSON.stringify(progress)); }
-
-// ========== Navigation ==========
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  const items = document.querySelectorAll('.nav-item');
-  const map = { home: 0, flashcard: 1, quiz: 2, guide: 3 };
-  items[map[id]]?.classList.add('active');
-  if (id === 'flashcard') initFlashcard();
-  if (id === 'quiz') renderQuizPage();
-  if (id === 'guide') renderGuide();
+function saveProgress() {
+  localStorage.setItem('shindanshi_progress', JSON.stringify({
+    fcKnew: [...fcKnewSet],
+    fcAgain: [...fcAgainSet]
+  }));
 }
 
-// ========== Render All ==========
-function renderAll() {
-  renderSidebar();
-  renderHome();
-  renderFlashcardFilters();
-  renderQuizFilters();
+// ===================== TAB NAVIGATION =====================
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  const idx = ['roadmap','slides','flashcards','quiz'].indexOf(tab);
+  document.querySelectorAll('nav button')[idx].classList.add('active');
 }
 
-function renderSidebar() {
-  const el = document.getElementById('sidebar-subjects');
-  el.innerHTML = data.subjects.map(s => {
-    const p = progress[s.id];
-    const pct = p.quiz_total > 0 ? Math.round(p.quiz_correct / p.quiz_total * 100) : 0;
-    return `<div class="nav-item" onclick="showPage('guide')">
-      <span class="nav-dot" style="background:${s.color}"></span>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
-        <div class="progress-bar" style="margin-top:4px"><div class="progress-fill" style="width:${pct}%;background:${s.color}"></div></div>
-      </div>
-      <span style="font-size:10px;color:var(--text-muted)">${pct}%</span>
-    </div>`;
-  }).join('');
-}
-
-function renderHome() {
-  const totalQ = data.subjects.reduce((a, s) => a + progress[s.id].quiz_total, 0);
-  const correctQ = data.subjects.reduce((a, s) => a + progress[s.id].quiz_correct, 0);
-  const totalFC = data.subjects.reduce((a, s) => a + progress[s.id].fc_total, 0);
-  const knownFC = data.subjects.reduce((a, s) => a + progress[s.id].fc_known, 0);
-  const acc = totalQ > 0 ? Math.round(correctQ / totalQ * 100) : 0;
-
-  document.getElementById('home-stats').innerHTML = `
-    <div class="stat-card"><div class="label">演習問題数</div><div class="value">${totalQ}</div><div class="sub">問解答済み</div></div>
-    <div class="stat-card"><div class="label">正答率</div><div class="value">${acc}<span style="font-size:16px">%</span></div><div class="sub">目標: 60%以上</div></div>
-    <div class="stat-card"><div class="label">カード習得</div><div class="value">${knownFC}<span style="font-size:16px">/${totalFC}</span></div><div class="sub">フラッシュカード</div></div>
-    <div class="stat-card"><div class="label">科目数</div><div class="value">7</div><div class="sub">科目 対応済み</div></div>
-  `;
-
-  document.getElementById('home-subjects').innerHTML = data.subjects.map(s => {
-    const p = progress[s.id];
-    const pct = p.quiz_total > 0 ? Math.round(p.quiz_correct / p.quiz_total * 100) : 0;
-    const fcPct = Math.round(p.fc_known / p.fc_total * 100);
-    return `<div class="subject-card" onclick="startSubject('${s.id}')">
-      <div class="subject-card-header">
-        <div class="subject-icon" style="background:${s.color}22;color:${s.color}">${s.emoji}</div>
-        <div>
-          <h3>${s.name}</h3>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${s.questions.length}問 / ${s.flashcards.length}カード</div>
-        </div>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${s.color}"></div></div>
-      <div class="stats-row">
-        <span>正答率 ${pct}%</span>
-        <span>カード習得 ${fcPct}%</span>
-        <span>演習 ${p.quiz_total}回</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function startSubject(id) {
-  selectedSubjects = new Set([id]);
-  document.querySelectorAll('.filter-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.id === id || b.dataset.id === 'all' && false);
-  });
-  showPage('quiz');
-  startQuiz();
-}
-
-// ========== Flashcard ==========
-function renderFlashcardFilters() {
-  const el = document.getElementById('fc-filter');
-  el.innerHTML = `<button class="filter-btn active" data-id="all" onclick="fcFilter('all',this)">全科目</button>` +
-    data.subjects.map(s => `<button class="filter-btn" data-id="${s.id}" onclick="fcFilter('${s.id}',this)" style="--c:${s.color}">${s.emoji} ${s.name}</button>`).join('');
-}
-
-function fcFilter(id, btn) {
-  document.querySelectorAll('#fc-filter .filter-btn').forEach(b => b.classList.remove('active'));
+// ===================== SLIDES =====================
+function selectSlideSubject(idx, btn) {
+  currentSlideSubject = idx;
+  currentSlide = 0;
+  document.querySelectorAll('#slideSubjectBtns button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  fcState.subject = id === 'all' ? null : id;
-  initFlashcard();
+  loadSlide();
 }
 
-function initFlashcard() {
-  let cards = [];
-  data.subjects.forEach(s => {
-    if (!fcState.subject || fcState.subject === s.id) {
-      s.flashcards.forEach(c => cards.push({ ...c, subjectName: s.name, subjectId: s.id }));
-    }
-  });
-  cards = shuffle(cards);
-  fcState.cards = cards;
-  fcState.index = 0;
-  fcState.flipped = false;
-  renderFlashcard();
+function loadSlide() {
+  const slides = slidesData[currentSlideSubject];
+  const s = slides[currentSlide];
+  const total = slides.length;
+  document.getElementById('slideNumLabel').textContent = `スライド ${currentSlide+1}/${total}`;
+  document.getElementById('slideProgressBar').style.width = `${((currentSlide+1)/total)*100}%`;
+  document.getElementById('slideCounter').textContent = `${currentSlide+1} / ${total}`;
+  document.getElementById('btnPrev').disabled = currentSlide === 0;
+  document.getElementById('btnNext').disabled = currentSlide === total-1;
+  document.getElementById('slideContent').innerHTML = `
+    <h2>${s.title}</h2>
+    <div class="slide-body">${s.content}</div>
+    <div class="analogy-box">
+      <div class="icon">${s.analogy.icon}</div>
+      <h4>${s.analogy.title}</h4>
+      <p style="font-size:.88rem;color:#334155;margin:0">${s.analogy.text}</p>
+    </div>
+    <div class="key-points">
+      <h4>📌 重要ポイント</h4>
+      <ul>${s.points.map(p=>`<li>${p}</li>`).join('')}</ul>
+    </div>
+  `;
 }
 
-function renderFlashcard() {
-  const { cards, index } = fcState;
-  if (!cards.length) return;
-  const card = cards[index];
-  document.getElementById('fc-term').textContent = card.term;
-  document.getElementById('fc-def').textContent = card.definition;
-  document.getElementById('fc-counter').textContent = `${index + 1} / ${cards.length}`;
-  document.getElementById('fc-subject-name').textContent = card.subjectName;
-  document.getElementById('flashcard').classList.remove('flipped');
-  fcState.flipped = false;
+function changeSlide(dir) {
+  const slides = slidesData[currentSlideSubject];
+  currentSlide = Math.max(0, Math.min(slides.length-1, currentSlide + dir));
+  loadSlide();
+}
+
+// ===================== FLASHCARDS =====================
+function selectFCSubject(idx, btn) {
+  currentFCSubject = idx;
+  currentCard = 0;
+  document.querySelectorAll('#fcSubjectBtns button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadFC();
+}
+
+function loadFC() {
+  if (currentFCSubject === 0) {
+    fcCards = flashcardsData.all;
+  } else {
+    fcCards = flashcardsData.subjects[currentFCSubject-1].cards.map(c => ({...c, subject: flashcardsData.subjects[currentFCSubject-1].name}));
+  }
+  currentCard = 0;
+  updateFCStats();
+  showCard();
+}
+
+function updateFCStats() {
+  document.getElementById('fcTotal').textContent = fcCards.length;
+  document.getElementById('fcKnew').textContent = fcCards.filter((_,i) => fcKnewSet.has(getCardId(i))).length;
+  document.getElementById('fcAgain').textContent = fcCards.filter((_,i) => fcAgainSet.has(getCardId(i))).length;
+  document.getElementById('fcRemain').textContent = fcCards.filter((_,i) => !fcKnewSet.has(getCardId(i)) && !fcAgainSet.has(getCardId(i))).length;
+}
+
+function getCardId(idx) {
+  const c = fcCards[idx];
+  return (c.subject || '') + '::' + c.term;
+}
+
+function showCard() {
+  if (!fcCards.length) return;
+  const c = fcCards[currentCard];
+  document.getElementById('fcTerm').textContent = c.term;
+  document.getElementById('fcDef').textContent = c.def;
+  document.getElementById('fcExample').textContent = c.example;
+  document.getElementById('fcCounter').textContent = `${currentCard+1} / ${fcCards.length}`;
+  cardFlipped = false;
+  document.getElementById('flashCard').classList.remove('flipped');
+  document.getElementById('cardActions').style.display = 'none';
 }
 
 function flipCard() {
-  fcState.flipped = !fcState.flipped;
-  document.getElementById('flashcard').classList.toggle('flipped', fcState.flipped);
+  cardFlipped = !cardFlipped;
+  document.getElementById('flashCard').classList.toggle('flipped', cardFlipped);
+  if (cardFlipped) document.getElementById('cardActions').style.display = 'flex';
 }
 
-function fcNext() {
-  if (fcState.index < fcState.cards.length - 1) { fcState.index++; renderFlashcard(); }
-}
-function fcPrev() {
-  if (fcState.index > 0) { fcState.index--; renderFlashcard(); }
-}
-function fcResult(known) {
-  const card = fcState.cards[fcState.index];
-  if (card) {
-    const p = progress[card.subjectId];
-    if (known && p.fc_known < p.fc_total) { p.fc_known++; saveProgress(); renderSidebar(); renderHome(); }
-  }
-  fcNext();
+function markCard(knew) {
+  const id = getCardId(currentCard);
+  if (knew) { fcKnewSet.add(id); fcAgainSet.delete(id); }
+  else { fcAgainSet.add(id); fcKnewSet.delete(id); }
+  saveProgress();
+  updateFCStats();
+  nextCard();
 }
 
-// ========== Quiz ==========
-function renderQuizFilters() {
-  const el = document.getElementById('quiz-filter');
-  el.innerHTML = `<button class="filter-btn active" data-id="all" onclick="qFilter('all',this)">全科目</button>` +
-    data.subjects.map(s => `<button class="filter-btn" data-id="${s.id}" onclick="qFilter('${s.id}',this)">${s.emoji} ${s.name}</button>`).join('');
+function nextCard() {
+  if (currentCard < fcCards.length-1) { currentCard++; showCard(); }
+}
+function prevCard() {
+  if (currentCard > 0) { currentCard--; showCard(); }
 }
 
-function qFilter(id, btn) {
-  document.querySelectorAll('#quiz-filter .filter-btn').forEach(b => b.classList.remove('active'));
+// ===================== QUIZ =====================
+function selectQuizSubject(idx, btn) {
+  currentQuizSubject = idx;
+  document.querySelectorAll('#quizSubjectBtns button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  selectedSubjects = id === 'all' ? new Set(data.subjects.map(s => s.id)) : new Set([id]);
+  resetQuiz();
 }
 
-function startQuiz() {
-  let questions = [];
-  data.subjects.forEach(s => {
-    if (selectedSubjects.has(s.id)) {
-      s.questions.forEach(q => questions.push({ ...q, subjectName: s.name, subjectId: s.id, subjectColor: s.color }));
-    }
-  });
-  questions = shuffle(questions).slice(0, 10);
-  quizState = { questions, index: 0, answered: false, results: [] };
-  renderQuizQuestion();
-}
-
-function renderQuizPage() {
-  if (!quizState.questions.length) {
-    document.getElementById('quiz-container').innerHTML = `
-      <div style="text-align:center;padding:60px;color:var(--text-muted)">
-        <div style="font-size:40px;margin-bottom:16px">📝</div>
-        <p>「新しいクイズ開始」をクリックして演習を始めましょう</p>
-      </div>`;
+function resetQuiz() {
+  if (currentQuizSubject === 0) {
+    quizQuestions = quizData.subjects.flatMap(s => s.questions.map(q => ({...q, subject: s.name})));
+  } else {
+    quizQuestions = quizData.subjects[currentQuizSubject-1].questions.map(q => ({...q, subject: quizData.subjects[currentQuizSubject-1].name}));
   }
+  quizQuestions = shuffle([...quizQuestions]);
+  currentQuestion = 0;
+  quizCorrect = 0;
+  quizAnswered = 0;
+  updateQuizScore();
+  loadQuestion();
 }
 
-function renderQuizQuestion() {
-  const { questions, index } = quizState;
-  if (index >= questions.length) { renderResults(); return; }
-  const q = questions[index];
-  const pct = Math.round(index / questions.length * 100);
+function loadQuiz() { resetQuiz(); }
 
-  document.getElementById('quiz-container').innerHTML = `
-    <div class="quiz-area">
-      <div class="quiz-progress">
-        <div class="quiz-progress-text"><span>問題 ${index + 1} / ${questions.length}</span><span>${pct}%</span></div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:var(--accent)"></div></div>
+function shuffle(arr) {
+  for (let i = arr.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function updateQuizScore() {
+  document.getElementById('qCorrect').textContent = quizCorrect;
+  document.getElementById('qTotal2').textContent = quizAnswered;
+  document.getElementById('qPercent').textContent = quizAnswered > 0 ? Math.round(quizCorrect/quizAnswered*100)+'%' : '-%';
+}
+
+function loadQuestion() {
+  answered = false;
+  if (currentQuestion >= quizQuestions.length) {
+    showComplete();
+    return;
+  }
+  const q = quizQuestions[currentQuestion];
+  const html = `
+    <div class="question-card">
+      <div class="q-num">問題 ${currentQuestion+1} / ${quizQuestions.length}${q.subject ? ' — ' + q.subject : ''}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="options" id="optionsList">
+        ${q.opts.map((opt,i) => `<button class="option" onclick="selectAnswer(${i})" id="opt${i}">${String.fromCharCode(65+i)}. ${opt}</button>`).join('')}
       </div>
-      <div class="quiz-question">
-        <div class="quiz-subject-tag" style="color:${q.subjectColor};background:${q.subjectColor}22">${q.subjectName}</div>
-        <h3>${q.question}</h3>
-      </div>
-      <div class="choices">
-        ${q.choices.map((c, i) => `
-          <div class="choice" id="choice-${i}" onclick="selectAnswer(${i})">
-            <span class="choice-letter">${['A','B','C','D'][i]}</span>
-            <span>${c}</span>
-          </div>`).join('')}
-      </div>
-      <div class="explanation" id="explanation">
-        <strong>解説：</strong> ${q.explanation}
-      </div>
+      <div id="feedback"></div>
       <div class="quiz-nav">
-        <span id="answer-feedback" style="font-size:14px;font-weight:600"></span>
-        <button class="btn btn-primary" id="next-btn" style="display:none" onclick="nextQuestion()">次の問題 →</button>
+        <button class="btn-secondary" onclick="resetQuiz()">🔄 リセット</button>
+        <button class="btn-primary" id="btnNextQ" onclick="nextQuestion()" style="display:none">次の問題 →</button>
       </div>
-    </div>`;
+    </div>
+  `;
+  document.getElementById('quizArea').innerHTML = html;
 }
 
 function selectAnswer(idx) {
-  if (quizState.answered) return;
-  quizState.answered = true;
-  const q = quizState.questions[quizState.index];
-  const correct = idx === q.answer;
-
-  document.querySelectorAll('.choice').forEach((el, i) => {
-    el.classList.add('disabled');
-    if (i === q.answer) el.classList.add('correct');
-    if (i === idx && !correct) el.classList.add('wrong');
+  if (answered) return;
+  answered = true;
+  quizAnswered++;
+  const q = quizQuestions[currentQuestion];
+  const isCorrect = idx === q.ans;
+  if (isCorrect) quizCorrect++;
+  updateQuizScore();
+  document.querySelectorAll('.option').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === idx && !isCorrect) btn.classList.add('wrong');
   });
-
-  document.getElementById('explanation').classList.add('show');
-  document.getElementById('answer-feedback').textContent = correct ? '✓ 正解！' : '✗ 不正解';
-  document.getElementById('answer-feedback').style.color = correct ? 'var(--success)' : 'var(--error)';
-  document.getElementById('next-btn').style.display = 'block';
-
-  const p = progress[q.subjectId];
-  p.quiz_total++;
-  if (correct) p.quiz_correct++;
-  quizState.results.push({ correct, question: q });
-  saveProgress();
-  renderSidebar();
-  renderHome();
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+  fb.innerHTML = `<strong>${isCorrect ? '✅ 正解！' : '❌ 不正解'}</strong><br>${q.exp}`;
+  document.getElementById('btnNextQ').style.display = 'inline-block';
 }
 
 function nextQuestion() {
-  quizState.index++;
-  quizState.answered = false;
-  renderQuizQuestion();
+  currentQuestion++;
+  loadQuestion();
 }
 
-function renderResults() {
-  const { results } = quizState;
-  const correct = results.filter(r => r.correct).length;
-  const pct = Math.round(correct / results.length * 100);
-  const grade = pct >= 70 ? '合格圏！' : pct >= 60 ? 'もう少し！' : '要復習';
-
-  document.getElementById('quiz-container').innerHTML = `
-    <div class="results">
-      <div class="score">${pct}<span style="font-size:24px">%</span></div>
-      <div class="score-label">${grade}</div>
-      <div class="breakdown">
-        <div class="breakdown-item"><div class="val" style="color:var(--success)">${correct}</div><div class="lbl">正解</div></div>
-        <div class="breakdown-item"><div class="val" style="color:var(--error)">${results.length - correct}</div><div class="lbl">不正解</div></div>
-        <div class="breakdown-item"><div class="val">${results.length}</div><div class="lbl">合計</div></div>
+function showComplete() {
+  const pct = quizAnswered > 0 ? Math.round(quizCorrect/quizAnswered*100) : 0;
+  let msg = pct >= 80 ? '🎉 素晴らしい！合格圏内です！' : pct >= 60 ? '👍 もう少しで合格ライン！' : '📚 復習して再チャレンジ！';
+  document.getElementById('quizArea').innerHTML = `
+    <div class="question-card quiz-complete">
+      <h2>🏁 問題終了！</h2>
+      <div class="big-score">${pct}%</div>
+      <p>${quizCorrect} / ${quizAnswered} 問正解</p>
+      <p style="font-size:1.1rem;font-weight:600;color:#1e293b;margin-bottom:20px">${msg}</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-primary" onclick="resetQuiz()">🔄 もう一度</button>
+        <button class="btn-secondary" onclick="showTab('flashcards')">🃏 フラッシュカードで復習</button>
       </div>
-      <button class="btn btn-primary" onclick="startQuiz()" style="width:100%;margin-bottom:10px">もう一度チャレンジ</button>
-      <button class="btn btn-outline" onclick="showPage('home')" style="width:100%">ホームに戻る</button>
-    </div>`;
+    </div>
+  `;
 }
 
-// ========== Study Guide ==========
-const guideContent = {
-  economics: {
-    sections: [
-      { title: '🔑 頻出キーワード', points: ['需要の価格弾力性：弾力的(>1)→贅沢品、非弾力的(<1)→必需品', 'IS-LM分析：財市場(IS)と貨幣市場(LM)の同時均衡', 'フィリップス曲線：短期では失業率↓⇔インフレ↑、長期は垂直', '比較優位：機会費用が相対的に低い財に特化して貿易利益を得る', 'GDPの三面等価：生産面＝支出面＝分配面'] },
-      { title: '📐 重要公式', points: ['GDP(支出面) = C + I + G + (X - M)', '乗数効果 = 1 ÷ (1 − 限界消費性向)', '需要の価格弾力性 = 需要量変化率 ÷ 価格変化率', 'BEP売上高 = 固定費 ÷ 限界利益率'], isFormula: true },
-      { title: '📋 試験のポイント', points: ['財政政策（IS移動）と金融政策（LM移動）の違いを押さえる', 'クラウディングアウト：財政拡大→金利上昇→民間投資を抑制', '為替レートと輸出入の関係（円安→輸出有利）', 'マーシャル・ラーナー条件：為替変化がBOPを改善する条件'] }
-    ]
-  },
-  finance: {
-    sections: [
-      { title: '🔑 頻出キーワード', points: ['損益分岐点：固定費÷限界利益率。感度分析も重要', 'キャッシュフロー計算書：営業CF・投資CF・財務CFの3区分', 'ROE分解（デュポン）：純利益率×総資産回転率×財務レバレッジ', 'NPV法 vs IRR法：投資判断の2大手法', 'WACC：負債コストと株主資本コストの加重平均'] },
-      { title: '📐 重要公式', points: ['BEP = 固定費 ÷ (1 - 変動費率)', 'ROE = 純利益 ÷ 自己資本 × 100', 'ROA = 純利益 ÷ 総資産 × 100', '流動比率 = 流動資産 ÷ 流動負債 × 100（目安200%以上）', '自己資本比率 = 自己資本 ÷ 総資産 × 100'], isFormula: true },
-      { title: '📋 試験のポイント', points: ['財務三表の繋がり：BS・PL・CFSの関係を理解する', '減価償却はPLでは費用だがCFでは加算（非現金費用）', 'のれん：超過収益力の現在価値。20年以内で償却（日本基準）', '中小企業の財務分析：収益性・安全性・成長性の3視点'] }
-    ]
-  },
-  management: {
-    sections: [
-      { title: '🔑 頻出キーワード', points: ['ポーター3戦略：コストリーダーシップ・差別化・集中', 'PPM：花形/金のなる木/問題児/負け犬の4象限', 'アンゾフマトリックス：市場浸透/市場開発/製品開発/多角化', 'コアコンピタンス：顧客価値・模倣困難・多市場展開の3条件', 'バリューチェーン：主活動（製造・販売）と支援活動（HR・調達）'] },
-      { title: '🔁 フレームワーク整理', points: ['SWOT×クロス分析：SO積極攻勢/ST差別化/WO段階的/WT防衛', '5フォース：新規参入・代替品・買い手・売り手・競合の5つ', 'マーケティングMix：4P(売り手)→4C(買い手視点)に転換', 'バランスト・スコアカード：財務/顧客/プロセス/学習成長の4視点'], isFormula: true },
-      { title: '📋 試験のポイント', points: ['SCP理論（構造→行動→成果）とRBV（資源ベース）の違い', 'ライフサイクル（導入→成長→成熟→衰退）と戦略の紐付け', '組織設計：職能別・事業部制・マトリクス組織の特徴', 'モチベーション理論：マズロー・ハーズバーグ・マクレガーX/Y'] }
-    ]
-  },
-  operations: {
-    sections: [
-      { title: '🔑 頻出キーワード', points: ['JIT：必要なものを必要な量だけ必要な時に。かんばん方式', '5S：整理→整頓→清掃→清潔→躾の順で実施', 'ABC分析：A品目（上位20%が売上80%）を重点管理', 'QC7つ道具：パレート図・特性要因図（魚骨図）・管理図など', 'PERT/CPM：クリティカルパスの管理が納期の鍵'] },
-      { title: '📐 重要公式', points: ['EOQ = √(2DS / H)　D:年間需要, S:発注費, H:在庫保持費', '稼働率 = 実際作業時間 ÷ 就業時間 × 100', '歩留まり率 = 良品数 ÷ 投入数 × 100', 'サービス料 = (μ - λ) の逆数（待ち行列理論）'], isFormula: true },
-      { title: '📋 試験のポイント', points: ['ハフモデル：来店確率∝面積、∝1/距離²（小売立地）', 'レイアウト：工程別/製品別/固定位置/セル生産の4類型', 'QCサークル活動・TQM（全社的品質管理）の概念', 'MRP（資材所要量計画）：BOMと生産計画から所要量を算出'] }
-    ]
-  },
-  law: {
-    sections: [
-      { title: '🔑 頻出キーワード', points: ['特許権：出願日から20年（存続期間延長最長5年）', '商標権：登録日から10年・更新可能で永続', '著作権：創作時から自動発生・死後70年', '独禁法3大規制：私的独占・不当取引制限・不公正取引方法', '事業承継：親族内・従業員（MBO）・M&Aの3類型'] },
-      { title: '⚖️ 会社法の重要事項', points: ['株主総会：最高意思決定機関。定款変更は特別決議（2/3以上）', '取締役会設置会社：原則として監査役（会）も必要', '合併：吸収合併（存続会社あり）vs 新設合併（両社消滅）', '株式譲渡制限：中小企業では取締役会（株主総会）の承認が必要'], isFormula: true },
-      { title: '📋 試験のポイント', points: ['労基法の割増賃金：時間外25%、深夜25%、休日35%、月60時間超50%', '下請法：親事業者の禁止行為（不当な値引き・返品・支払い遅延等）', 'フランチャイズ：本部と加盟店の契約関係。独禁法上の注意点', '不正競争防止法：営業秘密の要件（秘密管理性・有用性・非公知性）'] }
-    ]
-  },
-  info_systems: {
-    sections: [
-      { title: '🔑 頻出キーワード', points: ['情報セキュリティCIA：機密性・完全性・可用性', 'クラウド3層：SaaS(ソフト)→PaaS(基盤)→IaaS(インフラ)', 'ERP：基幹業務を統合管理（財務・製造・販売・人事）', 'アジャイル：短期スプリントで反復開発。スクラムが有名', 'DX：デジタル技術によるビジネスモデル変革（IT化≠DX）'] },
-      { title: '🖥️ システム開発手法', points: ['ウォーターフォール：要件→設計→実装→テストを順次', 'アジャイル（スクラム）：2〜4週スプリント、バックログ管理', 'DevOps：開発(Dev)と運用(Ops)の統合。CI/CD実現', 'ノーコード/ローコード：プログラムなしでアプリ開発'], isFormula: true },
-      { title: '📋 試験のポイント', points: ['データベース正規化：第1・2・3正規形の手順と目的', 'ネットワーク：LAN・WAN・VPN・クラウドの違い', 'サイバー攻撃：フィッシング・ランサムウェア・DDoSの対策', 'ITガバナンス：COBIT・ITIL等のフレームワーク'] }
-    ]
-  },
-  sme_policy: {
-    sections: [
-      { title: '🔑 中小企業の定義（必須暗記）', points: ['製造業等：資本金3億円以下 or 従業員300人以下', '卸売業：資本金1億円以下 or 従業員100人以下', '小売業：資本金5000万円以下 or 従業員50人以下', 'サービス業：資本金5000万円以下 or 従業員100人以下', '小規模：製造業20人以下、商業・サービス5人以下'] },
-      { title: '💼 主要な支援制度', points: ['ものづくり補助金：革新的製品開発・生産プロセス改善', '事業再構築補助金：新分野展開・業態転換等', '小規模事業者持続化補助金：販路開拓・業務効率化', '経営革新計画：承認で低利融資・保証特例等の支援', '事業承継税制：株式の相続・贈与税の猶予・免除'], isFormula: true },
-      { title: '📋 試験のポイント', points: ['中小企業白書の数値は毎年更新→最新の動向を確認', '事業承継の課題：後継者不在、株式・財産の分散、取引先への影響', 'M&A支援：中小M&Aガイドライン、M&Aマッチング支援', 'よろず支援拠点・中小企業振興公社・商工会議所の役割'] }
-    ]
-  }
-};
-
-function renderGuide() {
-  const el = document.getElementById('guide-container');
-  el.innerHTML = data.subjects.map(s => {
-    const content = guideContent[s.id];
-    return `<div class="guide-card" id="guide-${s.id}">
-      <div class="guide-header" onclick="toggleGuide('${s.id}')">
-        <h3><span style="width:28px;height:28px;border-radius:6px;background:${s.color}22;color:${s.color};display:inline-flex;align-items:center;justify-content:center;font-size:14px">${s.emoji}</span> ${s.name}</h3>
-        <span class="guide-chevron">▼</span>
-      </div>
-      <div class="guide-body">
-        ${content.sections.map(sec => `
-          <div class="section-title">${sec.title}</div>
-          <ul class="key-points">
-            ${sec.points.map(p => sec.isFormula
-              ? `<li><div class="formula-box">${p}</div></li>`
-              : `<li>${p}</li>`
-            ).join('')}
-          </ul>
-        `).join('')}
-      </div>
-    </div>`;
-  }).join('');
+// ===================== YOUTUBE SEARCH =====================
+function openYoutube(topic) {
+  const query = encodeURIComponent('中小企業診断士 ' + topic + ' わかりやすい 解説');
+  window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
 }
 
-function toggleGuide(id) {
-  document.getElementById('guide-' + id).classList.toggle('open');
+function openYoutubeCustom() {
+  const val = document.getElementById('ytCustomInput').value.trim();
+  if (!val) return;
+  openYoutube(val);
 }
 
-// ========== Utils ==========
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-// ========== Boot ==========
+// ===================== START =====================
 init();
 </script>
 </body>
