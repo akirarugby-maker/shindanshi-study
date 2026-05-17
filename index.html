@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中小企業診断士試験 学習ツール</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e334d;
+    --text: #e8eaf0;
+    --text-muted: #8892a4;
+    --accent: #5b7fff;
+    --accent-hover: #7b9aff;
+    --success: #4caf6e;
+    --error: #e05555;
+    --warning: #f0a732;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Layout */
+  .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+  .sidebar-logo h1 { font-size: 14px; font-weight: 700; color: var(--accent); line-height: 1.4; }
+  .sidebar-logo p { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  .sidebar-nav { padding: 16px 0; }
+  .nav-section-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; padding: 8px 20px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; cursor: pointer; transition: background 0.15s; font-size: 13px; color: var(--text-muted); }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(91, 127, 255, 0.15); color: var(--accent); border-right: 2px solid var(--accent); }
+  .nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 4px; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+  .nav-stats { padding: 3px 20px 0 38px; font-size: 10px; color: var(--text-muted); }
+
+  /* Main content */
+  .main { padding: 32px; overflow-y: auto; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Home */
+  .home-header { margin-bottom: 32px; }
+  .home-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .home-header p { color: var(--text-muted); font-size: 14px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .stat-card .label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; color: var(--accent); }
+  .stat-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .subject-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .subject-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; cursor: pointer; transition: all 0.2s; }
+  .subject-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .subject-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .subject-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .subject-card h3 { font-size: 14px; font-weight: 600; }
+  .subject-card .progress-bar { margin-top: 8px; }
+  .subject-card .stats-row { display: flex; gap: 16px; margin-top: 10px; font-size: 11px; color: var(--text-muted); }
+
+  /* Mode selector */
+  .mode-selector { display: flex; gap: 12px; margin-bottom: 28px; }
+  .mode-btn { flex: 1; padding: 14px; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; text-align: center; transition: all 0.2s; color: var(--text); }
+  .mode-btn:hover { border-color: var(--accent); }
+  .mode-btn.active { border-color: var(--accent); background: rgba(91, 127, 255, 0.1); }
+  .mode-btn .mode-icon { font-size: 24px; margin-bottom: 6px; }
+  .mode-btn .mode-name { font-size: 13px; font-weight: 600; }
+  .mode-btn .mode-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Flashcard */
+  .flashcard-area { max-width: 640px; margin: 0 auto; }
+  .flashcard-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: var(--text-muted); font-size: 13px; }
+  .flashcard { width: 100%; min-height: 260px; perspective: 1000px; cursor: pointer; margin-bottom: 24px; }
+  .flashcard-inner { position: relative; width: 100%; min-height: 260px; transition: transform 0.5s; transform-style: preserve-3d; }
+  .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+  .flashcard-front, .flashcard-back { position: absolute; width: 100%; min-height: 260px; backface-visibility: hidden; border-radius: var(--radius); padding: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .flashcard-front { background: var(--surface); border: 1px solid var(--border); }
+  .flashcard-back { background: var(--surface2); border: 1px solid var(--accent); transform: rotateY(180deg); }
+  .flashcard-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; }
+  .flashcard-term { font-size: 22px; font-weight: 700; line-height: 1.4; }
+  .flashcard-def { font-size: 15px; line-height: 1.7; color: var(--text); }
+  .flashcard-hint { font-size: 12px; color: var(--text-muted); margin-top: 16px; }
+
+  .fc-controls { display: flex; gap: 12px; justify-content: center; }
+  .btn { padding: 10px 22px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-success { background: var(--success); color: #fff; }
+  .btn-error { background: var(--error); color: #fff; }
+
+  /* Quiz */
+  .quiz-area { max-width: 680px; margin: 0 auto; }
+  .quiz-progress { margin-bottom: 24px; }
+  .quiz-progress-text { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 20px; }
+  .quiz-question h3 { font-size: 16px; font-weight: 600; line-height: 1.6; }
+  .quiz-subject-tag { display: inline-block; font-size: 10px; color: var(--text-muted); background: var(--surface2); padding: 3px 10px; border-radius: 99px; margin-bottom: 14px; }
+
+  .choices { display: flex; flex-direction: column; gap: 10px; }
+  .choice { padding: 14px 18px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; font-size: 14px; line-height: 1.5; transition: all 0.15s; display: flex; gap: 12px; align-items: flex-start; }
+  .choice:hover:not(.disabled) { border-color: var(--accent); background: rgba(91, 127, 255, 0.08); }
+  .choice.correct { border-color: var(--success); background: rgba(76, 175, 110, 0.12); color: var(--success); }
+  .choice.wrong { border-color: var(--error); background: rgba(224, 85, 85, 0.12); color: var(--error); }
+  .choice.disabled { cursor: default; }
+  .choice-letter { min-width: 22px; height: 22px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .choice.correct .choice-letter { background: var(--success); color: #fff; }
+  .choice.wrong .choice-letter { background: var(--error); color: #fff; }
+
+  .explanation { background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 16px; margin-top: 16px; font-size: 13px; line-height: 1.7; color: var(--text-muted); display: none; }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--text); }
+
+  .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+
+  /* Results */
+  .results { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; text-align: center; max-width: 480px; margin: 40px auto; }
+  .results .score { font-size: 64px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .results .score-label { font-size: 14px; color: var(--text-muted); margin: 8px 0 24px; }
+  .results .breakdown { display: flex; justify-content: center; gap: 32px; margin-bottom: 28px; }
+  .results .breakdown-item { text-align: center; }
+  .results .breakdown-item .val { font-size: 24px; font-weight: 700; }
+  .results .breakdown-item .lbl { font-size: 11px; color: var(--text-muted); }
+
+  /* Study guide */
+  .guide-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  .guide-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .guide-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .guide-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .guide-chevron { color: var(--text-muted); transition: transform 0.2s; font-size: 12px; }
+  .guide-card.open .guide-chevron { transform: rotate(180deg); }
+  .guide-body { display: none; padding: 0 20px 20px; }
+  .guide-card.open .guide-body { display: block; }
+
+  .key-points { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .key-points li { display: flex; gap: 10px; font-size: 13px; line-height: 1.6; }
+  .key-points li::before { content: "→"; color: var(--accent); flex-shrink: 0; font-weight: 700; margin-top: 1px; }
+
+  .formula-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin: 8px 0; font-family: monospace; font-size: 13px; color: var(--warning); }
+
+  .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin: 16px 0 8px; }
+
+  /* Page header */
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .page-header h2 { font-size: 20px; font-weight: 700; }
+  .subject-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .filter-btn { padding: 5px 14px; border-radius: 99px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 12px; transition: all 0.15s; }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { height: auto; position: static; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .subject-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>中小企業診断士<br>学習ツール</h1>
+      <p>1次試験 7科目対応</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">メニュー</div>
+      <div class="nav-item active" onclick="showPage('home')">
+        <span>🏠</span> ホーム
+      </div>
+      <div class="nav-item" onclick="showPage('flashcard')">
+        <span>🃏</span> フラッシュカード
+      </div>
+      <div class="nav-item" onclick="showPage('quiz')">
+        <span>📝</span> 問題演習
+      </div>
+      <div class="nav-item" onclick="showPage('guide')">
+        <span>📚</span> 科目別要点
+      </div>
+
+      <div class="nav-section-label" style="margin-top:16px">科目別進捗</div>
+      <div id="sidebar-subjects"></div>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Home -->
+    <div class="page active" id="page-home">
+      <div class="home-header">
+        <h2>学習ダッシュボード</h2>
+        <p>今日も一歩ずつ合格に近づこう！</p>
+      </div>
+      <div class="stats-grid" id="home-stats"></div>
+      <div class="page-header">
+        <h2>科目を選んで学習する</h2>
+      </div>
+      <div class="subject-grid" id="home-subjects"></div>
+    </div>
+
+    <!-- Flashcard -->
+    <div class="page" id="page-flashcard">
+      <div class="page-header">
+        <h2>🃏 フラッシュカード</h2>
+      </div>
+      <div class="subject-filter" id="fc-filter"></div>
+      <div class="flashcard-area" id="fc-area">
+        <div class="flashcard-meta">
+          <span id="fc-counter">1 / 0</span>
+          <span id="fc-subject-name" style="color:var(--text-muted);font-size:12px"></span>
+        </div>
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+          <div class="flashcard-inner">
+            <div class="flashcard-front">
+              <div class="flashcard-label">用語</div>
+              <div class="flashcard-term" id="fc-term">科目を選択してください</div>
+              <div class="flashcard-hint">クリックで答えを見る</div>
+            </div>
+            <div class="flashcard-back">
+              <div class="flashcard-label">解説</div>
+              <div class="flashcard-def" id="fc-def"></div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-controls">
+          <button class="btn btn-error" onclick="fcResult(false)">✗ もう一度</button>
+          <button class="btn btn-outline" onclick="fcPrev()">← 前へ</button>
+          <button class="btn btn-outline" onclick="fcNext()">次へ →</button>
+          <button class="btn btn-success" onclick="fcResult(true)">✓ 覚えた！</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="page" id="page-quiz">
+      <div class="page-header">
+        <h2>📝 問題演習</h2>
+        <button class="btn btn-primary" onclick="startQuiz()">新しいクイズ開始</button>
+      </div>
+      <div class="subject-filter" id="quiz-filter"></div>
+      <div id="quiz-container"></div>
+    </div>
+
+    <!-- Study Guide -->
+    <div class="page" id="page-guide">
+      <div class="page-header">
+        <h2>📚 科目別要点まとめ</h2>
+      </div>
+      <div class="guide-grid" id="guide-container"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ========== State ==========
+let data = null;
+let progress = JSON.parse(localStorage.getItem('chusho_progress') || '{}');
+let fcState = { subject: null, cards: [], index: 0, flipped: false };
+let quizState = { questions: [], index: 0, answered: false, results: [] };
+let selectedSubjects = new Set();
+
+const SUBJECT_EMOJIS = ['📊','💰','🏢','⚙️','⚖️','💻','🏪'];
+
+// ========== Init ==========
+async function init() {
+  const res = await fetch('questions.json');
+  data = await res.json();
+  data.subjects.forEach((s, i) => {
+    if (!progress[s.id]) progress[s.id] = { quiz_total: 0, quiz_correct: 0, fc_known: 0, fc_total: s.flashcards.length };
+    s.emoji = SUBJECT_EMOJIS[i];
+  });
+  selectedSubjects = new Set(data.subjects.map(s => s.id));
+  renderAll();
+}
+
+function saveProgress() { localStorage.setItem('chusho_progress', JSON.stringify(progress)); }
+
+// ========== Navigation ==========
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const items = document.querySelectorAll('.nav-item');
+  const map = { home: 0, flashcard: 1, quiz: 2, guide: 3 };
+  items[map[id]]?.classList.add('active');
+  if (id === 'flashcard') initFlashcard();
+  if (id === 'quiz') renderQuizPage();
+  if (id === 'guide') renderGuide();
+}
+
+// ========== Render All ==========
+function renderAll() {
+  renderSidebar();
+  renderHome();
+  renderFlashcardFilters();
+  renderQuizFilters();
+}
+
+function renderSidebar() {
+  const el = document.getElementById('sidebar-subjects');
+  el.innerHTML = data.subjects.map(s => {
+    const p = progress[s.id];
+    const pct = p.quiz_total > 0 ? Math.round(p.quiz_correct / p.quiz_total * 100) : 0;
+    return `<div class="nav-item" onclick="showPage('guide')">
+      <span class="nav-dot" style="background:${s.color}"></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+        <div class="progress-bar" style="margin-top:4px"><div class="progress-fill" style="width:${pct}%;background:${s.color}"></div></div>
+      </div>
+      <span style="font-size:10px;color:var(--text-muted)">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function renderHome() {
+  const totalQ = data.subjects.reduce((a, s) => a + progress[s.id].quiz_total, 0);
+  const correctQ = data.subjects.reduce((a, s) => a + progress[s.id].quiz_correct, 0);
+  const totalFC = data.subjects.reduce((a, s) => a + progress[s.id].fc_total, 0);
+  const knownFC = data.subjects.reduce((a, s) => a + progress[s.id].fc_known, 0);
+  const acc = totalQ > 0 ? Math.round(correctQ / totalQ * 100) : 0;
+
+  document.getElementById('home-stats').innerHTML = `
+    <div class="stat-card"><div class="label">演習問題数</div><div class="value">${totalQ}</div><div class="sub">問解答済み</div></div>
+    <div class="stat-card"><div class="label">正答率</div><div class="value">${acc}<span style="font-size:16px">%</span></div><div class="sub">目標: 60%以上</div></div>
+    <div class="stat-card"><div class="label">カード習得</div><div class="value">${knownFC}<span style="font-size:16px">/${totalFC}</span></div><div class="sub">フラッシュカード</div></div>
+    <div class="stat-card"><div class="label">科目数</div><div class="value">7</div><div class="sub">科目 対応済み</div></div>
+  `;
+
+  document.getElementById('home-subjects').innerHTML = data.subjects.map(s => {
+    const p = progress[s.id];
+    const pct = p.quiz_total > 0 ? Math.round(p.quiz_correct / p.quiz_total * 100) : 0;
+    const fcPct = Math.round(p.fc_known / p.fc_total * 100);
+    return `<div class="subject-card" onclick="startSubject('${s.id}')">
+      <div class="subject-card-header">
+        <div class="subject-icon" style="background:${s.color}22;color:${s.color}">${s.emoji}</div>
+        <div>
+          <h3>${s.name}</h3>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${s.questions.length}問 / ${s.flashcards.length}カード</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${s.color}"></div></div>
+      <div class="stats-row">
+        <span>正答率 ${pct}%</span>
+        <span>カード習得 ${fcPct}%</span>
+        <span>演習 ${p.quiz_total}回</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function startSubject(id) {
+  selectedSubjects = new Set([id]);
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.id === id || b.dataset.id === 'all' && false);
+  });
+  showPage('quiz');
+  startQuiz();
+}
+
+// ========== Flashcard ==========
+function renderFlashcardFilters() {
+  const el = document.getElementById('fc-filter');
+  el.innerHTML = `<button class="filter-btn active" data-id="all" onclick="fcFilter('all',this)">全科目</button>` +
+    data.subjects.map(s => `<button class="filter-btn" data-id="${s.id}" onclick="fcFilter('${s.id}',this)" style="--c:${s.color}">${s.emoji} ${s.name}</button>`).join('');
+}
+
+function fcFilter(id, btn) {
+  document.querySelectorAll('#fc-filter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  fcState.subject = id === 'all' ? null : id;
+  initFlashcard();
+}
+
+function initFlashcard() {
+  let cards = [];
+  data.subjects.forEach(s => {
+    if (!fcState.subject || fcState.subject === s.id) {
+      s.flashcards.forEach(c => cards.push({ ...c, subjectName: s.name, subjectId: s.id }));
+    }
+  });
+  cards = shuffle(cards);
+  fcState.cards = cards;
+  fcState.index = 0;
+  fcState.flipped = false;
+  renderFlashcard();
+}
+
+function renderFlashcard() {
+  const { cards, index } = fcState;
+  if (!cards.length) return;
+  const card = cards[index];
+  document.getElementById('fc-term').textContent = card.term;
+  document.getElementById('fc-def').textContent = card.definition;
+  document.getElementById('fc-counter').textContent = `${index + 1} / ${cards.length}`;
+  document.getElementById('fc-subject-name').textContent = card.subjectName;
+  document.getElementById('flashcard').classList.remove('flipped');
+  fcState.flipped = false;
+}
+
+function flipCard() {
+  fcState.flipped = !fcState.flipped;
+  document.getElementById('flashcard').classList.toggle('flipped', fcState.flipped);
+}
+
+function fcNext() {
+  if (fcState.index < fcState.cards.length - 1) { fcState.index++; renderFlashcard(); }
+}
+function fcPrev() {
+  if (fcState.index > 0) { fcState.index--; renderFlashcard(); }
+}
+function fcResult(known) {
+  const card = fcState.cards[fcState.index];
+  if (card) {
+    const p = progress[card.subjectId];
+    if (known && p.fc_known < p.fc_total) { p.fc_known++; saveProgress(); renderSidebar(); renderHome(); }
+  }
+  fcNext();
+}
+
+// ========== Quiz ==========
+function renderQuizFilters() {
+  const el = document.getElementById('quiz-filter');
+  el.innerHTML = `<button class="filter-btn active" data-id="all" onclick="qFilter('all',this)">全科目</button>` +
+    data.subjects.map(s => `<button class="filter-btn" data-id="${s.id}" onclick="qFilter('${s.id}',this)">${s.emoji} ${s.name}</button>`).join('');
+}
+
+function qFilter(id, btn) {
+  document.querySelectorAll('#quiz-filter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedSubjects = id === 'all' ? new Set(data.subjects.map(s => s.id)) : new Set([id]);
+}
+
+function startQuiz() {
+  let questions = [];
+  data.subjects.forEach(s => {
+    if (selectedSubjects.has(s.id)) {
+      s.questions.forEach(q => questions.push({ ...q, subjectName: s.name, subjectId: s.id, subjectColor: s.color }));
+    }
+  });
+  questions = shuffle(questions).slice(0, 10);
+  quizState = { questions, index: 0, answered: false, results: [] };
+  renderQuizQuestion();
+}
+
+function renderQuizPage() {
+  if (!quizState.questions.length) {
+    document.getElementById('quiz-container').innerHTML = `
+      <div style="text-align:center;padding:60px;color:var(--text-muted)">
+        <div style="font-size:40px;margin-bottom:16px">📝</div>
+        <p>「新しいクイズ開始」をクリックして演習を始めましょう</p>
+      </div>`;
+  }
+}
+
+function renderQuizQuestion() {
+  const { questions, index } = quizState;
+  if (index >= questions.length) { renderResults(); return; }
+  const q = questions[index];
+  const pct = Math.round(index / questions.length * 100);
+
+  document.getElementById('quiz-container').innerHTML = `
+    <div class="quiz-area">
+      <div class="quiz-progress">
+        <div class="quiz-progress-text"><span>問題 ${index + 1} / ${questions.length}</span><span>${pct}%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:var(--accent)"></div></div>
+      </div>
+      <div class="quiz-question">
+        <div class="quiz-subject-tag" style="color:${q.subjectColor};background:${q.subjectColor}22">${q.subjectName}</div>
+        <h3>${q.question}</h3>
+      </div>
+      <div class="choices">
+        ${q.choices.map((c, i) => `
+          <div class="choice" id="choice-${i}" onclick="selectAnswer(${i})">
+            <span class="choice-letter">${['A','B','C','D'][i]}</span>
+            <span>${c}</span>
+          </div>`).join('')}
+      </div>
+      <div class="explanation" id="explanation">
+        <strong>解説：</strong> ${q.explanation}
+      </div>
+      <div class="quiz-nav">
+        <span id="answer-feedback" style="font-size:14px;font-weight:600"></span>
+        <button class="btn btn-primary" id="next-btn" style="display:none" onclick="nextQuestion()">次の問題 →</button>
+      </div>
+    </div>`;
+}
+
+function selectAnswer(idx) {
+  if (quizState.answered) return;
+  quizState.answered = true;
+  const q = quizState.questions[quizState.index];
+  const correct = idx === q.answer;
+
+  document.querySelectorAll('.choice').forEach((el, i) => {
+    el.classList.add('disabled');
+    if (i === q.answer) el.classList.add('correct');
+    if (i === idx && !correct) el.classList.add('wrong');
+  });
+
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('answer-feedback').textContent = correct ? '✓ 正解！' : '✗ 不正解';
+  document.getElementById('answer-feedback').style.color = correct ? 'var(--success)' : 'var(--error)';
+  document.getElementById('next-btn').style.display = 'block';
+
+  const p = progress[q.subjectId];
+  p.quiz_total++;
+  if (correct) p.quiz_correct++;
+  quizState.results.push({ correct, question: q });
+  saveProgress();
+  renderSidebar();
+  renderHome();
+}
+
+function nextQuestion() {
+  quizState.index++;
+  quizState.answered = false;
+  renderQuizQuestion();
+}
+
+function renderResults() {
+  const { results } = quizState;
+  const correct = results.filter(r => r.correct).length;
+  const pct = Math.round(correct / results.length * 100);
+  const grade = pct >= 70 ? '合格圏！' : pct >= 60 ? 'もう少し！' : '要復習';
+
+  document.getElementById('quiz-container').innerHTML = `
+    <div class="results">
+      <div class="score">${pct}<span style="font-size:24px">%</span></div>
+      <div class="score-label">${grade}</div>
+      <div class="breakdown">
+        <div class="breakdown-item"><div class="val" style="color:var(--success)">${correct}</div><div class="lbl">正解</div></div>
+        <div class="breakdown-item"><div class="val" style="color:var(--error)">${results.length - correct}</div><div class="lbl">不正解</div></div>
+        <div class="breakdown-item"><div class="val">${results.length}</div><div class="lbl">合計</div></div>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()" style="width:100%;margin-bottom:10px">もう一度チャレンジ</button>
+      <button class="btn btn-outline" onclick="showPage('home')" style="width:100%">ホームに戻る</button>
+    </div>`;
+}
+
+// ========== Study Guide ==========
+const guideContent = {
+  economics: {
+    sections: [
+      { title: '🔑 頻出キーワード', points: ['需要の価格弾力性：弾力的(>1)→贅沢品、非弾力的(<1)→必需品', 'IS-LM分析：財市場(IS)と貨幣市場(LM)の同時均衡', 'フィリップス曲線：短期では失業率↓⇔インフレ↑、長期は垂直', '比較優位：機会費用が相対的に低い財に特化して貿易利益を得る', 'GDPの三面等価：生産面＝支出面＝分配面'] },
+      { title: '📐 重要公式', points: ['GDP(支出面) = C + I + G + (X - M)', '乗数効果 = 1 ÷ (1 − 限界消費性向)', '需要の価格弾力性 = 需要量変化率 ÷ 価格変化率', 'BEP売上高 = 固定費 ÷ 限界利益率'], isFormula: true },
+      { title: '📋 試験のポイント', points: ['財政政策（IS移動）と金融政策（LM移動）の違いを押さえる', 'クラウディングアウト：財政拡大→金利上昇→民間投資を抑制', '為替レートと輸出入の関係（円安→輸出有利）', 'マーシャル・ラーナー条件：為替変化がBOPを改善する条件'] }
+    ]
+  },
+  finance: {
+    sections: [
+      { title: '🔑 頻出キーワード', points: ['損益分岐点：固定費÷限界利益率。感度分析も重要', 'キャッシュフロー計算書：営業CF・投資CF・財務CFの3区分', 'ROE分解（デュポン）：純利益率×総資産回転率×財務レバレッジ', 'NPV法 vs IRR法：投資判断の2大手法', 'WACC：負債コストと株主資本コストの加重平均'] },
+      { title: '📐 重要公式', points: ['BEP = 固定費 ÷ (1 - 変動費率)', 'ROE = 純利益 ÷ 自己資本 × 100', 'ROA = 純利益 ÷ 総資産 × 100', '流動比率 = 流動資産 ÷ 流動負債 × 100（目安200%以上）', '自己資本比率 = 自己資本 ÷ 総資産 × 100'], isFormula: true },
+      { title: '📋 試験のポイント', points: ['財務三表の繋がり：BS・PL・CFSの関係を理解する', '減価償却はPLでは費用だがCFでは加算（非現金費用）', 'のれん：超過収益力の現在価値。20年以内で償却（日本基準）', '中小企業の財務分析：収益性・安全性・成長性の3視点'] }
+    ]
+  },
+  management: {
+    sections: [
+      { title: '🔑 頻出キーワード', points: ['ポーター3戦略：コストリーダーシップ・差別化・集中', 'PPM：花形/金のなる木/問題児/負け犬の4象限', 'アンゾフマトリックス：市場浸透/市場開発/製品開発/多角化', 'コアコンピタンス：顧客価値・模倣困難・多市場展開の3条件', 'バリューチェーン：主活動（製造・販売）と支援活動（HR・調達）'] },
+      { title: '🔁 フレームワーク整理', points: ['SWOT×クロス分析：SO積極攻勢/ST差別化/WO段階的/WT防衛', '5フォース：新規参入・代替品・買い手・売り手・競合の5つ', 'マーケティングMix：4P(売り手)→4C(買い手視点)に転換', 'バランスト・スコアカード：財務/顧客/プロセス/学習成長の4視点'], isFormula: true },
+      { title: '📋 試験のポイント', points: ['SCP理論（構造→行動→成果）とRBV（資源ベース）の違い', 'ライフサイクル（導入→成長→成熟→衰退）と戦略の紐付け', '組織設計：職能別・事業部制・マトリクス組織の特徴', 'モチベーション理論：マズロー・ハーズバーグ・マクレガーX/Y'] }
+    ]
+  },
+  operations: {
+    sections: [
+      { title: '🔑 頻出キーワード', points: ['JIT：必要なものを必要な量だけ必要な時に。かんばん方式', '5S：整理→整頓→清掃→清潔→躾の順で実施', 'ABC分析：A品目（上位20%が売上80%）を重点管理', 'QC7つ道具：パレート図・特性要因図（魚骨図）・管理図など', 'PERT/CPM：クリティカルパスの管理が納期の鍵'] },
+      { title: '📐 重要公式', points: ['EOQ = √(2DS / H)　D:年間需要, S:発注費, H:在庫保持費', '稼働率 = 実際作業時間 ÷ 就業時間 × 100', '歩留まり率 = 良品数 ÷ 投入数 × 100', 'サービス料 = (μ - λ) の逆数（待ち行列理論）'], isFormula: true },
+      { title: '📋 試験のポイント', points: ['ハフモデル：来店確率∝面積、∝1/距離²（小売立地）', 'レイアウト：工程別/製品別/固定位置/セル生産の4類型', 'QCサークル活動・TQM（全社的品質管理）の概念', 'MRP（資材所要量計画）：BOMと生産計画から所要量を算出'] }
+    ]
+  },
+  law: {
+    sections: [
+      { title: '🔑 頻出キーワード', points: ['特許権：出願日から20年（存続期間延長最長5年）', '商標権：登録日から10年・更新可能で永続', '著作権：創作時から自動発生・死後70年', '独禁法3大規制：私的独占・不当取引制限・不公正取引方法', '事業承継：親族内・従業員（MBO）・M&Aの3類型'] },
+      { title: '⚖️ 会社法の重要事項', points: ['株主総会：最高意思決定機関。定款変更は特別決議（2/3以上）', '取締役会設置会社：原則として監査役（会）も必要', '合併：吸収合併（存続会社あり）vs 新設合併（両社消滅）', '株式譲渡制限：中小企業では取締役会（株主総会）の承認が必要'], isFormula: true },
+      { title: '📋 試験のポイント', points: ['労基法の割増賃金：時間外25%、深夜25%、休日35%、月60時間超50%', '下請法：親事業者の禁止行為（不当な値引き・返品・支払い遅延等）', 'フランチャイズ：本部と加盟店の契約関係。独禁法上の注意点', '不正競争防止法：営業秘密の要件（秘密管理性・有用性・非公知性）'] }
+    ]
+  },
+  info_systems: {
+    sections: [
+      { title: '🔑 頻出キーワード', points: ['情報セキュリティCIA：機密性・完全性・可用性', 'クラウド3層：SaaS(ソフト)→PaaS(基盤)→IaaS(インフラ)', 'ERP：基幹業務を統合管理（財務・製造・販売・人事）', 'アジャイル：短期スプリントで反復開発。スクラムが有名', 'DX：デジタル技術によるビジネスモデル変革（IT化≠DX）'] },
+      { title: '🖥️ システム開発手法', points: ['ウォーターフォール：要件→設計→実装→テストを順次', 'アジャイル（スクラム）：2〜4週スプリント、バックログ管理', 'DevOps：開発(Dev)と運用(Ops)の統合。CI/CD実現', 'ノーコード/ローコード：プログラムなしでアプリ開発'], isFormula: true },
+      { title: '📋 試験のポイント', points: ['データベース正規化：第1・2・3正規形の手順と目的', 'ネットワーク：LAN・WAN・VPN・クラウドの違い', 'サイバー攻撃：フィッシング・ランサムウェア・DDoSの対策', 'ITガバナンス：COBIT・ITIL等のフレームワーク'] }
+    ]
+  },
+  sme_policy: {
+    sections: [
+      { title: '🔑 中小企業の定義（必須暗記）', points: ['製造業等：資本金3億円以下 or 従業員300人以下', '卸売業：資本金1億円以下 or 従業員100人以下', '小売業：資本金5000万円以下 or 従業員50人以下', 'サービス業：資本金5000万円以下 or 従業員100人以下', '小規模：製造業20人以下、商業・サービス5人以下'] },
+      { title: '💼 主要な支援制度', points: ['ものづくり補助金：革新的製品開発・生産プロセス改善', '事業再構築補助金：新分野展開・業態転換等', '小規模事業者持続化補助金：販路開拓・業務効率化', '経営革新計画：承認で低利融資・保証特例等の支援', '事業承継税制：株式の相続・贈与税の猶予・免除'], isFormula: true },
+      { title: '📋 試験のポイント', points: ['中小企業白書の数値は毎年更新→最新の動向を確認', '事業承継の課題：後継者不在、株式・財産の分散、取引先への影響', 'M&A支援：中小M&Aガイドライン、M&Aマッチング支援', 'よろず支援拠点・中小企業振興公社・商工会議所の役割'] }
+    ]
+  }
+};
+
+function renderGuide() {
+  const el = document.getElementById('guide-container');
+  el.innerHTML = data.subjects.map(s => {
+    const content = guideContent[s.id];
+    return `<div class="guide-card" id="guide-${s.id}">
+      <div class="guide-header" onclick="toggleGuide('${s.id}')">
+        <h3><span style="width:28px;height:28px;border-radius:6px;background:${s.color}22;color:${s.color};display:inline-flex;align-items:center;justify-content:center;font-size:14px">${s.emoji}</span> ${s.name}</h3>
+        <span class="guide-chevron">▼</span>
+      </div>
+      <div class="guide-body">
+        ${content.sections.map(sec => `
+          <div class="section-title">${sec.title}</div>
+          <ul class="key-points">
+            ${sec.points.map(p => sec.isFormula
+              ? `<li><div class="formula-box">${p}</div></li>`
+              : `<li>${p}</li>`
+            ).join('')}
+          </ul>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleGuide(id) {
+  document.getElementById('guide-' + id).classList.toggle('open');
+}
+
+// ========== Utils ==========
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ========== Boot ==========
+init();
+</script>
+</body>
+</html>
