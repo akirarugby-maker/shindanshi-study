@@ -563,10 +563,14 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
   <div class="quiz-header">
     <div class="subject-selector" style="padding:0;box-shadow:none;background:transparent;margin:0">
       <h3 style="margin-bottom:6px">🔢 計算練習</h3>
-      <p style="font-size:.83rem;color:#6b7280;margin-bottom:10px">財務・会計と経済学の計算問題を繰り返し練習して公式を身につけましょう</p>
-      <div class="subject-btns" id="calcSubjectBtns">
+      <p style="font-size:.83rem;color:#6b7280;margin-bottom:8px">財務・会計と経済学の計算問題を繰り返し練習して公式を身につけましょう</p>
+      <div class="subject-btns" id="calcSubjectBtns" style="margin-bottom:8px">
         <button class="active" onclick="selectCalcSubject(0,this)">財務・会計</button>
         <button onclick="selectCalcSubject(1,this)">経済学</button>
+      </div>
+      <div class="subject-btns" id="calcDiffBtns">
+        <button class="active" onclick="selectCalcDiff('basic',this)">📘 基礎（公式習得）</button>
+        <button onclick="selectCalcDiff('hard',this)">🔥 応用（本試験レベル）</button>
       </div>
     </div>
     <div class="quiz-score" id="calcScore">
@@ -1526,6 +1530,36 @@ const calcData = {
   ]
 };
 
+// ===================== CALCULATION DATA (HARD) =====================
+const calcDataHard = {
+  subjects: [
+    { name:"財務・会計【応用】", questions:[
+      {q:"初期投資800万円。1年後CF200万、2年後CF300万、3年後CF400万。割引率10%のとき、NPVはおよそいくらか？（1.1²≒1.21、1.1³≒1.331）",formula:"NPV ＝ Σ（各年CF ÷（1＋r）^n）− 初期投資",steps:"PV1＝200÷1.1≒181.8万 / PV2＝300÷1.21≒247.9万 / PV3＝400÷1.331≒300.5万 / 合計PV≒730.2万 / NPV＝730.2−800≒−70万円（投資不適）",opts:["約＋80万円","約＋10万円","約−70万円","約−130万円"],ans:2},
+      {q:"リスクフリーレート2%、市場リスクプレミアム6%、ベータ値1.5のとき、CAPM（資本資産価格モデル）による株主資本コストはいくらか？",formula:"株主資本コスト ＝ リスクフリーレート ＋ β × 市場リスクプレミアム",steps:"2% ＋ 1.5 × 6% ＝ 2% ＋ 9% ＝ 11%",opts:["8%","9%","11%","14%"],ans:2},
+      {q:"取得原価600万円の設備を定率法（償却率40%）で償却するとき、2年後の帳簿価額はいくらか？",formula:"定率法：帳簿価額 ＝ 前年度帳簿価額 ×（1 − 償却率）",steps:"1年後：600万×（1−0.4）＝360万 / 2年後：360万×（1−0.4）＝216万円",opts:["144万円","180万円","216万円","240万円"],ans:2},
+      {q:"固定費が240万円（前期比20%増）、変動費率40%、目標営業利益50万円。達成に必要な売上高はいくらか？",formula:"必要売上高 ＝（固定費 ＋ 目標利益）÷ 限界利益率",steps:"限界利益率：1−0.4＝0.6 / 必要売上高：（240＋50）÷0.6＝290÷0.6≒483万円",opts:["約400万円","約450万円","約483万円","約500万円"],ans:2},
+      {q:"期首在庫100個＠200円。当月仕入200個＠250円。当月販売220個。先入先出法（FIFO）での売上原価はいくらか？",formula:"FIFO：先に仕入れた分から順に売上原価に算入",steps:"期首100個×200円＝20,000円 ＋ 追加120個×250円＝30,000円 / 売上原価＝50,000円 / 期末在庫：残り80個×250円＝20,000円",opts:["47,500円","50,000円","52,500円","55,000円"],ans:1},
+      {q:"負債比率50%・負債利率4%・税率30%、株主資本比率50%・株主資本コスト10%のとき、税効果考慮後のWACCはいくらか？",formula:"WACC ＝ 負債コスト×（1−税率）×負債比率 ＋ 株主資本コスト×株主資本比率",steps:"4%×（1−0.3）×0.5 ＋ 10%×0.5 ＝ 1.4% ＋ 5.0% ＝ 6.4%",opts:["5.0%","6.0%","6.4%","7.0%"],ans:2},
+      {q:"A社：売上高純利益率3%、総資産回転率2.5回、財務レバレッジ2倍。B社：純利益率4%、回転率3回、レバレッジ1.5倍。ROEが高いのはどちら？",formula:"ROE（デュポン）＝ 売上高純利益率 × 総資産回転率 × 財務レバレッジ",steps:"A社：3%×2.5×2＝15% / B社：4%×3×1.5＝18% / B社の方が高い",opts:["A社（15%）","B社（18%）","同じ（15%）","A社（18%）"],ans:1},
+      {q:"売掛金300万円・受取手形60万円、年間売上高2,400万円のとき、売上債権回転日数はおよそ何日か？",formula:"売上債権回転日数 ＝（売掛金＋受取手形）÷ 年間売上高 × 365",steps:"（300＋60）÷2,400×365 ＝ 360÷2,400×365 ＝ 0.15×365 ≒ 54.75日 ≒ 約55日",opts:["約40日","約45日","約55日","約65日"],ans:2},
+      {q:"旧機械の年間運転費用500万円。新機械の取得費用800万円・年間運転費用300万円。投資回収期間（ペイバック法）は何年か？",formula:"年間節約額 ＝ 旧費用 − 新費用 / 回収期間 ＝ 投資額 ÷ 年間節約額",steps:"年間節約額：500万−300万＝200万円 / 回収期間：800万÷200万＝4年",opts:["2年","3年","4年","5年"],ans:2},
+      {q:"インタレスト・カバレッジ・レシオが2.0倍、支払利息が50万円のとき、営業利益はいくらか？また、ICR3.0倍にするには営業利益をいくら増やす必要があるか？",formula:"ICR ＝ 営業利益 ÷ 支払利息 / 目標営業利益 ＝ ICR × 支払利息",steps:"現在の営業利益：2.0×50万＝100万円 / 目標営業利益：3.0×50万＝150万円 / 必要増加額：150−100＝50万円",opts:["20万円","30万円","50万円","100万円"],ans:2}
+    ]},
+    { name:"経済学【応用】", questions:[
+      {q:"IS曲線：Y＝600−50r、LM曲線：Y＝200＋50r（rは利子率%）。IS-LM均衡でのGDP（Y）と利子率（r）はいくらか？",formula:"均衡：IS＝LM → 方程式を連立して解く",steps:"600−50r＝200＋50r / 400＝100r / r＝4% / Y＝600−50×4＝600−200＝400（兆円）",opts:["Y=300・r=6%","Y=400・r=4%","Y=500・r=3%","Y=600・r=2%"],ans:1},
+      {q:"独占企業の需要曲線：P＝120−2Q、限界費用MC＝20（一定）。利潤最大化の生産量Qと価格Pはいくらか？",formula:"利潤最大化：MR＝MC / MR＝TR'＝（P×Q）'",steps:"TR＝（120−2Q）×Q＝120Q−2Q² / MR＝120−4Q / MR＝MC：120−4Q＝20 / Q＝25 / P＝120−2×25＝70",opts:["Q＝20、P＝80","Q＝25、P＝70","Q＝30、P＝60","Q＝50、P＝20"],ans:1},
+      {q:"上の独占問題で完全競争均衡はP＝20、Q＝50。独占によって生じる死荷重（厚生損失）はいくらか？",formula:"死荷重 ＝ 1/2 ×（独占価格−MC）×（完全競争Q−独占Q）",steps:"(1/2)×（70−20）×（50−25）＝(1/2)×50×25＝625",opts:["312","500","625","1,250"],ans:2},
+      {q:"開放経済でMPC（限界消費性向）＝0.8、MPM（限界輸入性向）＝0.1のとき、政府支出を100億円増加した場合のGDP増加額は？",formula:"開放経済の乗数 ＝ 1 ÷（1−MPC＋MPM）",steps:"乗数 ＝ 1÷（1−0.8＋0.1）＝ 1÷0.3 ≒ 3.33 / GDP増加：100億×3.33 ≒ 333億円",opts:["約200億円","約250億円","約333億円","約400億円"],ans:2},
+      {q:"自然失業率4%、現在失業率3%、期待インフレ率2%、フィリップス曲線の係数α＝1。フィリップス曲線によれば現実のインフレ率は？",formula:"π ＝ πe − α×（u − un） ＝ 期待インフレ − α×（現在失業率 − 自然失業率）",steps:"π ＝ 2% − 1×（3%−4%）＝ 2%−（−1%）＝ 3%",opts:["1%","2%","3%","4%"],ans:2},
+      {q:"ある財の需要の価格弾力性が1.5のとき、価格を10%引き下げると総収入（売上高）はどう変化するか？",formula:"総収入変化 ≈ 価格変化率 ＋ 需要量変化率 ＝ −10% ＋ ed×10%",steps:"%ΔTR ＝ −10% ＋ 1.5×10% ＝ −10%＋15% ＝ ＋5%（増加）",opts:["約5%減少","変化なし","約5%増加","約15%増加"],ans:2},
+      {q:"現在の為替レート100円/ドル。日本のインフレ率3%、米国のインフレ率1%。購買力平価説により1年後の為替レートは？",formula:"購買力平価：e1 ＝ e0 ×（1＋π国内）÷（1＋π外国）",steps:"100円×1.03÷1.01 ≒ 100×1.0198 ≒ 約102円/ドル（円安方向）",opts:["約98円（円高）","約100円（不変）","約102円（円安）","約106円（円安）"],ans:2},
+      {q:"私的限界費用PMC＝10＋2Q、外部限界費用EMC＝4（定額）、需要P＝50−Q。ピグー税課税後の社会的最適生産量は？",formula:"社会的最適：社会的限界費用SMC（＝PMC＋EMC）＝ 需要P",steps:"SMC＝10＋2Q＋4＝14＋2Q / 14＋2Q＝50−Q / 3Q＝36 / Q＝12",opts:["Q＝8","Q＝10","Q＝12","Q＝14"],ans:2},
+      {q:"2社A・Bが価格競争。①両社高価格：各10億円利益、②A社のみ低価格：A＝20億/B＝3億、③B社のみ低価格：A＝3億/B＝20億、④両社低価格：各5億円。ナッシュ均衡の利得は？",formula:"ナッシュ均衡：相手の戦略を所与として、自分が最適戦略を取る状態（支配戦略）",steps:"A社：Bが高→低価格20億＞高価格10億、Bが低→低価格5億＞高価格3億 / 支配戦略は低価格 / 同様にB社も低価格 → ナッシュ均衡は（低, 低）＝各5億円",opts:["各10億円（高・高）","各5億円（低・低）","A社20億・B社3億","B社20億・A社3億"],ans:1},
+      {q:"個別需要曲線P＝80−Q。市場に同一の消費者が100人いる。市場価格60円のとき、市場全体の消費者余剰はいくらか？",formula:"個人余剰 ＝ 1/2 ×（最大支払意志額−価格）× 購入量 / 市場全体 ＝ 個人余剰 × 人数",steps:"個人需要量：80−Q＝60 → Q＝20 / 個人余剰：(1/2)×20×20＝200円 / 市場全体：200×100＝20,000円",opts:["10,000円","15,000円","20,000円","40,000円"],ans:2}
+    ]}
+  ]
+};
+
 // ===================== STATE =====================
 let currentSlideSubject = 0;
 let currentSlide = 0;
@@ -2276,17 +2310,36 @@ function openYoutubeCustom() {
 
 // ===================== CALCULATION MODE =====================
 let currentCalcSubject = 0;
+let calcDifficulty = 'basic';
 let calcQuestions = [];
 let currentCalcQ = 0;
 let calcCorrectCount = 0;
 let calcAnsweredCount = 0;
 let calcAnswered = false;
 
+function getCalcData() {
+  return calcDifficulty === 'hard' ? calcDataHard : calcData;
+}
+
 function selectCalcSubject(idx, btn) {
   currentCalcSubject = idx;
   document.querySelectorAll('#calcSubjectBtns button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  calcQuestions = calcData.subjects[idx].questions.slice();
+  calcQuestions = getCalcData().subjects[idx].questions.slice();
+  shuffle(calcQuestions);
+  currentCalcQ = 0;
+  calcCorrectCount = 0;
+  calcAnsweredCount = 0;
+  calcAnswered = false;
+  updateCalcScore();
+  loadCalcQuestion();
+}
+
+function selectCalcDiff(diff, btn) {
+  calcDifficulty = diff;
+  document.querySelectorAll('#calcDiffBtns button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  calcQuestions = getCalcData().subjects[currentCalcSubject].questions.slice();
   shuffle(calcQuestions);
   currentCalcQ = 0;
   calcCorrectCount = 0;
@@ -2363,7 +2416,7 @@ function nextCalcQuestion() {
 // ===================== START =====================
 init();
 // init calc mode
-calcQuestions = calcData.subjects[0].questions.slice();
+calcQuestions = getCalcData().subjects[0].questions.slice();
 shuffle(calcQuestions);
 loadCalcQuestion();
 </script>
