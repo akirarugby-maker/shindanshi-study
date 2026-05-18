@@ -90,6 +90,40 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .slide-action-btn{flex:1;min-width:160px;padding:11px 16px;border:none;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
 .slide-yt-btn{background:#fee2e2;color:#b91c1c}.slide-yt-btn:hover{background:#fecaca}
 .slide-kk-btn{background:#ede9fe;color:#5b21b6}.slide-kk-btn:hover{background:#ddd6fe}
+.sched-countdown-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+@media(max-width:540px){.sched-countdown-row{grid-template-columns:1fr}}
+.sched-countdown-card{border-radius:16px;padding:20px;text-align:center;color:#fff}
+.sched-takken{background:linear-gradient(135deg,#0891b2,#0e7490)}
+.sched-shindan{background:linear-gradient(135deg,#6366f1,#4f46e5)}
+.sched-exam-label{font-size:.9rem;font-weight:700;opacity:.9;margin-bottom:4px}
+.sched-exam-date{font-size:.78rem;opacity:.75;margin-bottom:8px}
+.sched-days{font-size:2.8rem;font-weight:900;line-height:1}
+.sched-days-label{font-size:.8rem;opacity:.8;margin-bottom:8px}
+.sched-phase-tag{display:inline-block;background:rgba(255,255,255,.25);border-radius:999px;padding:3px 12px;font-size:.78rem;font-weight:700}
+.sched-section{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:18px;margin-bottom:16px}
+.sched-section-title{font-size:1rem;font-weight:800;color:#1f2937;margin-bottom:12px}
+.sched-phase-box{background:#f0fdf4;border-left:4px solid #16a34a;border-radius:8px;padding:14px;font-size:.9rem;color:#166534;line-height:1.7}
+.sched-checklist{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px}
+.sched-day-cell{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 4px;border-radius:8px;border:2px solid #e5e7eb;transition:all .2s;background:#fafafa}
+.sched-day-cell.studied{background:#d1fae5;border-color:#059669}
+.sched-day-cell.today{border-color:#6366f1;background:#eef2ff}
+.sched-day-cell.today.studied{background:#c7d2fe;border-color:#4338ca}
+.sched-day-name{font-size:.72rem;color:#6b7280;font-weight:600}
+.sched-day-num{font-size:1rem;font-weight:700;color:#1f2937}
+.sched-day-check{font-size:1rem}
+.sched-streak-row{display:flex;align-items:center;gap:8px;font-size:.9rem;color:#374151}
+.sched-streak-num{font-size:1.3rem;font-weight:900;color:#f59e0b}
+.sched-today-btn{margin-left:auto;padding:7px 14px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit}
+.sched-today-btn.done{background:linear-gradient(135deg,#059669,#047857)}
+.sched-plan-table{display:flex;flex-direction:column;gap:6px}
+.sched-plan-row{display:grid;grid-template-columns:90px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;background:#f9fafb;border-left:4px solid #e5e7eb;font-size:.88rem}
+.sched-plan-row.current{background:#fffbeb;border-color:#f59e0b;font-weight:700}
+.sched-plan-row.done{background:#f0fdf4;border-color:#16a34a;color:#6b7280}
+.sched-plan-month{font-weight:700;color:#374151}
+.sched-plan-task{color:#374151}
+.sched-plan-exam{font-size:.78rem;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.sched-plan-exam.takken{background:#cffafe;color:#0e7490}
+.sched-plan-exam.shindan{background:#e0e7ff;color:#3730a3}
 .quiz-slide-btn{margin-top:10px;width:100%;padding:9px 14px;background:#f0fdf4;border:2px solid #10b981;border-radius:8px;color:#065f46;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
 .quiz-slide-btn:hover{background:#d1fae5}
 .weak-banner-btn{flex:1;display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:10px 0 0 10px;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;transition:opacity .2s}
@@ -225,6 +259,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 </header>
 <nav id="mainNav">
   <button class="active" onclick="showTab('roadmap')">🗺️ ロードマップ</button>
+  <button onclick="showTab('schedule')">📅 スケジュール</button>
   <button onclick="showTab('slides')">📖 スライド学習</button>
   <button onclick="showTab('flashcards')">🃏 フラッシュカード</button>
   <button onclick="showTab('quiz')">✏️ 問題演習</button>
@@ -332,7 +367,57 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
   </div>
 </div>
 
-<!-- TAB 2: SLIDES -->
+<!-- TAB 2: SCHEDULE -->
+<div id="tab-schedule" class="tab-content">
+  <div class="roadmap-intro">
+    <h2>📅 学習スケジュール</h2>
+    <p>2つの試験に向けた学習計画を管理しましょう。毎日の学習記録がモチベーションを維持します。</p>
+  </div>
+
+  <!-- カウントダウン -->
+  <div class="sched-countdown-row">
+    <div class="sched-countdown-card sched-takken">
+      <div class="sched-exam-label">🏠 宅建士試験</div>
+      <div class="sched-exam-date">2026年10月18日（日）</div>
+      <div class="sched-days" id="takkenDays">-</div>
+      <div class="sched-days-label">日後</div>
+      <div class="sched-phase-tag" id="takkenPhase"></div>
+    </div>
+    <div class="sched-countdown-card sched-shindan">
+      <div class="sched-exam-label">📊 診断士1次試験</div>
+      <div class="sched-exam-date">2027年8月1日（土）</div>
+      <div class="sched-days" id="shindanDays">-</div>
+      <div class="sched-days-label">日後</div>
+      <div class="sched-phase-tag" id="shindanPhase"></div>
+    </div>
+  </div>
+
+  <!-- 今週やること -->
+  <div class="sched-section">
+    <h3 class="sched-section-title">📌 今週の学習フェーズ</h3>
+    <div id="schedPhaseBox" class="sched-phase-box"></div>
+  </div>
+
+  <!-- 週間学習チェックリスト -->
+  <div class="sched-section">
+    <h3 class="sched-section-title">✅ 今週の学習記録 <span id="schedWeekLabel" style="font-size:.8rem;color:#6b7280;font-weight:400"></span></h3>
+    <div class="sched-checklist" id="schedChecklist"></div>
+    <div class="sched-streak-row">
+      <span>🔥 連続学習日数：</span>
+      <span class="sched-streak-num" id="schedStreak">0</span>
+      <span>日</span>
+      <button class="sched-today-btn" id="schedTodayBtn" onclick="toggleTodayStudy()">今日の学習を記録</button>
+    </div>
+  </div>
+
+  <!-- 月別フェーズ計画 -->
+  <div class="sched-section">
+    <h3 class="sched-section-title">📆 月別学習プラン</h3>
+    <div class="sched-plan-table" id="schedPlanTable"></div>
+  </div>
+</div>
+
+<!-- TAB 3: SLIDES -->
 <div id="tab-slides" class="tab-content">
   <div class="subject-selector">
     <h3>📚 科目を選んでください</h3>
@@ -1469,6 +1554,7 @@ function init() {
   loadSlide();
   loadFC();
   loadQuiz();
+  renderSchedule();
 }
 
 function saveProgress() {
@@ -1483,9 +1569,10 @@ function showTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  const idx = ['roadmap','slides','flashcards','quiz','kakomon','calc','youtube'].indexOf(tab);
+  const idx = ['roadmap','schedule','slides','flashcards','quiz','kakomon','calc','youtube'].indexOf(tab);
   if (idx >= 0) document.querySelectorAll('nav button')[idx].classList.add('active');
   if (tab === 'kakomon' && kakomonQuestions.length === 0) filterKakomonQuestions();
+  if (tab === 'schedule') renderSchedule();
 }
 
 // ===================== SLIDES =====================
@@ -1903,6 +1990,150 @@ function resetQuiz() {
   const header = document.querySelector('#tab-quiz .subject-selector h3');
   if (header) header.textContent = '✏️ 科目を選んでください';
   reloadCurrentSubject();
+}
+
+// ===================== SCHEDULE =====================
+const TAKKEN_DATE = new Date('2026-10-18');
+const SHINDAN_DATE = new Date('2027-08-01');
+
+const STUDY_PLANS = [
+  {month:'2026年5月', task:'【宅建】権利関係（民法）基礎 ／ 【診断士】経済学スライド復習', exam:'both', from:new Date('2026-05-01'), to:new Date('2026-05-31')},
+  {month:'2026年6月', task:'【宅建】宅建業法 ／ 【診断士】財務・会計スライド＋計算練習', exam:'both', from:new Date('2026-06-01'), to:new Date('2026-06-30')},
+  {month:'2026年7月', task:'【宅建】法令上の制限・税金 ／ 【診断士】企業経営理論フラッシュカード', exam:'both', from:new Date('2026-07-01'), to:new Date('2026-07-31')},
+  {month:'2026年8月', task:'【宅建】過去問演習（全分野） ／ 【診断士】運営管理スライド', exam:'both', from:new Date('2026-08-01'), to:new Date('2026-08-31')},
+  {month:'2026年9月', task:'【宅建】弱点補強・直前対策 ／ 【診断士】経営法務・情報システム', exam:'both', from:new Date('2026-09-01'), to:new Date('2026-09-30')},
+  {month:'2026年10月', task:'🏠 宅建士試験（10/18）→ 試験直前は宅建に集中！', exam:'takken', from:new Date('2026-10-01'), to:new Date('2026-10-31')},
+  {month:'2026年11月', task:'【診断士】中小企業政策スライド＋過去問スタート', exam:'shindan', from:new Date('2026-11-01'), to:new Date('2026-11-30')},
+  {month:'2026年12月', task:'【診断士】全7科目フラッシュカード総復習', exam:'shindan', from:new Date('2026-12-01'), to:new Date('2026-12-31')},
+  {month:'2027年1月', task:'【診断士】弱点科目の問題演習・過去問周回', exam:'shindan', from:new Date('2027-01-01'), to:new Date('2027-01-31')},
+  {month:'2027年2月', task:'【診断士】財務・会計 計算問題集中特訓', exam:'shindan', from:new Date('2027-02-01'), to:new Date('2027-02-28')},
+  {month:'2027年3月', task:'【診断士】経済学・運営管理 苦手問題復習', exam:'shindan', from:new Date('2027-03-01'), to:new Date('2027-03-31')},
+  {month:'2027年4月', task:'【診断士】全科目過去問スタイル問題を毎日1回転', exam:'shindan', from:new Date('2027-04-01'), to:new Date('2027-04-30')},
+  {month:'2027年5月', task:'【診断士】模試・時間配分の練習・弱点最終チェック', exam:'shindan', from:new Date('2027-05-01'), to:new Date('2027-05-31')},
+  {month:'2027年6月', task:'【診断士】直前総まとめ・重要用語フラッシュカード', exam:'shindan', from:new Date('2027-06-01'), to:new Date('2027-06-30')},
+  {month:'2027年7月', task:'【診断士】直前1ヶ月：苦手科目のみ集中・体調管理', exam:'shindan', from:new Date('2027-07-01'), to:new Date('2027-07-31')},
+  {month:'2027年8月', task:'📊 中小企業診断士1次試験（8/1〜2）', exam:'shindan', from:new Date('2027-08-01'), to:new Date('2027-08-31')},
+];
+
+function daysUntil(date) {
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  return Math.max(0, Math.ceil((d - now) / 86400000));
+}
+
+function getStudyLog() {
+  try { return JSON.parse(localStorage.getItem('studyLog') || '{}'); } catch(e) { return {}; }
+}
+function saveStudyLog(log) { localStorage.setItem('studyLog', JSON.stringify(log)); }
+
+function getDateKey(date) {
+  return date.toISOString().slice(0,10);
+}
+
+function getStreak() {
+  const log = getStudyLog();
+  let streak = 0;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    if (log[getDateKey(d)]) streak++;
+    else if (i > 0) break;
+  }
+  return streak;
+}
+
+function toggleTodayStudy() {
+  const log = getStudyLog();
+  const key = getDateKey(new Date());
+  if (log[key]) delete log[key];
+  else log[key] = true;
+  saveStudyLog(log);
+  renderSchedule();
+}
+
+function renderSchedule() {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // カウントダウン
+  const td = daysUntil(TAKKEN_DATE);
+  const sd = daysUntil(SHINDAN_DATE);
+  document.getElementById('takkenDays').textContent = td;
+  document.getElementById('shindanDays').textContent = sd;
+
+  // フェーズタグ
+  const tPhase = td > 90 ? '基礎固めフェーズ' : td > 30 ? '過去問演習フェーズ' : td > 0 ? '直前対策フェーズ' : '試験終了';
+  const sPhase = sd > 300 ? '基礎固めフェーズ' : sd > 90 ? '演習フェーズ' : sd > 30 ? '直前対策フェーズ' : sd > 0 ? '追い込みフェーズ' : '試験終了';
+  document.getElementById('takkenPhase').textContent = tPhase;
+  document.getElementById('shindanPhase').textContent = sPhase;
+
+  // 今のフェーズ
+  const currentPlan = STUDY_PLANS.find(p => today >= p.from && today <= p.to);
+  const phaseBox = document.getElementById('schedPhaseBox');
+  if (currentPlan) {
+    phaseBox.innerHTML = `<strong>今月のテーマ（${currentPlan.month}）</strong><br>${currentPlan.task}`;
+  } else {
+    phaseBox.innerHTML = '<strong>スケジュールに沿って学習を進めましょう！</strong>';
+  }
+
+  // 週間チェックリスト
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+  const log = getStudyLog();
+  const dayNames = ['月','火','水','木','金','土','日'];
+  let checkHtml = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    const key = getDateKey(d);
+    const isToday = getDateKey(d) === getDateKey(today);
+    const studied = !!log[key];
+    checkHtml += `<div class="sched-day-cell${studied?' studied':''}${isToday?' today':''}" onclick="clickDayCell('${key}')">
+      <span class="sched-day-name">${dayNames[i]}</span>
+      <span class="sched-day-num">${d.getDate()}</span>
+      <span class="sched-day-check">${studied ? '✅' : '　'}</span>
+    </div>`;
+  }
+  document.getElementById('schedChecklist').innerHTML = checkHtml;
+  const monthStr = `${weekStart.getMonth()+1}/${weekStart.getDate()}〜`;
+  document.getElementById('schedWeekLabel').textContent = `(${monthStr})`;
+
+  // ストリーク
+  document.getElementById('schedStreak').textContent = getStreak();
+  const todayStudied = !!log[getDateKey(today)];
+  const btn = document.getElementById('schedTodayBtn');
+  btn.textContent = todayStudied ? '✅ 今日の学習を記録済み' : '今日の学習を記録';
+  btn.classList.toggle('done', todayStudied);
+
+  // 月別プラン
+  let planHtml = '';
+  STUDY_PLANS.forEach(p => {
+    const isDone = today > p.to;
+    const isCurrent = today >= p.from && today <= p.to;
+    const examTag = p.exam === 'both'
+      ? `<span class="sched-plan-exam takken">宅建</span><span class="sched-plan-exam shindan" style="margin-left:4px">診断士</span>`
+      : p.exam === 'takken'
+      ? `<span class="sched-plan-exam takken">宅建</span>`
+      : `<span class="sched-plan-exam shindan">診断士</span>`;
+    planHtml += `<div class="sched-plan-row${isCurrent?' current':''}${isDone?' done':''}">
+      <span class="sched-plan-month">${p.month}</span>
+      <span class="sched-plan-task">${isDone ? '✓ ' : isCurrent ? '▶ ' : ''}${p.task}</span>
+      <span>${examTag}</span>
+    </div>`;
+  });
+  document.getElementById('schedPlanTable').innerHTML = planHtml;
+}
+
+function clickDayCell(key) {
+  const log = getStudyLog();
+  if (log[key]) delete log[key];
+  else log[key] = true;
+  saveStudyLog(log);
+  renderSchedule();
 }
 
 // ===================== PAST EXAM MODE =====================
