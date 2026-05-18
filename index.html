@@ -83,6 +83,8 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .card-back .card-label{font-size:.8rem;color:#64748b;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
 .card-back .card-def{font-size:.95rem;line-height:1.7;color:#334155;margin-bottom:12px}
 .card-back .card-example{font-size:.85rem;color:#2563eb;background:#eff6ff;padding:8px 12px;border-radius:8px;width:100%}
+.fc-slide-link-btn{margin-top:12px;width:100%;padding:10px 14px;background:#f0fdf4;border:2px solid #10b981;border-radius:10px;color:#065f46;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
+.fc-slide-link-btn:hover{background:#d1fae5}
 .card-actions{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
 .card-actions button{padding:12px 28px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:.95rem;transition:all .2s}
 .btn-knew{background:#10b981;color:#fff}
@@ -330,6 +332,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
         <div class="card-label">解説</div>
         <div class="card-def" id="fcDef"></div>
         <div class="card-example" id="fcExample"></div>
+        <div id="fcSlideLink"></div>
       </div>
     </div>
   </div>
@@ -824,7 +827,62 @@ const flashcardsData = {
 // Compute all cards combined
 flashcardsData.all = flashcardsData.subjects.flatMap((s,si) => s.cards.map(c => ({...c, subject:s.name, subjectIdx:si})));
 
-// QUIZ DATA
+// ===================== FLASHCARD → SLIDE MAPPING =====================
+// key: "科目名::用語", value: {subj: subjectIdx, slide: slideIdx}
+const fcSlideMap = {
+  // ── 経済学・経済政策（Subject 0）──
+  "経済学・経済政策::需要の価格弾力性":          {subj:0, slide:2},
+  "経済学・経済政策::均衡価格":                  {subj:0, slide:2},
+  "経済学・経済政策::GDP（国内総生産）":          {subj:0, slide:4},
+  "経済学・経済政策::財政政策":                  {subj:0, slide:6},
+  "経済学・経済政策::金融政策":                  {subj:0, slide:8},
+  "経済学・経済政策::インフレーション":           {subj:0, slide:34},
+  "経済学・経済政策::比較優位":                  {subj:0, slide:10},
+  "経済学・経済政策::クラウディングアウト":       {subj:0, slide:6},
+  "経済学・経済政策::乗数効果":                  {subj:0, slide:38},
+  "経済学・経済政策::為替レート":                {subj:0, slide:10},
+  "経済学・経済政策::景気循環":                  {subj:0, slide:4},
+  "経済学・経済政策::フィリップス曲線":          {subj:0, slide:34},
+  "経済学・経済政策::機会費用":                  {subj:0, slide:0},
+  "経済学・経済政策::消費者余剰":                {subj:0, slide:12},
+  "経済学・経済政策::外部不経済":                {subj:0, slide:14},
+  "経済学・経済政策::公共財":                    {subj:0, slide:14},
+  "経済学・経済政策::情報の非対称性":            {subj:0, slide:16},
+  "経済学・経済政策::逆選択（アドバース・セレクション）": {subj:0, slide:16},
+  "経済学・経済政策::モラルハザード":            {subj:0, slide:16},
+  "経済学・経済政策::ナッシュ均衡":              {subj:0, slide:20},
+  "経済学・経済政策::囚人のジレンマ":            {subj:0, slide:20},
+  "経済学・経済政策::実質GDP・名目GDP":          {subj:0, slide:22},
+  "経済学・経済政策::ISバランス（恒等式）":      {subj:0, slide:26},
+  "経済学・経済政策::購買力平価（PPP）":         {subj:0, slide:28},
+  "経済学・経済政策::デフレスパイラル":          {subj:0, slide:36},
+  "経済学・経済政策::スタグフレーション":        {subj:0, slide:34},
+  "経済学・経済政策::ディマンドプル・インフレ":  {subj:0, slide:34},
+  "経済学・経済政策::コストプッシュ・インフレ":  {subj:0, slide:34},
+  "経済学・経済政策::経常収支":                  {subj:0, slide:26},
+  "経済学・経済政策::限界消費性向（MPC）":       {subj:0, slide:38},
+};
+
+// Helper: subject index → button element in slideSubjectBtns
+const slideSubjectBtnIdx = [0,1,2,3,4,5,6]; // matches selectSlideSubject order
+
+function goToSlideFromFC(subjectIdx, slideIdx) {
+  // Switch to slides tab
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-slides').classList.add('active');
+  document.querySelectorAll('nav button')[1].classList.add('active');
+  // Select the correct subject
+  const subjBtns = document.querySelectorAll('#slideSubjectBtns button');
+  subjBtns.forEach(b => b.classList.remove('active'));
+  if (subjBtns[subjectIdx]) subjBtns[subjectIdx].classList.add('active');
+  currentSlideSubject = subjectIdx;
+  currentSlide = slideIdx;
+  loadSlide();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+
 const quizData = {
   subjects: [
     { name:"経済学・経済政策", questions:[
@@ -1047,6 +1105,16 @@ function showCard() {
   cardFlipped = false;
   document.getElementById('flashCard').classList.remove('flipped');
   document.getElementById('cardActions').style.display = 'none';
+  // Slide link button
+  const linkEl = document.getElementById('fcSlideLink');
+  const mapKey = (c.subject || '') + '::' + c.term;
+  const dest = fcSlideMap[mapKey];
+  if (dest) {
+    const slideTitle = slidesData[dest.subj][dest.slide].title;
+    linkEl.innerHTML = `<button class="fc-slide-link-btn" onclick="event.stopPropagation();goToSlideFromFC(${dest.subj},${dest.slide})">📖 スライドで学習：${slideTitle}</button>`;
+  } else {
+    linkEl.innerHTML = '';
+  }
 }
 
 function flipCard() {
