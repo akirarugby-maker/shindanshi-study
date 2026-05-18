@@ -89,6 +89,23 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .slide-back-btn:hover{background:#dbeafe}
 .quiz-slide-btn{margin-top:10px;width:100%;padding:9px 14px;background:#f0fdf4;border:2px solid #10b981;border-radius:8px;color:#065f46;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
 .quiz-slide-btn:hover{background:#d1fae5}
+.calc-card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:24px;max-width:700px;margin:0 auto}
+.calc-progress{font-size:.8rem;color:#9ca3af;margin-bottom:10px;font-weight:600}
+.calc-formula-hint{background:#fef3c7;border:1.5px solid #f59e0b;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:.83rem;color:#92400e}
+.calc-formula-hint span{font-weight:700}
+.calc-question{font-size:1.02rem;font-weight:700;color:#1f2937;margin-bottom:18px;line-height:1.6}
+.calc-opts{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.calc-opt-btn{width:100%;padding:12px 16px;background:#f9fafb;border:2px solid #e5e7eb;border-radius:10px;text-align:left;font-size:.95rem;cursor:pointer;transition:all .2s;font-weight:500}
+.calc-opt-btn:hover:not(:disabled){background:#eff6ff;border-color:#3b82f6}
+.calc-opt-btn.calc-correct{background:#d1fae5!important;border-color:#10b981!important;color:#065f46;font-weight:700}
+.calc-opt-btn.calc-wrong{background:#fee2e2!important;border-color:#ef4444!important;color:#991b1b}
+.calc-feedback{border-radius:12px;padding:16px;margin-top:10px}
+.calc-feedback.correct{background:#f0fdf4;border:1.5px solid #10b981}
+.calc-feedback.wrong{background:#fef2f2;border:1.5px solid #ef4444}
+.calc-result{font-weight:700;font-size:1rem;margin-bottom:8px}
+.calc-steps-label{font-size:.83rem;font-weight:700;color:#374151;margin-bottom:4px}
+.calc-steps{font-size:.88rem;color:#1f2937;line-height:1.7;white-space:pre-wrap;font-family:monospace;background:#f3f4f6;padding:10px;border-radius:6px}
+.calc-nav{margin-top:14px;text-align:center}
 .card-actions{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
 .card-actions button{padding:12px 28px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:.95rem;transition:all .2s}
 .btn-knew{background:#10b981;color:#fff}
@@ -174,6 +191,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
   <button onclick="showTab('slides')">📖 スライド学習</button>
   <button onclick="showTab('flashcards')">🃏 フラッシュカード</button>
   <button onclick="showTab('quiz')">✏️ 問題演習</button>
+  <button onclick="showTab('calc')">🔢 計算練習</button>
   <button onclick="showTab('youtube')">📺 YouTube検索</button>
 </nav>
 
@@ -378,7 +396,27 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
   <div id="quizArea"></div>
 </div>
 
-<!-- TAB 5: YOUTUBE SEARCH -->
+<!-- TAB 5: CALCULATION PRACTICE -->
+<div id="tab-calc" class="tab-content">
+  <div class="quiz-header">
+    <div class="subject-selector" style="padding:0;box-shadow:none;background:transparent;margin:0">
+      <h3 style="margin-bottom:6px">🔢 計算練習</h3>
+      <p style="font-size:.83rem;color:#6b7280;margin-bottom:10px">財務・会計と経済学の計算問題を繰り返し練習して公式を身につけましょう</p>
+      <div class="subject-btns" id="calcSubjectBtns">
+        <button class="active" onclick="selectCalcSubject(0,this)">財務・会計</button>
+        <button onclick="selectCalcSubject(1,this)">経済学</button>
+      </div>
+    </div>
+    <div class="quiz-score" id="calcScore">
+      <div class="score-item"><div class="num" id="calcCorrect">0</div><div class="label">正解</div></div>
+      <div class="score-item"><div class="num" id="calcTotal">0</div><div class="label">解答済</div></div>
+      <div class="score-item"><div class="num" id="calcPercent">-%</div><div class="label">正答率</div></div>
+    </div>
+  </div>
+  <div id="calcArea"></div>
+</div>
+
+<!-- TAB 6: YOUTUBE SEARCH -->
 <div id="tab-youtube" class="tab-content">
   <div class="yt-intro">
     <h2>📺 YouTube動画で学ぶ</h2>
@@ -1196,6 +1234,46 @@ const quizData = {
   ]
 };
 
+// ===================== CALCULATION DATA =====================
+const calcData = {
+  subjects: [
+    { name:"財務・会計", questions:[
+      {q:"固定費が180万円、変動費率が40%のとき、損益分岐点売上高はいくらか？",formula:"損益分岐点売上高 ＝ 固定費 ÷（1 − 変動費率）",steps:"180万 ÷（1 − 0.4）＝ 180万 ÷ 0.6 ＝ 300万円",opts:["240万円","300万円","360万円","450万円"],ans:1},
+      {q:"当期純利益が30億円、自己資本が150億円のとき、ROE（自己資本利益率）はいくらか？",formula:"ROE ＝ 当期純利益 ÷ 自己資本 × 100",steps:"30億 ÷ 150億 × 100 ＝ 20%",opts:["10%","15%","20%","25%"],ans:2},
+      {q:"流動資産が240万円、流動負債が120万円のとき、流動比率はいくらか？",formula:"流動比率 ＝ 流動資産 ÷ 流動負債 × 100",steps:"240万 ÷ 120万 × 100 ＝ 200%",opts:["100%","150%","200%","250%"],ans:2},
+      {q:"実際の売上高が500万円、損益分岐点売上高が300万円のとき、安全余裕率はいくらか？",formula:"安全余裕率 ＝（実際の売上高 − 損益分岐点売上高）÷ 実際の売上高 × 100",steps:"（500万 − 300万）÷ 500万 × 100 ＝ 200万 ÷ 500万 × 100 ＝ 40%",opts:["30%","35%","40%","45%"],ans:2},
+      {q:"純資産が60億円、総資産が200億円のとき、自己資本比率はいくらか？",formula:"自己資本比率 ＝ 純資産 ÷ 総資産 × 100",steps:"60億 ÷ 200億 × 100 ＝ 30%",opts:["20%","25%","30%","35%"],ans:2},
+      {q:"売上高純利益率が5%、総資産回転率が2.0回、財務レバレッジが2.5倍のとき、ROEはいくらか？（デュポン分解）",formula:"ROE ＝ 売上高純利益率 × 総資産回転率 × 財務レバレッジ",steps:"5% × 2.0回 × 2.5倍 ＝ 25%",opts:["15%","20%","25%","30%"],ans:2},
+      {q:"営業利益が6億円、支払利息が2億円のとき、インタレスト・カバレッジ・レシオはいくらか？",formula:"ICR ＝ 営業利益 ÷ 支払利息",steps:"6億 ÷ 2億 ＝ 3倍",opts:["2倍","3倍","4倍","5倍"],ans:1},
+      {q:"売上高が400億円、総資産が200億円のとき、総資産回転率はいくらか？",formula:"総資産回転率 ＝ 売上高 ÷ 総資産",steps:"400億 ÷ 200億 ＝ 2.0回",opts:["0.5回","1.0回","1.5回","2.0回"],ans:3},
+      {q:"売掛金が60万円、年間売上高が720万円のとき、売上債権回転日数はいくらか？",formula:"売上債権回転日数 ＝ 売掛金 ÷ 売上高 × 365日",steps:"60万 ÷ 720万 × 365 ≒ 30.4日 ≒ 約30日",opts:["約20日","約25日","約30日","約35日"],ans:2},
+      {q:"固定費が120万円、売上高が400万円、変動費が160万円のとき、限界利益率はいくらか？",formula:"限界利益率 ＝（売上高 − 変動費）÷ 売上高 × 100",steps:"（400万 − 160万）÷ 400万 × 100 ＝ 240万 ÷ 400万 × 100 ＝ 60%",opts:["40%","50%","60%","70%"],ans:2},
+      {q:"取得原価500万円の機械を定額法・耐用年数5年で減価償却するとき、1年間の減価償却費はいくらか？（残存価額ゼロ）",formula:"定額法 年間減価償却費 ＝ 取得原価 ÷ 耐用年数",steps:"500万 ÷ 5年 ＝ 100万円/年",opts:["80万円","90万円","100万円","120万円"],ans:2},
+      {q:"負債コスト2%（税率30%考慮後）、負債比率60%、株主資本コスト8%、株主資本比率40%のとき、WACCはいくらか？",formula:"WACC ＝ 負債コスト × 負債比率 ＋ 株主資本コスト × 株主資本比率",steps:"2% × 0.6 ＋ 8% × 0.4 ＝ 1.2% ＋ 3.2% ＝ 4.4%",opts:["3.2%","4.0%","4.4%","5.0%"],ans:2},
+      {q:"総資産が300億円、有利子負債が90億円のとき、有利子負債依存度はいくらか？",formula:"有利子負債依存度 ＝ 有利子負債 ÷ 総資産 × 100",steps:"90億 ÷ 300億 × 100 ＝ 30%",opts:["20%","25%","30%","35%"],ans:2},
+      {q:"1年後に110万円を受け取る権利がある。割引率10%のとき、この権利の現在価値はいくらか？",formula:"現在価値 ＝ 将来価値 ÷（1 ＋ 割引率）^年数",steps:"110万 ÷（1 ＋ 0.10）^1 ＝ 110万 ÷ 1.10 ＝ 100万円",opts:["90万円","95万円","100万円","105万円"],ans:2},
+      {q:"株価1,200円、1株当たり純利益（EPS）が100円のとき、PER（株価収益率）はいくらか？",formula:"PER ＝ 株価 ÷ EPS",steps:"1,200円 ÷ 100円 ＝ 12倍",opts:["8倍","10倍","12倍","15倍"],ans:2}
+    ]},
+    { name:"経済学・経済政策", questions:[
+      {q:"価格が200円から220円に上昇したとき、需要量が100個から80個に減少した。需要の価格弾力性はいくらか？",formula:"需要の価格弾力性 ＝ 需要量の変化率（%）÷ 価格の変化率（%）",steps:"需要量変化率：（80−100）÷ 100 × 100 ＝ −20% / 価格変化率：（220−200）÷ 200 × 100 ＝ 10% / 弾力性＝ 20% ÷ 10% ＝ 2（絶対値）",opts:["0.5","1.0","2.0","4.0"],ans:2},
+      {q:"限界消費性向（MPC）が0.75のとき、政府支出が200億円増加した場合のGDP増加額はいくらか？",formula:"乗数 ＝ 1 ÷（1 − MPC） / GDP増加額 ＝ 政府支出 × 乗数",steps:"乗数 ＝ 1 ÷（1 − 0.75）＝ 1 ÷ 0.25 ＝ 4 / GDP増加 ＝ 200億 × 4 ＝ 800億円",opts:["400億円","600億円","800億円","1,000億円"],ans:2},
+      {q:"名目GDPが600兆円、GDPデフレーターが120（基準年＝100）のとき、実質GDPはいくらか？",formula:"実質GDP ＝ 名目GDP ÷ GDPデフレーター × 100",steps:"600兆 ÷ 120 × 100 ＝ 500兆円",opts:["480兆円","500兆円","520兆円","600兆円"],ans:1},
+      {q:"民間消費300兆円、民間投資100兆円、政府支出120兆円、輸出80兆円、輸入60兆円のとき、GDPはいくらか？",formula:"GDP（支出面）＝ 消費 ＋ 投資 ＋ 政府支出 ＋（輸出 − 輸入）",steps:"300 ＋ 100 ＋ 120 ＋（80 − 60）＝ 300 ＋ 100 ＋ 120 ＋ 20 ＝ 540兆円",opts:["520兆円","530兆円","540兆円","560兆円"],ans:2},
+      {q:"A国は小麦1トンを生産するのに2日、綿布1mに3日かかる。B国は小麦に4日、綿布に5日かかる。B国が比較優位を持つのはどちらか？",formula:"比較優位：機会費用の比較 → A国：綿布の機会費用＝3/2単位の小麦、B国：綿布の機会費用＝5/4単位の小麦",steps:"A国の綿布機会費用：3/2＝1.5単位の小麦 / B国の綿布機会費用：5/4＝1.25単位の小麦 / B国は綿布の機会費用が低い→B国が綿布に比較優位",opts:["小麦","綿布","どちらも同じ","どちらも比較優位なし"],ans:1},
+      {q:"名目利子率が3%、期待インフレ率が1.5%のとき、実質利子率はいくらか？（フィッシャー方程式の近似式を使うこと）",formula:"実質利子率 ≈ 名目利子率 − 期待インフレ率",steps:"3% − 1.5% ＝ 1.5%",opts:["0.5%","1.0%","1.5%","2.0%"],ans:2},
+      {q:"ある財の需要曲線：P＝100−2Q、供給曲線：P＝20＋Q のとき、均衡価格はいくらか？",formula:"均衡：需要量＝供給量 → 需要曲線＝供給曲線 を解く",steps:"100−2Q ＝ 20＋Q / 80 ＝ 3Q / Q＝80/3≒26.7 / P ＝ 20＋Q ＝ 20＋80/3 ≒ 46.7 → 簡略化すると P≒47",opts:["P＝40","P＝47（約47）","P＝60","P＝80"],ans:1},
+      {q:"消費者の最大支払意志額が800円、実際の市場価格が500円のとき、この消費者の消費者余剰はいくらか？",formula:"消費者余剰 ＝ 支払意志額 − 実際の支払価格",steps:"800円 − 500円 ＝ 300円",opts:["100円","200円","300円","500円"],ans:2},
+      {q:"政府支出を100億円増やしたとき、クラウディングアウトにより民間投資が50億円減少した。実際のGDP増加額は？（乗数は5と仮定）",formula:"ネット増加額 ＝（政府支出増 − 民間投資減）× 乗数",steps:"（100億 − 50億）× 5 ＝ 50億 × 5 ＝ 250億円",opts:["100億円","200億円","250億円","500億円"],ans:2},
+      {q:"ある国の輸出が200億ドル、輸入が180億ドル、海外からの所得受取が50億ドル、海外への所得支払が30億ドルのとき、経常収支はいくらか？",formula:"経常収支 ＝ 貿易収支 ＋ 第一次所得収支（簡略化）",steps:"貿易収支：200−180＝20億ドル / 第一次所得収支：50−30＝20億ドル / 経常収支：20＋20＝40億ドルの黒字",opts:["20億ドル黒字","30億ドル黒字","40億ドル黒字","50億ドル黒字"],ans:2},
+      {q:"日本の物価水準が5%上昇し、アメリカの物価水準が2%上昇した。購買力平価説によれば、円はドルに対してどう動くか？",formula:"購買力平価：インフレ率の高い国の通貨は下落する",steps:"日本のインフレ率（5%）＞ アメリカ（2%）→ 日本の物価上昇が相対的に大きい → 円安方向に動く（約3%の円安）",opts:["約3%の円高","変化なし","約3%の円安","約5%の円安"],ans:2},
+      {q:"ある工場が生産量100単位のとき、社会的費用（私的費用＋外部不経済）が1,000万円、私的費用が700万円だった。最適なピグー税（排出量1単位あたり）はいくらか？（単位あたり外部費用を求める）",formula:"ピグー税 ＝ 外部費用（社会的費用 − 私的費用）÷ 生産量",steps:"（1,000万 − 700万）÷ 100単位 ＝ 300万 ÷ 100 ＝ 3万円/単位",opts:["1万円/単位","2万円/単位","3万円/単位","4万円/単位"],ans:2},
+      {q:"前年のGDPが500兆円、今年の名目GDPが520兆円、今年のGDPデフレーターが104（前年＝100）のとき、実質GDP成長率はいくらか？",formula:"今年の実質GDP ＝ 520兆 ÷ 104 × 100 ＝ 500兆円 / 実質成長率 ＝（500−500）÷ 500 × 100",steps:"今年の実質GDP：520 ÷ 1.04 ≒ 500兆円 / 実質GDP成長率：（500−500）÷ 500 × 100 ＝ 0%",opts:["−2%","0%","2%","4%"],ans:1},
+      {q:"限界消費性向が0.6の経済で、政府が100億円の減税を実施した。GDPの増加額はいくらか？（租税乗数を使うこと）",formula:"租税乗数 ＝ −MPC ÷（1 − MPC） / GDP変化 ＝ 租税乗数 × 減税額（符号注意）",steps:"租税乗数 ＝ −0.6 ÷（1 − 0.6）＝ −0.6 ÷ 0.4 ＝ −1.5 / 減税（−100億）× （−1.5）＝ 150億円増加",opts:["100億円増","150億円増","200億円増","250億円増"],ans:1},
+      {q:"IS-LMモデルで、政府支出を200億円増加させた。乗数が3のとき、IS曲線のシフト量（GDPの増加方向）はいくらか？",formula:"IS曲線のシフト量 ＝ 政府支出増加額 × 乗数",steps:"200億 × 3 ＝ 600億円分のIS曲線が右シフト（ただし均衡GDPの増加はLMとの交点で決まり600億より小さい）",opts:["200億円","400億円","600億円","800億円"],ans:2}
+    ]}
+  ]
+};
+
 // ===================== STATE =====================
 let currentSlideSubject = 0;
 let currentSlide = 0;
@@ -1547,8 +1625,98 @@ function openYoutubeCustom() {
   openYoutube(val);
 }
 
+// ===================== CALCULATION MODE =====================
+let currentCalcSubject = 0;
+let calcQuestions = [];
+let currentCalcQ = 0;
+let calcCorrectCount = 0;
+let calcAnsweredCount = 0;
+let calcAnswered = false;
+
+function selectCalcSubject(idx, btn) {
+  currentCalcSubject = idx;
+  document.querySelectorAll('#calcSubjectBtns button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  calcQuestions = calcData.subjects[idx].questions.slice();
+  shuffle(calcQuestions);
+  currentCalcQ = 0;
+  calcCorrectCount = 0;
+  calcAnsweredCount = 0;
+  calcAnswered = false;
+  updateCalcScore();
+  loadCalcQuestion();
+}
+
+function updateCalcScore() {
+  document.getElementById('calcCorrect').textContent = calcCorrectCount;
+  document.getElementById('calcTotal').textContent = calcAnsweredCount;
+  document.getElementById('calcPercent').textContent = calcAnsweredCount > 0 ? Math.round(calcCorrectCount/calcAnsweredCount*100)+'%' : '-%';
+}
+
+function loadCalcQuestion() {
+  const area = document.getElementById('calcArea');
+  if (!calcQuestions.length) {
+    area.innerHTML = '<p style="text-align:center;padding:40px;color:#6b7280">問題データを読み込み中...</p>';
+    return;
+  }
+  calcAnswered = false;
+  const q = calcQuestions[currentCalcQ % calcQuestions.length];
+  const num = currentCalcQ % calcQuestions.length + 1;
+  const total = calcQuestions.length;
+  area.innerHTML = `
+    <div class="calc-card">
+      <div class="calc-progress">問題 ${num} / ${total}</div>
+      <div class="calc-formula-hint">📐 公式ヒント：<span>${q.formula}</span></div>
+      <div class="calc-question">${q.q}</div>
+      <div class="calc-opts" id="calcOpts">
+        ${q.opts.map((o,i) => `<button class="calc-opt-btn" onclick="selectCalcAnswer(${i})">${['A','B','C','D'][i]}. ${o}</button>`).join('')}
+      </div>
+      <div id="calcFeedback"></div>
+      <div class="calc-nav" id="calcNav" style="display:none">
+        <button class="btn-primary" onclick="nextCalcQuestion()">次の問題 →</button>
+      </div>
+    </div>`;
+}
+
+function selectCalcAnswer(idx) {
+  if (calcAnswered) return;
+  calcAnswered = true;
+  calcAnsweredCount++;
+  const q = calcQuestions[currentCalcQ % calcQuestions.length];
+  const isCorrect = idx === q.ans;
+  if (isCorrect) calcCorrectCount++;
+  updateCalcScore();
+  const btns = document.querySelectorAll('.calc-opt-btn');
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.ans) b.classList.add('calc-correct');
+    else if (i === idx && !isCorrect) b.classList.add('calc-wrong');
+  });
+  const fb = document.getElementById('calcFeedback');
+  fb.innerHTML = `
+    <div class="calc-feedback ${isCorrect ? 'correct' : 'wrong'}">
+      <div class="calc-result">${isCorrect ? '✅ 正解！' : '❌ 不正解'}</div>
+      <div class="calc-steps-label">📝 解き方：</div>
+      <div class="calc-steps">${q.steps}</div>
+    </div>`;
+  document.getElementById('calcNav').style.display = 'block';
+}
+
+function nextCalcQuestion() {
+  currentCalcQ++;
+  if (currentCalcQ % calcQuestions.length === 0) {
+    shuffle(calcQuestions);
+  }
+  calcAnswered = false;
+  loadCalcQuestion();
+}
+
 // ===================== START =====================
 init();
+// init calc mode
+calcQuestions = calcData.subjects[0].questions.slice();
+shuffle(calcQuestions);
+loadCalcQuestion();
 </script>
 </body>
 </html>
