@@ -19,18 +19,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 /* Roadmap */
 .roadmap-intro{background:#fff;border-radius:12px;padding:20px;margin-bottom:20px;border-left:4px solid #2563eb}
 .roadmap-intro h2{color:#2563eb;margin-bottom:8px}
-.subject-card{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;display:flex;gap:16px;align-items:flex-start;box-shadow:0 1px 4px rgba(0,0,0,.08);border-left:5px solid #2563eb;transition:transform .2s}
-.subject-card:hover{transform:translateX(4px)}
-.subject-num{background:#2563eb;color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;flex-shrink:0}
-.subject-info h3{font-size:1rem;color:#1e293b;margin-bottom:6px}
-.subject-info p{font-size:.85rem;color:#64748b;line-height:1.6}
-.subject-meta{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
 .badge{padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
-.badge-hours{background:#dbeafe;color:#1d4ed8}
-.badge-diff{background:#fef3c7;color:#92400e}
-.badge-diff.hard{background:#fee2e2;color:#991b1b}
-.badge-diff.medium{background:#fef3c7;color:#92400e}
-.badge-diff.easy{background:#d1fae5;color:#065f46}
 .study-tip{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;margin-top:20px}
 .study-tip h3{color:#065f46;margin-bottom:8px}
 .study-tip ul{padding-left:20px;font-size:.9rem;line-height:1.8;color:#166534}
@@ -215,8 +204,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 @media(max-width:600px){
   header h1{font-size:1.1rem}
   .tab-content{padding:12px}
-  .subject-card{flex-direction:column}
-  .slide-container{padding:18px}
+.slide-container{padding:18px}
   .card-face{padding:20px}
   .question-card{padding:18px}
 }
@@ -258,8 +246,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
   <p>7科目を体系的に学習できる総合学習ツール</p>
 </header>
 <nav id="mainNav">
-  <button class="active" onclick="showTab('roadmap')">🗺️ ロードマップ</button>
-  <button onclick="showTab('schedule')">📅 スケジュール</button>
+  <button class="active" onclick="showTab('schedule')">📅 スケジュール</button>
   <button onclick="showTab('slides')">📖 スライド学習</button>
   <button onclick="showTab('flashcards')">🃏 フラッシュカード</button>
   <button onclick="showTab('quiz')">✏️ 問題演習</button>
@@ -268,110 +255,24 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
   <button onclick="showTab('youtube')">📺 YouTube検索</button>
 </nav>
 
-<!-- TAB 1: ROADMAP -->
-<div id="tab-roadmap" class="tab-content active">
-  <div class="roadmap-intro">
-    <h2>🗺️ 学習ロードマップ</h2>
-    <p>中小企業診断士一次試験は7科目。推奨学習順序と目安時間を確認しましょう。</p>
-  </div>
-  <div class="subject-card" style="border-color:#10b981">
-    <div class="subject-num" style="background:#10b981">1</div>
-    <div class="subject-info">
-      <h3>企業経営理論</h3>
-      <p>経営戦略・マーケティング・組織論の基礎。他科目の土台となる考え方が満載。まず最初に学ぶことで、全体像が見えてきます。SWOT分析、PPM、4Pなど、実務でも使える概念を学べます。</p>
-      <div class="subject-meta">
-        <span class="badge badge-hours">⏱️ 約120時間</span>
-        <span class="badge badge-diff medium">難易度：普通</span>
-        <span class="badge" style="background:#dcfce7;color:#166534">最初に学ぶべき</span>
-      </div>
-    </div>
-  </div>
-  <div class="subject-card" style="border-color:#2563eb">
-    <div class="subject-num">2</div>
-    <div class="subject-info">
-      <h3>財務・会計</h3>
-      <p>BS・PL・CFの読み方から財務分析、原価計算まで。数字が苦手な人も多い科目ですが、診断士の核心スキルです。計算問題が多く、繰り返し練習が必要です。</p>
-      <div class="subject-meta">
-        <span class="badge badge-hours">⏱️ 約150時間</span>
-        <span class="badge badge-diff hard">難易度：高い</span>
-        <span class="badge" style="background:#dbeafe;color:#1e40af">合格のカギ</span>
-      </div>
-    </div>
-  </div>
-  <div class="subject-card" style="border-color:#8b5cf6">
-    <div class="subject-num" style="background:#8b5cf6">3</div>
-    <div class="subject-info">
-      <h3>経済学・経済政策</h3>
-      <p>ミクロ経済学（需要と供給）、マクロ経済学（GDP・景気）、財政・金融政策。グラフの読み方が重要です。大学で経済を学んだ人には比較的取り組みやすい科目です。</p>
-      <div class="subject-meta">
-        <span class="badge badge-hours">⏱️ 約100時間</span>
-        <span class="badge badge-diff medium">難易度：普通</span>
-      </div>
-    </div>
-  </div>
-  <div class="subject-card" style="border-color:#f59e0b">
-    <div class="subject-num" style="background:#f59e0b">4</div>
-    <div class="subject-info">
-      <h3>運営管理</h3>
-      <p>製造業の生産管理と小売業の店舗管理の2本柱。QC・IE・在庫管理・SCMなど実務的な内容が多い。製造業や流通業出身者には馴染みやすい科目です。</p>
-      <div class="subject-meta">
-        <span class="badge badge-hours">⏱️ 約100時間</span>
-        <span class="badge badge-diff medium">難易度：普通</span>
-      </div>
-    </div>
-  </div>
-  <div class="subject-card" style="border-color:#ef4444">
-    <div class="subject-num" style="background:#ef4444">5</div>
-    <div class="subject-info">
-      <h3>経営法務</h3>
-      <p>会社法・契約法・知的財産権・労働法など。法律の知識が問われます。暗記が中心ですが範囲が広く、法律初学者には難しい科目。毎年難易度の変動が大きいです。</p>
-      <div class="subject-meta">
-        <span class="badge badge-hours">⏱️ 約80時間</span>
-        <span class="badge badge-diff hard">難易度：高い</span>
-      </div>
-    </div>
-  </div>
-  <div class="subject-card" style="border-color:#06b6d4">
-    <div class="subject-num" style="background:#06b6d4">6</div>
-    <div class="subject-info">
-      <h3>経営情報システム</h3>
-      <p>コンピュータ・ネットワーク・データベース・セキュリティ・システム開発。IT系出身者には有利な科目。近年AIやクラウドに関する問題も増えています。</p>
-      <div class="subject-meta">
-        <span class="badge badge-hours">⏱️ 約80時間</span>
-        <span class="badge badge-diff easy">難易度：易しい</span>
-        <span class="badge" style="background:#cffafe;color:#164e63">IT知識があれば楽</span>
-      </div>
-    </div>
-  </div>
-  <div class="subject-card" style="border-color:#84cc16">
-    <div class="subject-num" style="background:#84cc16">7</div>
-    <div class="subject-info">
-      <h3>中小企業経営・中小企業政策</h3>
-      <p>日本の中小企業の現状・支援機関・政策・補助金制度。毎年最新の中小企業白書から出題されます。最後に学ぶことで試験直前の暗記に適しています。</p>
-      <div class="subject-meta">
-        <span class="badge badge-hours">⏱️ 約60時間</span>
-        <span class="badge badge-diff easy">難易度：易しい</span>
-        <span class="badge" style="background:#ecfccb;color:#365314">試験直前に仕上げ</span>
-      </div>
-    </div>
-  </div>
-  <div class="study-tip">
-    <h3>💡 学習のコツ</h3>
-    <ul>
-      <li>合計学習時間の目安：<strong>約1,000〜1,200時間</strong>（1〜2年計画）</li>
-      <li>一次試験の合格基準：各科目40点以上、かつ<strong>平均60点以上</strong></li>
-      <li>科目合格制度あり：60点以上の科目は<strong>3年間免除</strong>可能</li>
-      <li>財務・会計と企業経営理論を得意科目にすると二次試験でも有利</li>
-      <li>毎日少しずつ（1〜2時間）継続学習が合格への近道</li>
-    </ul>
-  </div>
-</div>
-
-<!-- TAB 2: SCHEDULE -->
-<div id="tab-schedule" class="tab-content">
+<!-- TAB 1: SCHEDULE -->
+<div id="tab-schedule" class="tab-content active">
   <div class="roadmap-intro">
     <h2>📅 学習スケジュール</h2>
     <p>2つの試験に向けた学習計画を管理しましょう。毎日の学習記録がモチベーションを維持します。</p>
+  </div>
+
+  <!-- 合格基準・注意事項 -->
+  <div class="study-tip" style="margin-bottom:16px">
+    <h3>📋 診断士1次試験 合格基準と注意点</h3>
+    <ul>
+      <li>合格基準：各科目<strong>40点以上</strong>、かつ全7科目の<strong>平均60点以上</strong></li>
+      <li>科目合格制度：60点以上の科目は<strong>3年間免除</strong>可能（戦略的に活用）</li>
+      <li>合計学習時間の目安：<strong>約1,000〜1,200時間</strong>（仕事しながらなら1〜2年）</li>
+      <li>⚠️ このアプリの問題はオリジナル模擬問題です。<strong>実際の過去問は公式・市販教材で必ず演習してください</strong></li>
+      <li>財務・会計と企業経営理論を得意にすると二次試験でも有利</li>
+      <li>推奨学習順：企業経営理論 → 財務・会計 → 経済学 → 運営管理 → 法務 → 情報 → 中小企業政策</li>
+    </ul>
   </div>
 
   <!-- カウントダウン -->
@@ -1603,7 +1504,7 @@ function showTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  const idx = ['roadmap','schedule','slides','flashcards','quiz','kakomon','calc','youtube'].indexOf(tab);
+  const idx = ['schedule','slides','flashcards','quiz','kakomon','calc','youtube'].indexOf(tab);
   if (idx >= 0) document.querySelectorAll('nav button')[idx].classList.add('active');
   if (tab === 'kakomon' && kakomonQuestions.length === 0) filterKakomonQuestions();
   if (tab === 'schedule') renderSchedule();
