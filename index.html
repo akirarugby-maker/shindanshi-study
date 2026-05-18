@@ -1571,6 +1571,32 @@ function changeSlide(dir) {
 }
 
 // ===================== SLIDE NAVIGATION FROM FC / QUIZ =====================
+
+// キーワードでスライドタイトルを検索して最も関連するスライドのインデックスを返す
+function findBestSlide(subjectIdx, searchText) {
+  const slides = slidesData[subjectIdx];
+  if (!slides || slides.length === 0) return 0;
+  // 助詞・記号・空文字を除いたトークンに分割
+  const tokenize = s => s.toLowerCase()
+    .split(/[\s・（）【】「」、。＊\-のでにとをがはへやもからよりまで]/)
+    .filter(w => w.length >= 2);
+  const searchTokens = tokenize(searchText);
+  if (searchTokens.length === 0) return 0;
+  let bestIdx = 0;
+  let bestScore = -1;
+  slides.forEach((slide, idx) => {
+    const titleLower = slide.title.toLowerCase();
+    const titleTokens = tokenize(slide.title);
+    let score = 0;
+    // タイトルのトークンが検索テキストに含まれるか
+    titleTokens.forEach(w => { if (searchText.toLowerCase().includes(w)) score += w.length; });
+    // 検索テキストのトークンがタイトルに含まれるか（双方向）
+    searchTokens.forEach(w => { if (titleLower.includes(w)) score += w.length; });
+    if (score > bestScore) { bestScore = score; bestIdx = idx; }
+  });
+  return bestIdx;
+}
+
 function goToSlideFromFC(subjectIdx, slideIdx) {
   navSource = 'flashcard';
   navReturnCardIdx = currentCard;
@@ -1711,9 +1737,18 @@ function showCard() {
   const linkEl = document.getElementById('fcSlideLink');
   const mapKey = (c.subject || '') + '::' + c.term;
   const dest = fcSlideMap[mapKey];
-  if (dest) {
-    const slideTitle = slidesData[dest.subj][dest.slide].title;
-    linkEl.innerHTML = `<button class="fc-slide-link-btn" onclick="event.stopPropagation();goToSlideFromFC(${dest.subj},${dest.slide})">📖 スライドで学習：${slideTitle}</button>`;
+  const subjNames = ['経済学・経済政策','財務・会計','企業経営理論','運営管理','経営法務','経営情報システム','中小企業経営・中小企業政策'];
+  const subjIdx = subjNames.indexOf(c.subject);
+  if (subjIdx >= 0) {
+    let slideIdx;
+    if (dest) {
+      slideIdx = dest.slide;
+    } else {
+      // fcSlideMap未登録の場合はキーワード検索でベストスライドを探す
+      slideIdx = findBestSlide(subjIdx, c.term + ' ' + (c.def || '') + ' ' + (c.example || ''));
+    }
+    const slideTitle = slidesData[subjIdx][slideIdx].title;
+    linkEl.innerHTML = `<button class="fc-slide-link-btn" onclick="event.stopPropagation();goToSlideFromFC(${subjIdx},${slideIdx})">📖 スライドで学習：${slideTitle}</button>`;
   } else {
     linkEl.innerHTML = '';
   }
@@ -1833,7 +1868,9 @@ function selectAnswer(idx) {
     '運営管理':3,'経営法務':4,'経営情報システム':5,'中小企業経営・中小企業政策':6
   };
   const subjIdx = quizSubjMap[q.subject] ?? 0;
-  const slideBtn = `<button class="quiz-slide-btn" onclick="goToSlideFromQuiz(${subjIdx},0)">📖 スライドで確認（${q.subject}）</button>`;
+  const bestSlide = findBestSlide(subjIdx, q.q + ' ' + q.exp);
+  const slideTitle = slidesData[subjIdx][bestSlide].title;
+  const slideBtn = `<button class="quiz-slide-btn" onclick="goToSlideFromQuiz(${subjIdx},${bestSlide})">📖 スライドで確認：${slideTitle}</button>`;
   const weakTag = isWeakReviewMode && isCorrect ? '<span class="weak-cleared-tag">✅ 苦手リストから削除</span>' : '';
   fb.innerHTML = `<strong>${isCorrect ? '✅ 正解！' : '❌ 不正解 → 苦手リストに追加'}</strong><br>${q.exp}${slideBtn}${weakTag}`;
   document.getElementById('btnNextQ').style.display = 'inline-block';
