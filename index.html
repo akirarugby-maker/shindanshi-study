@@ -89,6 +89,15 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .slide-back-btn:hover{background:#dbeafe}
 .quiz-slide-btn{margin-top:10px;width:100%;padding:9px 14px;background:#f0fdf4;border:2px solid #10b981;border-radius:8px;color:#065f46;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
 .quiz-slide-btn:hover{background:#d1fae5}
+.weak-banner-btn{flex:1;display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:10px 0 0 10px;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;transition:opacity .2s}
+.weak-banner-btn:hover{opacity:.9}
+.weak-count{background:#fff;color:#d97706;border-radius:999px;padding:2px 10px;font-size:.95rem;font-weight:800}
+.weak-clear-btn{padding:10px 14px;background:#fff;border:2px solid #f59e0b;border-radius:0 10px 10px 0;color:#d97706;font-weight:700;cursor:pointer;font-size:.85rem;transition:background .2s}
+.weak-clear-btn:hover{background:#fef3c7}
+#weakBanner{display:flex;align-items:stretch;margin:10px 0 4px;gap:0;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(245,158,11,.25)}
+.weak-cleared-tag{display:inline-block;margin-top:6px;background:#d1fae5;color:#065f46;border-radius:6px;padding:2px 8px;font-size:.8rem;font-weight:700}
+.btn-warning{padding:12px 22px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:.95rem;transition:opacity .2s}
+.btn-warning:hover{opacity:.9}
 .calc-card{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:24px;max-width:700px;margin:0 auto}
 .calc-progress{font-size:.8rem;color:#9ca3af;margin-bottom:10px;font-weight:600}
 .calc-formula-hint{background:#fef3c7;border:1.5px solid #f59e0b;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:.83rem;color:#92400e}
@@ -392,6 +401,12 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
       <div class="score-item"><div class="num" id="qTotal2">0</div><div class="label">解答済</div></div>
       <div class="score-item"><div class="num" id="qPercent">-%</div><div class="label">正答率</div></div>
     </div>
+  </div>
+  <div id="weakBanner" style="display:none">
+    <button class="weak-banner-btn" onclick="startWeakReview()">
+      <span>⚠️ 苦手問題</span><span id="weakCount" class="weak-count">0</span><span>問 → 今すぐ復習する</span>
+    </button>
+    <button class="weak-clear-btn" onclick="clearWeakPool()" title="苦手問題リストをリセット">✕ リセット</button>
   </div>
   <div id="quizArea"></div>
 </div>
@@ -1505,13 +1520,16 @@ function prevCard() {
 
 // ===================== QUIZ =====================
 function selectQuizSubject(idx, btn) {
+  isWeakReviewMode = false;
+  const header = document.querySelector('#tab-quiz .subject-selector h3');
+  if (header) header.textContent = '✏️ 科目を選んでください';
   currentQuizSubject = idx;
   document.querySelectorAll('#quizSubjectBtns button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  resetQuiz();
+  reloadCurrentSubject();
 }
 
-function resetQuiz() {
+function reloadCurrentSubject() {
   if (currentQuizSubject === 0) {
     quizQuestions = quizData.subjects.flatMap(s => s.questions.map(q => ({...q, subject: s.name})));
   } else {
@@ -1525,7 +1543,7 @@ function resetQuiz() {
   loadQuestion();
 }
 
-function loadQuiz() { resetQuiz(); }
+function loadQuiz() { reloadCurrentSubject(); }
 
 function shuffle(arr) {
   for (let i = arr.length-1; i > 0; i--) {
@@ -1578,16 +1596,23 @@ function selectAnswer(idx) {
     if (i === q.ans) btn.classList.add('correct');
     else if (i === idx && !isCorrect) btn.classList.add('wrong');
   });
+  // 苦手問題トラッキング
+  if (!isCorrect) {
+    addToWeakPool(q);
+  } else if (isWeakReviewMode) {
+    removeFromWeakPool(q);
+  }
+  updateWeakBanner();
   const fb = document.getElementById('feedback');
   fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
-  // 科目名→スライド科目インデックス変換
   const quizSubjMap = {
     '経済学・経済政策':0,'財務・会計':1,'企業経営理論':2,
     '運営管理':3,'経営法務':4,'経営情報システム':5,'中小企業経営・中小企業政策':6
   };
   const subjIdx = quizSubjMap[q.subject] ?? 0;
   const slideBtn = `<button class="quiz-slide-btn" onclick="goToSlideFromQuiz(${subjIdx},0)">📖 スライドで確認（${q.subject}）</button>`;
-  fb.innerHTML = `<strong>${isCorrect ? '✅ 正解！' : '❌ 不正解'}</strong><br>${q.exp}${slideBtn}`;
+  const weakTag = isWeakReviewMode && isCorrect ? '<span class="weak-cleared-tag">✅ 苦手リストから削除</span>' : '';
+  fb.innerHTML = `<strong>${isCorrect ? '✅ 正解！' : '❌ 不正解 → 苦手リストに追加'}</strong><br>${q.exp}${slideBtn}${weakTag}`;
   document.getElementById('btnNextQ').style.display = 'inline-block';
 }
 
@@ -1598,19 +1623,85 @@ function nextQuestion() {
 
 function showComplete() {
   const pct = quizAnswered > 0 ? Math.round(quizCorrect/quizAnswered*100) : 0;
-  let msg = pct >= 80 ? '🎉 素晴らしい！合格圏内です！' : pct >= 60 ? '👍 もう少しで合格ライン！' : '📚 復習して再チャレンジ！';
+  let msg = isWeakReviewMode
+    ? (weakPool.length === 0 ? '🎉 全ての苦手問題をクリアしました！' : `⚠️ まだ苦手問題が ${weakPool.length} 問残っています`)
+    : (pct >= 80 ? '🎉 素晴らしい！合格圏内です！' : pct >= 60 ? '👍 もう少しで合格ライン！' : '📚 復習して再チャレンジ！');
+  const weakBtn = weakPool.length > 0
+    ? `<button class="btn-warning" onclick="startWeakReview()">⚠️ 苦手${weakPool.length}問を復習</button>`
+    : '';
   document.getElementById('quizArea').innerHTML = `
     <div class="question-card quiz-complete">
-      <h2>🏁 問題終了！</h2>
+      <h2>${isWeakReviewMode ? '⚠️ 苦手問題復習 終了！' : '🏁 問題終了！'}</h2>
       <div class="big-score">${pct}%</div>
       <p>${quizCorrect} / ${quizAnswered} 問正解</p>
       <p style="font-size:1.1rem;font-weight:600;color:#1e293b;margin-bottom:20px">${msg}</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button class="btn-primary" onclick="resetQuiz()">🔄 もう一度</button>
+        <button class="btn-primary" onclick="resetQuiz()">🔄 通常問題に戻る</button>
+        ${weakBtn}
         <button class="btn-secondary" onclick="showTab('flashcards')">🃏 フラッシュカードで復習</button>
       </div>
     </div>
   `;
+}
+
+// ===================== WEAK QUESTION REVIEW =====================
+let weakPool = []; // 苦手問題プール
+let isWeakReviewMode = false;
+
+function addToWeakPool(q) {
+  if (!weakPool.find(w => w.q === q.q)) {
+    weakPool.push({...q});
+  }
+}
+
+function removeFromWeakPool(q) {
+  const idx = weakPool.findIndex(w => w.q === q.q);
+  if (idx !== -1) weakPool.splice(idx, 1);
+}
+
+function updateWeakBanner() {
+  const banner = document.getElementById('weakBanner');
+  const countEl = document.getElementById('weakCount');
+  if (!banner) return;
+  if (weakPool.length > 0) {
+    banner.style.display = 'flex';
+    countEl.textContent = weakPool.length;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function startWeakReview() {
+  if (weakPool.length === 0) return;
+  isWeakReviewMode = true;
+  quizQuestions = weakPool.map(q => ({...q}));
+  shuffle(quizQuestions);
+  currentQuestion = 0;
+  quizCorrect = 0;
+  quizAnswered = 0;
+  answered = false;
+  updateQuizScore();
+  // タブが違う場合はクイズタブを表示
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-quiz').classList.add('active');
+  // ヘッダーを苦手復習モード表示に
+  const header = document.querySelector('#tab-quiz .subject-selector h3');
+  if (header) header.textContent = '⚠️ 苦手問題復習モード';
+  loadQuestion();
+}
+
+function clearWeakPool() {
+  if (!confirm('苦手問題リスト（' + weakPool.length + '問）をリセットしますか？')) return;
+  weakPool = [];
+  isWeakReviewMode = false;
+  updateWeakBanner();
+}
+
+function resetQuiz() {
+  isWeakReviewMode = false;
+  const header = document.querySelector('#tab-quiz .subject-selector h3');
+  if (header) header.textContent = '✏️ 科目を選んでください';
+  reloadCurrentSubject();
 }
 
 // ===================== YOUTUBE SEARCH =====================
