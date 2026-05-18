@@ -85,6 +85,10 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .card-back .card-example{font-size:.85rem;color:#2563eb;background:#eff6ff;padding:8px 12px;border-radius:8px;width:100%}
 .fc-slide-link-btn{margin-top:12px;width:100%;padding:10px 14px;background:#f0fdf4;border:2px solid #10b981;border-radius:10px;color:#065f46;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
 .fc-slide-link-btn:hover{background:#d1fae5}
+.slide-back-btn{width:100%;padding:10px 16px;background:#eff6ff;border:2px solid #3b82f6;border-radius:10px;color:#1e40af;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
+.slide-back-btn:hover{background:#dbeafe}
+.quiz-slide-btn{margin-top:10px;width:100%;padding:9px 14px;background:#f0fdf4;border:2px solid #10b981;border-radius:8px;color:#065f46;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
+.quiz-slide-btn:hover{background:#d1fae5}
 .card-actions{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
 .card-actions button{padding:12px 28px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:.95rem;transition:all .2s}
 .btn-knew{background:#10b981;color:#fff}
@@ -291,12 +295,14 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
       <span class="slide-num" id="slideNumLabel">スライド 1/6</span>
       <div class="slide-progress"><div class="slide-progress-bar" id="slideProgressBar" style="width:16.7%"></div></div>
     </div>
+    <div id="slideBackBtn" style="display:none;margin-bottom:10px"></div>
     <div id="slideContent"></div>
     <div class="slide-nav">
       <button class="btn-prev" id="btnPrev" onclick="changeSlide(-1)" disabled>← 前へ</button>
       <span class="slide-counter" id="slideCounter">1 / 6</span>
       <button class="btn-next" id="btnNext" onclick="changeSlide(1)">次へ →</button>
     </div>
+    <div id="slideBackBtn2" style="display:none;margin-top:10px"></div>
   </div>
 </div>
 
@@ -975,25 +981,6 @@ const fcSlideMap = {
   "中小企業経営・中小企業政策::小規模企業振興基本法":     {subj:6, slide:26},
 };
 
-// Helper: subject index → button element in slideSubjectBtns
-const slideSubjectBtnIdx = [0,1,2,3,4,5,6]; // matches selectSlideSubject order
-
-function goToSlideFromFC(subjectIdx, slideIdx) {
-  // Switch to slides tab
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-slides').classList.add('active');
-  document.querySelectorAll('nav button')[1].classList.add('active');
-  // Select the correct subject
-  const subjBtns = document.querySelectorAll('#slideSubjectBtns button');
-  subjBtns.forEach(b => b.classList.remove('active'));
-  if (subjBtns[subjectIdx]) subjBtns[subjectIdx].classList.add('active');
-  currentSlideSubject = subjectIdx;
-  currentSlide = slideIdx;
-  loadSlide();
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
 
 const quizData = {
   subjects: [
@@ -1109,6 +1096,10 @@ let currentQuestion = 0;
 let quizCorrect = 0;
 let quizAnswered = 0;
 let answered = false;
+// 遷移元追跡（'flashcard' | 'quiz' | null）
+let navSource = null;
+let navReturnCardIdx = 0;
+let navReturnQuestionIdx = 0;
 
 // ===================== INIT =====================
 function init() {
@@ -1138,6 +1129,7 @@ function showTab(tab) {
 
 // ===================== SLIDES =====================
 function selectSlideSubject(idx, btn) {
+  navSource = null; // 科目ボタンで直接選択したときは遷移元をリセット
   currentSlideSubject = idx;
   currentSlide = 0;
   document.querySelectorAll('#slideSubjectBtns button').forEach(b => b.classList.remove('active'));
@@ -1167,12 +1159,79 @@ function loadSlide() {
       <ul>${s.points.map(p=>`<li>${p}</li>`).join('')}</ul>
     </div>
   `;
+  // 戻るボタンの表示制御
+  const backHtml = navSource === 'flashcard'
+    ? `<button class="slide-back-btn" onclick="returnToFC()">← フラッシュカードに戻る</button>`
+    : navSource === 'quiz'
+    ? `<button class="slide-back-btn" onclick="returnToQuiz()">← 問題演習に戻る</button>`
+    : '';
+  const show = navSource !== null;
+  ['slideBackBtn','slideBackBtn2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.display = show ? 'block' : 'none';
+    el.innerHTML = backHtml;
+  });
 }
 
 function changeSlide(dir) {
   const slides = slidesData[currentSlideSubject];
   currentSlide = Math.max(0, Math.min(slides.length-1, currentSlide + dir));
   loadSlide();
+}
+
+// ===================== SLIDE NAVIGATION FROM FC / QUIZ =====================
+function goToSlideFromFC(subjectIdx, slideIdx) {
+  navSource = 'flashcard';
+  navReturnCardIdx = currentCard;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-slides').classList.add('active');
+  document.querySelectorAll('nav button')[1].classList.add('active');
+  const subjBtns = document.querySelectorAll('#slideSubjectBtns button');
+  subjBtns.forEach(b => b.classList.remove('active'));
+  if (subjBtns[subjectIdx]) subjBtns[subjectIdx].classList.add('active');
+  currentSlideSubject = subjectIdx;
+  currentSlide = slideIdx;
+  loadSlide();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function goToSlideFromQuiz(subjectIdx, slideIdx) {
+  navSource = 'quiz';
+  navReturnQuestionIdx = currentQuestion;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-slides').classList.add('active');
+  document.querySelectorAll('nav button')[1].classList.add('active');
+  const subjBtns = document.querySelectorAll('#slideSubjectBtns button');
+  subjBtns.forEach(b => b.classList.remove('active'));
+  if (subjBtns[subjectIdx]) subjBtns[subjectIdx].classList.add('active');
+  currentSlideSubject = subjectIdx;
+  currentSlide = slideIdx;
+  loadSlide();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function returnToFC() {
+  navSource = null;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-flashcards').classList.add('active');
+  document.querySelectorAll('nav button')[2].classList.add('active');
+  currentCard = navReturnCardIdx;
+  showCard();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function returnToQuiz() {
+  navSource = null;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-quiz').classList.add('active');
+  document.querySelectorAll('nav button')[3].classList.add('active');
+  currentQuestion = navReturnQuestionIdx;
+  loadQuestion();
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 // ===================== FLASHCARDS =====================
@@ -1328,7 +1387,14 @@ function selectAnswer(idx) {
   });
   const fb = document.getElementById('feedback');
   fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
-  fb.innerHTML = `<strong>${isCorrect ? '✅ 正解！' : '❌ 不正解'}</strong><br>${q.exp}`;
+  // 科目名→スライド科目インデックス変換
+  const quizSubjMap = {
+    '経済学・経済政策':0,'財務・会計':1,'企業経営理論':2,
+    '運営管理':3,'経営法務':4,'経営情報システム':5,'中小企業経営・中小企業政策':6
+  };
+  const subjIdx = quizSubjMap[q.subject] ?? 0;
+  const slideBtn = `<button class="quiz-slide-btn" onclick="goToSlideFromQuiz(${subjIdx},0)">📖 スライドで確認（${q.subject}）</button>`;
+  fb.innerHTML = `<strong>${isCorrect ? '✅ 正解！' : '❌ 不正解'}</strong><br>${q.exp}${slideBtn}`;
   document.getElementById('btnNextQ').style.display = 'inline-block';
 }
 
