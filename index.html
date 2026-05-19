@@ -198,6 +198,8 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .btn-primary:hover{background:#1d4ed8}
 .btn-secondary{padding:10px 24px;background:#f1f5f9;color:#475569;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s}
 .btn-secondary:hover{background:#e2e8f0}
+.btn-skip{padding:10px 20px;background:#fff;color:#6b7280;border:2px solid #d1d5db;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s}
+.btn-skip:hover{background:#f9fafb;border-color:#9ca3af;color:#374151}
 .quiz-complete{text-align:center;padding:40px 20px}
 .quiz-complete .big-score{font-size:3rem;font-weight:700;color:#2563eb;margin:16px 0}
 .quiz-complete p{color:#64748b;margin-bottom:20px}
@@ -1978,6 +1980,7 @@ function loadQuestion() {
       <div id="feedback"></div>
       <div class="quiz-nav">
         <button class="btn-secondary" onclick="resetQuiz()">🔄 リセット</button>
+        <button class="btn-skip" id="btnSkipQ" onclick="skipQuestion()">次へ →</button>
         <button class="btn-primary" id="btnNextQ" onclick="nextQuestion()" style="display:none">次の問題 →</button>
       </div>
     </div>
@@ -2018,6 +2021,13 @@ function selectAnswer(idx) {
   const weakTag = isWeakReviewMode && isCorrect ? '<span class="weak-cleared-tag">✅ 苦手リストから削除</span>' : '';
   fb.innerHTML = `<strong>${isCorrect ? '✅ 正解！' : '❌ 不正解 → 苦手リストに追加'}</strong><br>${q.exp}${slideBtn}${weakTag}`;
   document.getElementById('btnNextQ').style.display = 'inline-block';
+  const skipBtn = document.getElementById('btnSkipQ');
+  if (skipBtn) skipBtn.style.display = 'none';
+}
+
+function skipQuestion() {
+  currentQuestion++;
+  loadQuestion();
 }
 
 function nextQuestion() {
@@ -2353,8 +2363,9 @@ function loadKakomonQuestion() {
         ${q.opts.map((o, i) => `<button class="kk-opt-btn" onclick="selectKakomonAnswer(${i})">${['ア','イ','ウ','エ'][i]}. ${o}</button>`).join('')}
       </div>
       <div class="kk-feedback" id="kkFeedback" style="display:none"></div>
-      <div class="kk-nav" id="kkNav" style="display:none">
-        <button class="btn-primary" onclick="nextKakomonQuestion()">次の問題 →</button>
+      <div class="kk-nav">
+        <button class="btn-skip" id="kkSkipBtn" onclick="skipKakomonQuestion()">次へ →</button>
+        <button class="btn-primary" id="kkNextBtn" onclick="nextKakomonQuestion()" style="display:none">次の問題 →</button>
       </div>
     </div>`;
   document.getElementById('kakomonArea').innerHTML = html;
@@ -2377,7 +2388,15 @@ function selectKakomonAnswer(idx) {
   const feedback = document.getElementById('kkFeedback');
   feedback.style.display = 'block';
   feedback.innerHTML = `<div class="kk-result ${isCorrect ? 'kk-ok' : 'kk-ng'}">${isCorrect ? '✅ 正解！' : '❌ 不正解'}</div><div class="kk-exp">${q.exp}</div>`;
-  document.getElementById('kkNav').style.display = 'block';
+  const skipBtn = document.getElementById('kkSkipBtn');
+  if (skipBtn) skipBtn.style.display = 'none';
+  const nextBtn = document.getElementById('kkNextBtn');
+  if (nextBtn) nextBtn.style.display = 'inline-block';
+}
+
+function skipKakomonQuestion() {
+  currentKakomonQ++;
+  loadKakomonQuestion();
 }
 
 function nextKakomonQuestion() {
@@ -2476,8 +2495,9 @@ function loadCalcQuestion() {
         ${q.opts.map((o,i) => `<button class="calc-opt-btn" onclick="selectCalcAnswer(${i})">${['A','B','C','D'][i]}. ${o}</button>`).join('')}
       </div>
       <div id="calcFeedback"></div>
-      <div class="calc-nav" id="calcNav" style="display:none">
-        <button class="btn-primary" onclick="nextCalcQuestion()">次の問題 →</button>
+      <div class="calc-nav">
+        <button class="btn-skip" id="calcSkipBtn" onclick="skipCalcQuestion()">次へ →</button>
+        <button class="btn-primary" id="calcNextBtn" onclick="nextCalcQuestion()" style="display:none">次の問題 →</button>
       </div>
     </div>`;
 }
@@ -2503,7 +2523,15 @@ function selectCalcAnswer(idx) {
       <div class="calc-steps-label">📝 解き方：</div>
       <div class="calc-steps">${q.steps}</div>
     </div>`;
-  document.getElementById('calcNav').style.display = 'block';
+  const skipBtn = document.getElementById('calcSkipBtn');
+  if (skipBtn) skipBtn.style.display = 'none';
+  const nextBtn = document.getElementById('calcNextBtn');
+  if (nextBtn) nextBtn.style.display = 'inline-block';
+}
+
+function skipCalcQuestion() {
+  currentCalcQ++;
+  loadCalcQuestion();
 }
 
 function nextCalcQuestion() {
