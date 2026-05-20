@@ -1701,12 +1701,23 @@ function loadSlide() {
   const slideSubjNames = ['経済学・経済政策','財務・会計','企業経営理論','運営管理','経営法務','経営情報システム','中小企業経営・政策'];
   const safeTitle = s.title.replace(/'/g, "\\'");
   const safeSubj = slideSubjNames[currentSlideSubject];
-  document.getElementById('slideActionBtns').innerHTML = `
-    <button class="slide-action-btn slide-fc-btn" onclick="goToFCFromSlide()">🃏 この科目のフラッシュカード</button>
-    <button class="slide-action-btn slide-quiz-btn" onclick="goToQuizFromSlide()">✏️ この科目の問題演習</button>
-    <button class="slide-action-btn slide-kk-btn" onclick="goToKakomonFromSlide()">📝 この科目の関連過去問</button>
-    <button class="slide-action-btn slide-yt-btn" onclick="openSlideYoutube('${safeTitle}','${safeSubj}')">▶ YouTube で理解を深める</button>
-  `;
+  const tokens = slideTokens(currentSlideSubject, currentSlide);
+  const fcIdx = findBestFCCard(currentSlideSubject, tokens);
+  const relQuiz = hasRelatedQuiz(currentSlideSubject, tokens);
+  const relKakomon = hasRelatedKakomon(currentSlideSubject, tokens);
+  let actionHtml = '';
+  if (fcIdx >= 0) {
+    const term = flashcardsData.subjects[currentSlideSubject].cards[fcIdx].term;
+    actionHtml += `<button class="slide-action-btn slide-fc-btn" onclick="goToFCFromSlide(${fcIdx})">🃏 FC: ${term}</button>`;
+  }
+  if (relQuiz) {
+    actionHtml += `<button class="slide-action-btn slide-quiz-btn" onclick="goToQuizFromSlide()">✏️ 関連問題演習へ</button>`;
+  }
+  if (relKakomon) {
+    actionHtml += `<button class="slide-action-btn slide-kk-btn" onclick="goToKakomonFromSlide()">📝 関連過去問へ</button>`;
+  }
+  actionHtml += `<button class="slide-action-btn slide-yt-btn" onclick="openSlideYoutube('${safeTitle}','${safeSubj}')">▶ YouTube で理解を深める</button>`;
+  document.getElementById('slideActionBtns').innerHTML = actionHtml;
   autoCheckSlide(currentSlideSubject, currentSlide);
 }
 
@@ -1722,7 +1733,6 @@ function changeSlide(dir) {
 function findBestSlide(subjectIdx, searchText) {
   const slides = slidesData[subjectIdx];
   if (!slides || slides.length === 0) return 0;
-  // 助詞・記号・空文字を除いたトークンに分割
   const tokenize = s => s.toLowerCase()
     .split(/[\s・（）【】「」、。＊\-のでにとをがはへやもからよりまで]/)
     .filter(w => w.length >= 2);
@@ -1734,13 +1744,58 @@ function findBestSlide(subjectIdx, searchText) {
     const titleLower = slide.title.toLowerCase();
     const titleTokens = tokenize(slide.title);
     let score = 0;
-    // タイトルのトークンが検索テキストに含まれるか
     titleTokens.forEach(w => { if (searchText.toLowerCase().includes(w)) score += w.length; });
-    // 検索テキストのトークンがタイトルに含まれるか（双方向）
     searchTokens.forEach(w => { if (titleLower.includes(w)) score += w.length; });
     if (score > bestScore) { bestScore = score; bestIdx = idx; }
   });
   return bestIdx;
+}
+
+function extractTokens(text) {
+  return text
+    .replace(/[（）【】「」、。！？・＊\-\(\)\[\]①②③④⑤⑥⑦：:→＝＋×÷]/g, ' ')
+    .replace(/って|では|には|から|まで|など|とは|であり|として/g, ' ')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(w => w.length >= 2);
+}
+
+function scoreTokenMatch(tokens, text) {
+  const t = text.toLowerCase();
+  let score = 0;
+  tokens.forEach(kw => { if (t.includes(kw)) score += kw.length; });
+  return score;
+}
+
+function slideTokens(subjectIdx, slideIdx) {
+  const s = slidesData[subjectIdx][slideIdx];
+  return extractTokens(s.title + ' ' + s.points.join(' '));
+}
+
+function findBestFCCard(subjectIdx, tokens) {
+  const cards = flashcardsData.subjects[subjectIdx].cards;
+  let bestScore = 0, bestIdx = -1;
+  cards.forEach((card, i) => {
+    const score = scoreTokenMatch(tokens, card.term + ' ' + (card.def || ''));
+    if (score > bestScore) { bestScore = score; bestIdx = i; }
+  });
+  return bestScore >= 4 ? bestIdx : -1;
+}
+
+function hasRelatedQuiz(subjectIdx, tokens) {
+  return quizData.subjects[subjectIdx].questions.some(q =>
+    scoreTokenMatch(tokens, q.q + ' ' + (q.exp || '') + ' ' + (q.opts || []).join(' ')) >= 4
+  );
+}
+
+function hasRelatedKakomon(subjectIdx, tokens) {
+  return kakomonData.subjects[subjectIdx].questions.some(q =>
+    scoreTokenMatch(tokens, q.q + ' ' + (q.exp || '') + ' ' + (q.opts || []).join(' ')) >= 4
+  );
+}
+
+function fcTokens(card) {
+  return extractTokens(card.term + ' ' + (card.def || ''));
 }
 
 function goToSlideFromFC(subjectIdx, slideIdx) {
@@ -1895,7 +1950,7 @@ function returnToFCFromKakomon() {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function goToFCFromSlide() {
+function goToFCFromSlide(fcCardIdx) {
   fcFromSlide = true;
   fcFromSlideSubject = currentSlideSubject;
   fcFromSlideIdx = currentSlide;
@@ -1908,6 +1963,10 @@ function goToFCFromSlide() {
   fcBtns.forEach(b => b.classList.remove('active'));
   if (fcBtns[currentFCSubject]) fcBtns[currentFCSubject].classList.add('active');
   loadFC();
+  if (typeof fcCardIdx === 'number' && fcCardIdx >= 0) {
+    currentCard = fcCardIdx;
+    showCard();
+  }
   updateFCBackBtn();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -2049,8 +2108,17 @@ function showCard() {
     }
     const slideTitle = slidesData[subjIdx][slideIdx].title;
     linkEl.innerHTML = `<button class="fc-slide-link-btn" onclick="event.stopPropagation();goToSlideFromFC(${subjIdx},${slideIdx})">📖 スライドで学習：${slideTitle}</button>`;
-    quizLinkEl.innerHTML = `<button class="fc-quiz-link-btn" onclick="event.stopPropagation();goToQuizFromFC(${subjIdx})">✏️ この科目の問題演習へ</button>`;
-    kakomonLinkEl.innerHTML = `<button class="fc-kakomon-link-btn" onclick="event.stopPropagation();goToKakomonFromFC(${subjIdx})">📝 この科目の過去問へ</button>`;
+    const tokens = fcTokens(c);
+    if (hasRelatedQuiz(subjIdx, tokens)) {
+      quizLinkEl.innerHTML = `<button class="fc-quiz-link-btn" onclick="event.stopPropagation();goToQuizFromFC(${subjIdx})">✏️ 関連問題演習へ</button>`;
+    } else {
+      quizLinkEl.innerHTML = '';
+    }
+    if (hasRelatedKakomon(subjIdx, tokens)) {
+      kakomonLinkEl.innerHTML = `<button class="fc-kakomon-link-btn" onclick="event.stopPropagation();goToKakomonFromFC(${subjIdx})">📝 関連過去問へ</button>`;
+    } else {
+      kakomonLinkEl.innerHTML = '';
+    }
   } else {
     linkEl.innerHTML = '';
     quizLinkEl.innerHTML = '';
