@@ -246,6 +246,27 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .yt-custom-row input:focus{border-color:#ef4444}
 .yt-custom-row button{padding:10px 20px;background:#ef4444;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.9rem;white-space:nowrap}
 .yt-custom-row button:hover{background:#dc2626}
+/* Global Search */
+.search-widget{background:#fff;border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.search-widget h3{font-size:.9rem;font-weight:700;color:#374151;margin-bottom:10px}
+.search-row{display:flex;gap:8px}
+.search-row input{flex:1;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:.95rem;outline:none;font-family:inherit;color:#1e293b;background:#f8fafc}
+.search-row input:focus{border-color:#6366f1;background:#fff;box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+.search-row button{padding:10px 16px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:.9rem;cursor:pointer;font-weight:700;white-space:nowrap;font-family:inherit}
+.search-row button:hover{background:#4f46e5}
+.search-results{margin-top:12px}
+.search-count{font-size:.82rem;color:#6b7280;margin-bottom:10px;font-weight:600}
+.search-group-label{font-size:.75rem;font-weight:700;color:#9ca3af;letter-spacing:.5px;margin:14px 0 6px;text-transform:uppercase}
+.search-result-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:8px;border:1.5px solid #e2e8f0;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.search-result-item:hover{border-color:#6366f1;background:#f5f3ff}
+.search-result-icon{font-size:1.05rem;flex-shrink:0;margin-top:1px}
+.search-result-body{flex:1;min-width:0}
+.search-result-meta{font-size:.72rem;color:#9ca3af;font-weight:600;margin-bottom:2px}
+.search-result-title{font-size:.88rem;font-weight:700;color:#1f2937;line-height:1.4}
+.search-result-preview{font-size:.78rem;color:#6b7280;margin-top:2px;line-height:1.4}
+.search-result-preview mark{background:#fde68a;color:#92400e;border-radius:2px;padding:0 1px;font-style:normal}
+.search-result-title mark{background:#fde68a;color:#92400e;border-radius:2px;padding:0 1px;font-style:normal}
+.search-no-results{text-align:center;color:#9ca3af;padding:20px 0;font-size:.9rem}
 </style>
 </head>
 <body>
@@ -265,6 +286,16 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 
 <!-- TAB 1: SCHEDULE -->
 <div id="tab-schedule" class="tab-content active">
+
+  <!-- 検索 -->
+  <div class="search-widget">
+    <h3>🔍 用語・キーワード検索</h3>
+    <div class="search-row">
+      <input type="text" id="globalSearchInput" placeholder="例：購買力平価、ROE、ビルトインスタビライザー…" oninput="doGlobalSearch()" onkeydown="if(event.key==='Enter')doGlobalSearch()">
+      <button onclick="doGlobalSearch()">🔍 検索</button>
+    </div>
+    <div id="searchResults"></div>
+  </div>
 
   <!-- 合格基準・注意事項 -->
   <div class="study-tip" style="margin-bottom:16px">
@@ -2864,6 +2895,133 @@ function nextCalcQuestion() {
   }
   calcAnswered = false;
   loadCalcQuestion();
+}
+
+// ===================== GLOBAL SEARCH =====================
+let searchResultsCache = [];
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function doGlobalSearch() {
+  const raw = (document.getElementById('globalSearchInput').value || '').trim();
+  const container = document.getElementById('searchResults');
+  searchResultsCache = [];
+  if (!raw) { container.innerHTML = ''; return; }
+  const q = raw.toLowerCase();
+
+  slidesData.forEach((subject, si) => {
+    subject.forEach((slide, idx) => {
+      const text = (slide.title + ' ' + slide.points.join(' ')).toLowerCase();
+      if (text.includes(q)) {
+        const preview = slide.points.find(p => p.toLowerCase().includes(q)) || slide.title;
+        searchResultsCache.push({ type:'slide', si, idx, title: slide.title, preview, subject: SUBJECT_THEMES[si].name });
+      }
+    });
+  });
+
+  flashcardsData.subjects.forEach((s, si) => {
+    s.cards.forEach((card, idx) => {
+      const text = (card.term + ' ' + (card.def || '') + ' ' + (card.example || '')).toLowerCase();
+      if (text.includes(q)) {
+        searchResultsCache.push({ type:'fc', si, idx, title: card.term, preview: card.def || '', subject: s.name });
+      }
+    });
+  });
+
+  quizData.subjects.forEach((s, si) => {
+    s.questions.forEach(question => {
+      const text = (question.q + ' ' + (question.exp || '') + ' ' + (question.opts || []).join(' ')).toLowerCase();
+      if (text.includes(q)) {
+        searchResultsCache.push({ type:'quiz', si, title: question.q, preview: question.exp || '', subject: s.name, question });
+      }
+    });
+  });
+
+  kakomonData.subjects.forEach((s, si) => {
+    s.questions.forEach(question => {
+      const text = (question.q + ' ' + (question.exp || '') + ' ' + (question.opts || []).join(' ')).toLowerCase();
+      if (text.includes(q)) {
+        searchResultsCache.push({ type:'kakomon', si, title: question.q, preview: question.exp || '', subject: s.name, question, year: question.year });
+      }
+    });
+  });
+
+  const total = searchResultsCache.length;
+  if (total === 0) {
+    container.innerHTML = `<div class="search-no-results">「${escHtml(raw)}」に一致する結果が見つかりませんでした</div>`;
+    return;
+  }
+
+  const hl = (text, keyword) => {
+    const escaped = escHtml(text);
+    const re = new RegExp('(' + keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+    return escaped.replace(re, '<mark>$1</mark>');
+  };
+  const short = (text, max) => text.length > max ? text.slice(0, max) + '…' : text;
+
+  let html = `<div class="search-count">「${escHtml(raw)}」の検索結果：${total}件</div>`;
+
+  const groups = [
+    { type:'slide',   label:'📖 スライド学習', icon:'📖' },
+    { type:'fc',      label:'🃏 フラッシュカード', icon:'🃏' },
+    { type:'quiz',    label:'✏️ 問題演習', icon:'✏️' },
+    { type:'kakomon', label:'📝 過去問', icon:'📝' },
+  ];
+
+  groups.forEach(g => {
+    const items = searchResultsCache.map((r, i) => ({ r, i })).filter(x => x.r.type === g.type);
+    if (!items.length) return;
+    html += `<div class="search-group-label">${g.label}（${items.length}件）</div>`;
+    items.forEach(({ r, i }) => {
+      const yearTag = r.year ? ` <span style="color:#6366f1;font-weight:700">${escHtml(r.year)}</span>` : '';
+      html += `<div class="search-result-item" onclick="goToSearchResult(${i})">
+        <div class="search-result-icon">${g.icon}</div>
+        <div class="search-result-body">
+          <div class="search-result-meta">${escHtml(r.subject)}${yearTag}</div>
+          <div class="search-result-title">${hl(short(r.title, 60), q)}</div>
+          <div class="search-result-preview">${hl(short(r.preview, 80), q)}</div>
+        </div>
+      </div>`;
+    });
+  });
+
+  container.innerHTML = html;
+}
+
+function goToSearchResult(cacheIdx) {
+  const r = searchResultsCache[cacheIdx];
+  if (!r) return;
+  if (r.type === 'slide') {
+    showTab('slides');
+    currentSlideSubject = r.si;
+    currentSlide = r.idx;
+    document.querySelectorAll('#slideSubjectBtns button').forEach((b, i) => b.classList.toggle('active', i === r.si));
+    loadSlide();
+  } else if (r.type === 'fc') {
+    showTab('flashcards');
+    currentFCSubject = r.si + 1;
+    document.querySelectorAll('#fcSubjectBtns button').forEach((b, i) => b.classList.toggle('active', i === currentFCSubject));
+    loadFC();
+    currentCard = r.idx;
+    showCard();
+  } else if (r.type === 'quiz') {
+    showTab('quiz');
+    currentQuizSubject = r.si + 1;
+    document.querySelectorAll('#quizSubjectBtns button').forEach((b, i) => b.classList.toggle('active', i === currentQuizSubject));
+    reloadCurrentSubject();
+    navigateToQuestion(r.question);
+  } else if (r.type === 'kakomon') {
+    showTab('kakomon');
+    currentKakomonSubject = r.si + 1;
+    kakomonNavKeyword = r.question.q;
+    document.querySelectorAll('#kakomonSubjectBtns button').forEach((b, i) => b.classList.toggle('active', i === currentKakomonSubject));
+    currentKakomonYear = 0;
+    document.querySelectorAll('#kakomonYearBtns button').forEach((b, i) => b.classList.toggle('active', i === 0));
+    filterKakomonQuestions();
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ===================== START =====================
