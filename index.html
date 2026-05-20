@@ -113,6 +113,8 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .prog-theme-name{font-size:.84rem;font-weight:600;color:#374151;flex:1;line-height:1.4}
 .prog-reset-theme-btn{padding:2px 7px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:5px;color:#9ca3af;font-size:.68rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;margin-top:1px}
 .prog-reset-theme-btn:hover{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+.prog-theme-name-link{font-size:.84rem;font-weight:600;color:#2563eb;flex:1;line-height:1.4;text-decoration:underline;text-decoration-color:#bfdbfe;text-underline-offset:2px;cursor:pointer;background:none;border:none;padding:0;text-align:left;font-family:inherit}
+.prog-theme-name-link:hover{color:#1d4ed8;text-decoration-color:#2563eb}
 .prog-checks{display:flex;flex-wrap:wrap;gap:6px 12px}
 .prog-act{display:flex;align-items:center;gap:3px}
 .prog-act-label{font-size:.68rem;color:#9ca3af;font-weight:600;min-width:46px;text-align:right}
@@ -2600,7 +2602,7 @@ function renderSchedule() {
       });
       html += `<div class="prog-theme-row">
         <div class="prog-theme-header">
-          <span class="prog-theme-name">${theme}</span>
+          <button class="prog-theme-name-link" onclick="goToSlideFromSchedule(${si},${ti})">📖 ${theme}</button>
           <button class="prog-reset-theme-btn" onclick="resetThemeProgress(${si},${ti})">このテーマをリセット</button>
         </div>
         <div class="prog-checks">${checksHtml}</div>
@@ -2895,6 +2897,15 @@ function nextCalcQuestion() {
   }
   calcAnswered = false;
   loadCalcQuestion();
+}
+
+function goToSlideFromSchedule(si, ti) {
+  showTab('slides');
+  currentSlideSubject = si;
+  currentSlide = ti;
+  document.querySelectorAll('#slideSubjectBtns button').forEach((b, i) => b.classList.toggle('active', i === si));
+  loadSlide();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ===================== GLOBAL SEARCH =====================
