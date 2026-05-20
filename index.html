@@ -74,6 +74,10 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .card-back .card-example{font-size:.85rem;color:#2563eb;background:#eff6ff;padding:8px 12px;border-radius:8px;width:100%}
 .fc-slide-link-btn{margin-top:12px;width:100%;padding:10px 14px;background:#f0fdf4;border:2px solid #10b981;border-radius:10px;color:#065f46;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
 .fc-slide-link-btn:hover{background:#d1fae5}
+.fc-quiz-link-btn{margin-top:6px;width:100%;padding:10px 14px;background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;color:#92400e;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
+.fc-quiz-link-btn:hover{background:#fef9c3}
+.fc-kakomon-link-btn{margin-top:6px;width:100%;padding:10px 14px;background:#ede9fe;border:2px solid #8b5cf6;border-radius:10px;color:#5b21b6;font-size:.83rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
+.fc-kakomon-link-btn:hover{background:#ddd6fe}
 .slide-back-btn{width:100%;padding:10px 16px;background:#eff6ff;border:2px solid #3b82f6;border-radius:10px;color:#1e40af;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .2s;text-align:center;display:block}
 .slide-back-btn:hover{background:#dbeafe}
 .slide-action-btn{flex:1;min-width:160px;padding:11px 16px;border:none;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
@@ -364,6 +368,8 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
         <div class="card-def" id="fcDef"></div>
         <div class="card-example" id="fcExample"></div>
         <div id="fcSlideLink"></div>
+        <div id="fcQuizLink"></div>
+        <div id="fcKakomonLink"></div>
       </div>
     </div>
   </div>
@@ -1612,6 +1618,11 @@ let fcFromSlideIdx = 0;
 let quizFromSlide = false;
 let quizFromSlideSubject = 0;
 let quizFromSlideIdx = 0;
+// FC→問題演習 / FC→過去問の遷移追跡
+let quizFromFC = false;
+let quizFromFCCardIdx = 0;
+let kakomonFromFC = false;
+let kakomonFromFCCardIdx = 0;
 
 // ===================== INIT =====================
 function init() {
@@ -1828,6 +1839,62 @@ function returnToSlideFromKakomon() {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
+function goToQuizFromFC(subjectIdx) {
+  quizFromFC = true;
+  quizFromFCCardIdx = currentCard;
+  quizFromSlide = false;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-quiz').classList.add('active');
+  document.querySelectorAll('nav button')[3].classList.add('active');
+  currentQuizSubject = subjectIdx + 1;
+  const quizBtns = document.querySelectorAll('#quizSubjectBtns button');
+  quizBtns.forEach(b => b.classList.remove('active'));
+  if (quizBtns[currentQuizSubject]) quizBtns[currentQuizSubject].classList.add('active');
+  reloadCurrentSubject();
+  updateQuizBackBtn();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function returnToFCFromQuiz() {
+  quizFromFC = false;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-flashcards').classList.add('active');
+  document.querySelectorAll('nav button')[2].classList.add('active');
+  currentCard = quizFromFCCardIdx;
+  showCard();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function goToKakomonFromFC(subjectIdx) {
+  kakomonFromFC = true;
+  kakomonFromFCCardIdx = currentCard;
+  kakomonNavSource = 'fc';
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-kakomon').classList.add('active');
+  document.querySelectorAll('nav button')[4].classList.add('active');
+  currentKakomonSubject = subjectIdx + 1;
+  document.querySelectorAll('#kakomonSubjectBtns button').forEach((b, i) => b.classList.toggle('active', i === currentKakomonSubject));
+  currentKakomonYear = 0;
+  document.querySelectorAll('#kakomonYearBtns button').forEach((b, i) => b.classList.toggle('active', i === 0));
+  filterKakomonQuestions();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function returnToFCFromKakomon() {
+  kakomonFromFC = false;
+  kakomonNavSource = null;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-flashcards').classList.add('active');
+  document.querySelectorAll('nav button')[2].classList.add('active');
+  currentCard = kakomonFromFCCardIdx;
+  showCard();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
 function goToFCFromSlide() {
   fcFromSlide = true;
   fcFromSlideSubject = currentSlideSubject;
@@ -1910,6 +1977,10 @@ function updateQuizBackBtn() {
     const title = slidesData[quizFromSlideSubject][quizFromSlideIdx].title;
     el.style.display = 'block';
     el.innerHTML = `<button class="slide-back-btn" onclick="returnToSlideFromQuiz()">← スライドに戻る：${title}</button>`;
+  } else if (quizFromFC) {
+    const card = fcCards[quizFromFCCardIdx];
+    el.style.display = 'block';
+    el.innerHTML = `<button class="slide-back-btn" onclick="returnToFCFromQuiz()">← フラッシュカードに戻る：${card ? card.term : ''}</button>`;
   } else {
     el.style.display = 'none';
     el.innerHTML = '';
@@ -1967,18 +2038,23 @@ function showCard() {
   const dest = fcSlideMap[mapKey];
   const subjNames = ['経済学・経済政策','財務・会計','企業経営理論','運営管理','経営法務','経営情報システム','中小企業経営・中小企業政策'];
   const subjIdx = subjNames.indexOf(c.subject);
+  const quizLinkEl = document.getElementById('fcQuizLink');
+  const kakomonLinkEl = document.getElementById('fcKakomonLink');
   if (subjIdx >= 0) {
     let slideIdx;
     if (dest) {
       slideIdx = dest.slide;
     } else {
-      // fcSlideMap未登録の場合はキーワード検索でベストスライドを探す
       slideIdx = findBestSlide(subjIdx, c.term + ' ' + (c.def || '') + ' ' + (c.example || ''));
     }
     const slideTitle = slidesData[subjIdx][slideIdx].title;
     linkEl.innerHTML = `<button class="fc-slide-link-btn" onclick="event.stopPropagation();goToSlideFromFC(${subjIdx},${slideIdx})">📖 スライドで学習：${slideTitle}</button>`;
+    quizLinkEl.innerHTML = `<button class="fc-quiz-link-btn" onclick="event.stopPropagation();goToQuizFromFC(${subjIdx})">✏️ この科目の問題演習へ</button>`;
+    kakomonLinkEl.innerHTML = `<button class="fc-kakomon-link-btn" onclick="event.stopPropagation();goToKakomonFromFC(${subjIdx})">📝 この科目の過去問へ</button>`;
   } else {
     linkEl.innerHTML = '';
+    quizLinkEl.innerHTML = '';
+    kakomonLinkEl.innerHTML = '';
   }
 }
 
@@ -2011,6 +2087,7 @@ function selectQuizSubject(idx, btn) {
   if (header) header.textContent = '✏️ 科目を選んでください';
   currentQuizSubject = idx;
   quizFromSlide = false;
+  quizFromFC = false;
   document.querySelectorAll('#quizSubjectBtns button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (idx > 0) autoCheckSubject(idx - 1, 'quiz');
@@ -2415,6 +2492,8 @@ const kakomonSubjectNames = ['全科目','経済学・経済政策','財務・�
 
 function selectKakomonSubject(idx, btn) {
   currentKakomonSubject = idx;
+  kakomonNavSource = null;
+  kakomonFromFC = false;
   document.querySelectorAll('#kakomonSubjectBtns button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (idx > 0) autoCheckSubject(idx - 1, 'kakomon');
@@ -2490,6 +2569,8 @@ function loadKakomonQuestion() {
   const yearClass = q.year === 'R5' ? 'kk-badge-r5' : q.year === 'R4' ? 'kk-badge-r4' : 'kk-badge-r3';
   const backBtn = kakomonNavSource === 'slide'
     ? `<button class="slide-back-btn" onclick="returnToSlideFromKakomon()" style="margin-bottom:14px">← スライド学習に戻る</button>`
+    : kakomonNavSource === 'fc'
+    ? `<button class="slide-back-btn" onclick="returnToFCFromKakomon()" style="margin-bottom:14px">← フラッシュカードに戻る</button>`
     : '';
   const html = `
     ${backBtn}
