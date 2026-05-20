@@ -79,6 +79,8 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .slide-action-btn{flex:1;min-width:160px;padding:11px 16px;border:none;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
 .slide-yt-btn{background:#fee2e2;color:#b91c1c}.slide-yt-btn:hover{background:#fecaca}
 .slide-kk-btn{background:#ede9fe;color:#5b21b6}.slide-kk-btn:hover{background:#ddd6fe}
+.slide-fc-btn{background:#f0fdf4;color:#166534}.slide-fc-btn:hover{background:#dcfce7}
+.slide-quiz-btn{background:#fffbeb;color:#92400e}.slide-quiz-btn:hover{background:#fef9c3}
 .prog-countdown{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border-radius:16px;padding:20px;text-align:center;margin-bottom:20px}
 .prog-countdown-label{font-size:.95rem;font-weight:700;opacity:.9;margin-bottom:4px}
 .prog-countdown-date{font-size:.78rem;opacity:.75;margin-bottom:8px}
@@ -330,6 +332,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 
 <!-- TAB 3: FLASHCARDS -->
 <div id="tab-flashcards" class="tab-content">
+  <div id="fcSlideBackBtn" style="display:none;margin-bottom:10px"></div>
   <div class="subject-selector">
     <h3>🃏 科目を選んでください</h3>
     <div class="subject-btns" id="fcSubjectBtns">
@@ -377,6 +380,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 
 <!-- TAB 4: QUIZ -->
 <div id="tab-quiz" class="tab-content">
+  <div id="quizSlideBackBtn" style="display:none;margin-bottom:10px"></div>
   <div class="quiz-header">
     <div class="subject-selector" style="padding:0;box-shadow:none;background:transparent;margin:0">
       <h3 style="margin-bottom:10px">✏️ 科目を選んでください</h3>
@@ -1601,6 +1605,13 @@ let answered = false;
 let navSource = null;
 let navReturnCardIdx = 0;
 let navReturnQuestionIdx = 0;
+// スライド→FC / スライド→問題演習の遷移追跡
+let fcFromSlide = false;
+let fcFromSlideSubject = 0;
+let fcFromSlideIdx = 0;
+let quizFromSlide = false;
+let quizFromSlideSubject = 0;
+let quizFromSlideIdx = 0;
 
 // ===================== INIT =====================
 function init() {
@@ -1680,8 +1691,10 @@ function loadSlide() {
   const safeTitle = s.title.replace(/'/g, "\\'");
   const safeSubj = slideSubjNames[currentSlideSubject];
   document.getElementById('slideActionBtns').innerHTML = `
-    <button class="slide-action-btn slide-yt-btn" onclick="openSlideYoutube('${safeTitle}','${safeSubj}')">▶ YouTube で理解を深める</button>
+    <button class="slide-action-btn slide-fc-btn" onclick="goToFCFromSlide()">🃏 この科目のフラッシュカード</button>
+    <button class="slide-action-btn slide-quiz-btn" onclick="goToQuizFromSlide()">✏️ この科目の問題演習</button>
     <button class="slide-action-btn slide-kk-btn" onclick="goToKakomonFromSlide()">📝 この科目の関連過去問</button>
+    <button class="slide-action-btn slide-yt-btn" onclick="openSlideYoutube('${safeTitle}','${safeSubj}')">▶ YouTube で理解を深める</button>
   `;
   autoCheckSlide(currentSlideSubject, currentSlide);
 }
@@ -1815,13 +1828,103 @@ function returnToSlideFromKakomon() {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
+function goToFCFromSlide() {
+  fcFromSlide = true;
+  fcFromSlideSubject = currentSlideSubject;
+  fcFromSlideIdx = currentSlide;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-flashcards').classList.add('active');
+  document.querySelectorAll('nav button')[2].classList.add('active');
+  currentFCSubject = currentSlideSubject + 1;
+  const fcBtns = document.querySelectorAll('#fcSubjectBtns button');
+  fcBtns.forEach(b => b.classList.remove('active'));
+  if (fcBtns[currentFCSubject]) fcBtns[currentFCSubject].classList.add('active');
+  loadFC();
+  updateFCBackBtn();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function returnToSlideFromFC() {
+  fcFromSlide = false;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-slides').classList.add('active');
+  document.querySelectorAll('nav button')[1].classList.add('active');
+  const subjBtns = document.querySelectorAll('#slideSubjectBtns button');
+  subjBtns.forEach(b => b.classList.remove('active'));
+  if (subjBtns[fcFromSlideSubject]) subjBtns[fcFromSlideSubject].classList.add('active');
+  currentSlideSubject = fcFromSlideSubject;
+  currentSlide = fcFromSlideIdx;
+  loadSlide();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function updateFCBackBtn() {
+  const el = document.getElementById('fcSlideBackBtn');
+  if (fcFromSlide) {
+    const title = slidesData[fcFromSlideSubject][fcFromSlideIdx].title;
+    el.style.display = 'block';
+    el.innerHTML = `<button class="slide-back-btn" onclick="returnToSlideFromFC()">← スライドに戻る：${title}</button>`;
+  } else {
+    el.style.display = 'none';
+    el.innerHTML = '';
+  }
+}
+
+function goToQuizFromSlide() {
+  quizFromSlide = true;
+  quizFromSlideSubject = currentSlideSubject;
+  quizFromSlideIdx = currentSlide;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-quiz').classList.add('active');
+  document.querySelectorAll('nav button')[3].classList.add('active');
+  currentQuizSubject = currentSlideSubject + 1;
+  const quizBtns = document.querySelectorAll('#quizSubjectBtns button');
+  quizBtns.forEach(b => b.classList.remove('active'));
+  if (quizBtns[currentQuizSubject]) quizBtns[currentQuizSubject].classList.add('active');
+  reloadCurrentSubject();
+  updateQuizBackBtn();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function returnToSlideFromQuiz() {
+  quizFromSlide = false;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-slides').classList.add('active');
+  document.querySelectorAll('nav button')[1].classList.add('active');
+  const subjBtns = document.querySelectorAll('#slideSubjectBtns button');
+  subjBtns.forEach(b => b.classList.remove('active'));
+  if (subjBtns[quizFromSlideSubject]) subjBtns[quizFromSlideSubject].classList.add('active');
+  currentSlideSubject = quizFromSlideSubject;
+  currentSlide = quizFromSlideIdx;
+  loadSlide();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function updateQuizBackBtn() {
+  const el = document.getElementById('quizSlideBackBtn');
+  if (quizFromSlide) {
+    const title = slidesData[quizFromSlideSubject][quizFromSlideIdx].title;
+    el.style.display = 'block';
+    el.innerHTML = `<button class="slide-back-btn" onclick="returnToSlideFromQuiz()">← スライドに戻る：${title}</button>`;
+  } else {
+    el.style.display = 'none';
+    el.innerHTML = '';
+  }
+}
+
 // ===================== FLASHCARDS =====================
 function selectFCSubject(idx, btn) {
   currentFCSubject = idx;
   currentCard = 0;
+  fcFromSlide = false;
   document.querySelectorAll('#fcSubjectBtns button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (idx > 0) autoCheckSubject(idx - 1, 'fc');
+  updateFCBackBtn();
   loadFC();
 }
 
@@ -1907,9 +2010,11 @@ function selectQuizSubject(idx, btn) {
   const header = document.querySelector('#tab-quiz .subject-selector h3');
   if (header) header.textContent = '✏️ 科目を選んでください';
   currentQuizSubject = idx;
+  quizFromSlide = false;
   document.querySelectorAll('#quizSubjectBtns button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (idx > 0) autoCheckSubject(idx - 1, 'quiz');
+  updateQuizBackBtn();
   reloadCurrentSubject();
 }
 
