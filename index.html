@@ -269,6 +269,27 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .search-result-preview mark{background:#fde68a;color:#92400e;border-radius:2px;padding:0 1px;font-style:normal}
 .search-result-title mark{background:#fde68a;color:#92400e;border-radius:2px;padding:0 1px;font-style:normal}
 .search-no-results{text-align:center;color:#9ca3af;padding:20px 0;font-size:.9rem}
+/* Textbook tab */
+.tb-chapter-selector{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.tb-chapter-selector h4{font-size:.85rem;font-weight:700;color:#374151;margin-bottom:10px}
+.tb-chapter-btns{display:flex;flex-wrap:wrap;gap:8px}
+.tb-chapter-btns button{padding:7px 14px;border-radius:8px;border:2px solid #e2e8f0;background:#f8fafc;font-size:.82rem;cursor:pointer;transition:all .2s;font-weight:500;color:#475569;font-family:inherit}
+.tb-chapter-btns button.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.tb-section{background:#fff;border-radius:12px;padding:20px 22px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.tb-section h3{font-size:1rem;font-weight:800;color:#1e293b;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e2e8f0}
+.tb-body{font-size:.91rem;line-height:1.85;color:#374151}
+.tb-body p{margin-bottom:10px}
+.tb-body strong{color:#1e293b}
+.tb-formula-box{background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:12px 14px;margin:12px 0}
+.tb-f-title{font-size:.72rem;font-weight:700;color:#92400e;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.tb-formula-item{font-family:'SFMono-Regular',Consolas,monospace;font-size:.86rem;color:#1c1917;background:#fff8;padding:4px 10px;border-radius:4px;margin:3px 0;display:block;border-left:3px solid #f59e0b}
+.tb-points{background:#f0fdf4;border-radius:10px;padding:12px 14px;margin:12px 0;border:1.5px solid #bbf7d0}
+.tb-points-title{font-size:.72rem;font-weight:700;color:#065f46;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.tb-points ul{padding-left:18px;margin:0}
+.tb-points li{font-size:.85rem;color:#166534;line-height:1.9}
+.tb-exam-tip{background:#fff7ed;border-left:4px solid #f97316;border-radius:0 8px 8px 0;padding:10px 14px;margin:12px 0}
+.tb-exam-label{font-size:.72rem;font-weight:700;color:#c2410c;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.tb-exam-text{font-size:.85rem;color:#7c2d12;line-height:1.65}
 </style>
 </head>
 <body>
@@ -284,6 +305,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
   <button onclick="showTab('kakomon')">📝 過去問</button>
   <button onclick="showTab('calc')">🔢 計算練習</button>
   <button onclick="showTab('youtube')">📺 YouTube検索</button>
+  <button onclick="showTab('textbook')">📘 テキスト</button>
 </nav>
 
 <!-- TAB 1: SCHEDULE -->
@@ -654,6 +676,31 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
       <button onclick="openYoutubeCustom()">▶ YouTube検索</button>
     </div>
   </div>
+</div>
+
+<!-- TAB 8: TEXTBOOK -->
+<div id="tab-textbook" class="tab-content">
+  <div class="roadmap-intro">
+    <h2>📘 テキスト学習</h2>
+    <p style="color:#475569;font-size:.9rem;margin-top:4px">試験合格レベルの体系的解説・重要公式・試験のツボをまとめたテキストです。スライドやフラッシュカードと並行して使用してください。</p>
+  </div>
+  <div class="subject-selector">
+    <h3>📚 科目を選んでください</h3>
+    <div class="subject-btns" id="tbSubjectBtns">
+      <button class="active" onclick="selectTBSubject(0,this)">経済学</button>
+      <button onclick="selectTBSubject(1,this)">財務・会計</button>
+      <button onclick="selectTBSubject(2,this)">企業経営理論</button>
+      <button onclick="selectTBSubject(3,this)">運営管理</button>
+      <button onclick="selectTBSubject(4,this)">経営法務</button>
+      <button onclick="selectTBSubject(5,this)">経営情報</button>
+      <button onclick="selectTBSubject(6,this)">中小企業</button>
+    </div>
+  </div>
+  <div class="tb-chapter-selector">
+    <h4>📑 章を選んでください</h4>
+    <div class="tb-chapter-btns" id="tbChapterBtns"></div>
+  </div>
+  <div id="tbSections"></div>
 </div>
 
 <script>
@@ -1683,10 +1730,11 @@ function showTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  const idx = ['schedule','slides','flashcards','quiz','kakomon','calc','youtube'].indexOf(tab);
+  const idx = ['schedule','slides','flashcards','quiz','kakomon','calc','youtube','textbook'].indexOf(tab);
   if (idx >= 0) document.querySelectorAll('nav button')[idx].classList.add('active');
   if (tab === 'kakomon' && kakomonQuestions.length === 0) filterKakomonQuestions();
   if (tab === 'schedule') renderSchedule();
+  if (tab === 'textbook' && !document.getElementById('tbChapterBtns').innerHTML) { renderTBChapters(); renderTBSections(); }
 }
 
 // ===================== SLIDES =====================
@@ -2906,6 +2954,251 @@ function goToSlideFromSchedule(si, ti) {
   document.querySelectorAll('#slideSubjectBtns button').forEach((b, i) => b.classList.toggle('active', i === si));
   loadSlide();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===================== TEXTBOOK =====================
+const textbookData = [
+{name:"経済学・経済政策",icon:"📈",chapters:[
+  {title:"ミクロ経済学",sections:[
+    {title:"需要・供給と市場均衡",
+     body:`<p><strong>需要曲線</strong>：価格↑→需要量↓（右下がり）。<strong>供給曲線</strong>：価格↑→供給量↑（右上がり）。2曲線の交点が<strong>均衡価格・均衡数量</strong>。市場は「神の見えざる手」でこの均衡へ収束する。</p><p><strong>需要のシフト要因</strong>（曲線自体の移動）：所得変化・代替財/補完財の価格変化・嗜好変化・将来の期待。価格変化は「需要曲線上の移動」でシフトではない点に注意。</p><p><strong>消費者余剰</strong>＝支払意志額－市場価格（需要曲線と価格の間の面積）。<strong>生産者余剰</strong>＝市場価格－最低受入価格（供給曲線と価格の間の面積）。<strong>社会的余剰</strong>（総余剰）＝両者の和で完全競争市場において最大化される。</p>`,
+     formulas:["需要の価格弾力性 ＝ 需要量変化率 ÷ 価格変化率","弾力性＞1：弾力的（嗜好品・代替品多い）　弾力性＜1：非弾力的（必需品・代替品少ない）","代替財価格↑ → 当該財の需要↑（右シフト）　補完財価格↑ → 当該財の需要↓（左シフト）"],
+     points:["需要曲線上の移動（価格変化）とシフト（それ以外の要因）を厳密に区別","完全競争では P＝MC（価格受容者）で社会的余剰が最大","課税（従量税）→ 供給曲線が上方シフト → 均衡数量減・価格上昇・死荷重発生","価格の硬直性がある場合（最低賃金・価格規制）→ 超過需要または超過供給が生じる"],
+     exam:"弾力性の計算と「弾力的 vs 非弾力的」の判断は頻出。課税の帰着（弾力的な方が税負担が小さい）も出題される。"},
+    {title:"市場構造（完全競争・独占・寡占）",
+     body:`<p><strong>完全競争市場</strong>の5条件：①多数の売り手・買い手 ②同質財 ③価格受容者（プライステイカー） ④自由な参入退出 ⑤情報の完全性。P＝MR＝MCで均衡し、社会的余剰が最大化される。</p><p><strong>独占市場</strong>では企業はMR＝MCで産出量を決定。MRは需要曲線より下（傾きが2倍急）。P＞MCとなり<strong>死荷重（デッドウェイトロス）</strong>が発生する。独占企業は「価格設定者（プライスメーカー）」。</p><p><strong>独占的競争</strong>：多数企業が差別化製品で競争（飲食業・アパレル等）。短期は超過利潤あり、長期は参入増加で超過利潤ゼロ。<strong>寡占</strong>：少数企業が相互依存（ゲーム理論で分析）。<strong>カルテル</strong>は独禁法で禁止。</p>`,
+     formulas:["独占の利潤最大化：MR（限界収入）＝ MC（限界費用）","線形需要曲線 P＝a－bQ のとき MR＝a－2bQ（傾きが2倍）","ラーナー指数 ＝ (P－MC) ÷ P　（完全競争では0、独占では正）"],
+     points:["独占：P＞MR＝MC（競争市場より高価格・少産出量）","死荷重＝競争均衡と独占産出量の差の三角形面積","自然独占（インフラ等）→ 政府が P＝AC の平均費用価格規制で対処","クールノー競争：産出量で競争。ベルトラン競争：価格で競争（→均衡では P＝MC）"],
+     exam:"MR＝MCで産出量を求め、需要曲線に代入して独占価格を求める計算は必出。死荷重の三角形の面積計算も練習する。"},
+    {title:"市場の失敗（外部性・公共財・情報の非対称性）",
+     body:`<p><strong>市場の失敗の4類型</strong>：①外部性 ②公共財 ③情報の非対称性 ④独占・寡占。いずれも自由市場では効率的な資源配分が達成されず、政府介入の根拠となる。</p><p><strong>外部不経済</strong>（負の外部性：工場排水など）→ 過剰生産 → <strong>ピグー税</strong>（炭素税）で外部費用を内部化。<strong>外部経済</strong>（正の外部性：研究開発の波及など）→ 過少生産 → 補助金で内部化。<br><strong>コースの定理</strong>：取引費用がゼロなら当事者間交渉で外部性を内部化できる（政府不要）。現実は取引費用があるため限界あり。</p><p><strong>公共財</strong>：①非競合性（多数が同時利用可）②非排除性（代金未払いを排除不可）→ フリーライダー問題 → 過少供給 → 政府が供給（国防・警察・灯台等）。</p><p><strong>逆選択</strong>（アドバース・セレクション）：<em>契約前</em>の情報格差で不利な相手が集まる（中古車レモン市場・健康保険）。<strong>モラルハザード</strong>：<em>契約後</em>に行動変化・注意低下（保険加入後の不注意）。</p>`,
+     formulas:["ピグー税の最適水準 ＝ 限界外部費用（外部不経済を限界費用に上乗せ）","排出権取引：上限設定後に許可証を市場売買 → 限界削減費用が均等化"],
+     points:["逆選択：契約前 / モラルハザード：契約後（この区別は必出）","シグナリング（情報を持つ側：学歴・資格・保証書）で逆選択を軽減","スクリーニング（情報を持たない側が取得）：保険の告知義務・審査","非競合性のみ：準公共財（混雑のない道路等）。非排除性のみ：コモンズ（共有地）"],
+     exam:"逆選択とモラルハザードの区別（前者は契約前、後者は契約後）は毎回必ず出る。コースの定理の「前提条件（取引費用ゼロ）」も問われる。"}
+  ]},
+  {title:"マクロ経済学",sections:[
+    {title:"GDP・景気循環・三面等価の原則",
+     body:`<p><strong>GDP</strong>（国内総生産）：国内で1年間に生産された財・サービスの付加価値合計（国籍不問）。<strong>GNI（旧GNP）</strong>：日本国民が世界中で生産した付加価値の合計（在外日本人の生産を含む）。</p><p><strong>三面等価の原則</strong>：①生産面GDP（各産業の付加価値合計）＝②分配面GDP（賃金＋利潤＋地代＋利子）＝③支出面GDP（C＋I＋G＋X－M）は常に等しい。</p><p><strong>景気循環の4波</strong>：キチン（在庫循環、約40ヶ月）＜ジュグラー（設備投資循環、約10年）＜クズネッツ（建設循環、約20年）＜コンドラチェフ（技術革新、約50年）。<strong>フィリップス曲線</strong>：失業率↑⟷インフレ率↓のトレードオフ。1970年代スタグフレーションで安定性に疑問。</p>`,
+     formulas:["GDP（支出面）＝ C（消費）＋ I（投資）＋ G（政府支出）＋（X－M）純輸出","名目GDP成長率 ≈ 実質GDP成長率 ＋ インフレ率（GDPデフレーター）","実質GDP成長率 ≈ 名目GDP成長率 − GDPデフレーター上昇率","GDPデフレーター ＝ 名目GDP ÷ 実質GDP × 100"],
+     points:["GDP：地理的範囲基準（国内）/ GNI：国籍基準（国民）","三面等価は会計上の恒等式（理論ではなく定義）","GDPギャップ＝実際GDP－潜在GDP（マイナス＝デフレギャップ）","内閣府の景気動向指数：先行指数（株価等）・一致指数（生産量等）・遅行指数（完全失業率等）"],
+     exam:"支出面GDPの計算式（C＋I＋G＋X－M）とGDPデフレーター計算は頻出。景気循環4波の名前と期間は暗記必須。"},
+    {title:"IS-LMモデルと財政・金融政策",
+     body:`<p><strong>IS曲線</strong>（財市場の均衡）：右下がり。利子率↓→投資↑→GDP↑。財政支出増・減税 → IS右シフト（GDP↑・利子率↑）。<br><strong>LM曲線</strong>（貨幣市場の均衡）：右上がり。GDP↑→貨幣需要↑→利子率↑。通貨供給増 → LM右シフト（GDP↑・利子率↓）。</p><p><strong>クラウディングアウト</strong>：財政拡大→IS右シフト→利子率↑→民間投資↓。LM曲線が水平（<strong>流動性の罠</strong>：名目金利ゼロ下限）なら利子率上昇なし＝クラウディングアウトなし・財政政策有効。LM曲線が垂直なら完全なクラウディングアウト。</p><p><strong>乗数効果</strong>：政府支出1→GDP増加は乗数倍。乗数＝1÷(1－MPC)。MPC（限界消費性向）が高いほど乗数は大きい。<strong>ビルトインスタビライザー</strong>：累進課税・失業保険給付が自動的に景気変動を緩和（裁量的政策は不要）。</p>`,
+     formulas:["乗数 ＝ 1 ÷ (1－MPC)　例：MPC＝0.8 → 乗数＝5","租税乗数 ＝ −MPC ÷ (1－MPC)　（政府支出乗数より絶対値が小さい）","均衡予算乗数 ＝ 1　（同額の増税と歳出増でGDPが1だけ増加）","消費関数：C ＝ a（基礎消費）＋ MPC × Y"],
+     points:["IS：財政政策でシフト / LM：金融政策でシフト（試験の基本）","流動性の罠：金融政策無効・財政政策有効","MPC＝0.8 → 乗数＝5、100億円の財政支出 → GDP500億円増","ビルトインスタビライザー（自動安定化装置）は政府の裁量なしに作動"],
+     exam:"IS・LMの各曲線シフト方向と均衡点の変化（GDP・利子率）は毎年出る。乗数計算（MPC＝0.8→乗数5）を確実に暗記。"},
+    {title:"為替・貿易・国際収支",
+     body:`<p><strong>円高</strong>（例：1ドル150円→100円）：輸出企業に不利・輸入企業に有利・外国人観光客が日本に来にくくなる。<strong>円安</strong>は逆。</p><p><strong>購買力平価（PPP）説</strong>：一物一価の法則→各国物価水準の差が為替レートを決定（長期的な均衡為替レートの指標）。<strong>金利平価説</strong>：高金利国通貨は将来下落予想→金利差＝為替変化率。</p><p><strong>経常収支</strong>＝貿易収支＋サービス収支＋第一次所得収支（海外投資収益）＋第二次所得収支。日本の経常黒字の主因は第一次所得収支の黒字（対外投資収益）。<br><strong>ISバランス</strong>恒等式：経常収支＝民間貯蓄超過(S－I)＋財政収支(T－G)。</p>`,
+     formulas:["購買力平価（PPP）: e ＝ 国内物価 ÷ 外国物価","マーシャル＝ラーナー条件：輸出弾力性＋輸入弾力性＞1 → 円安が経常収支を改善","Jカーブ効果：円安直後は経常収支が一時悪化してから改善"],
+     points:["比較優位：すべての財で劣っていても相対的に得意な財に特化して貿易できる（リカード）","絶対優位のない国でも比較優位で貿易から利益を得られる","WTO：多角的自由貿易推進。FTA/EPA：2国間・地域間の関税撤廃協定","第一次所得収支の黒字が日本の経常収支黒字の主因（近年の重要出題ポイント）"],
+     exam:"PPP・金利平価・マーシャル＝ラーナー条件・Jカーブ効果の概念と適用場面は頻出。ISバランス恒等式も出題実績あり。"}
+  ]}
+]},
+{name:"財務・会計",icon:"💰",chapters:[
+  {title:"財務三表",sections:[
+    {title:"貸借対照表（BS）",
+     body:`<p>BSは<strong>決算日時点の財産状態</strong>を示すストック情報。左（借方）に<strong>資産</strong>、右（貸方）に<strong>負債＋純資産</strong>。「資産＝負債＋純資産」は常に成立。</p><p>【資産】流動資産（1年以内現金化：現金・売掛金・棚卸資産）・固定資産（有形：建物・機械、無形：のれん・ソフトウェア、投資：投資有価証券）。【負債】流動負債（1年以内返済：買掛金・短期借入金）・固定負債（社債・長期借入金）。【純資産】資本金＋資本剰余金＋<strong>利益剰余金</strong>（毎期純利益の蓄積）。</p><p><strong>のれん</strong>＝買収価格－被取得企業純資産の公正価値（超過収益力）。日本基準では20年以内定額償却。IFRS（国際会計基準）では償却せず毎期減損テスト。</p>`,
+     formulas:["資産 ＝ 負債 ＋ 純資産（常に成立するBSの基本等式）","自己資本比率 ＝ 純資産 ÷ 総資産 × 100","のれん ＝ 買収価格 − 被取得企業の純資産（公正価値）"],
+     points:["流動性配列法：換金性の高い順に資産を並べる","繰延税金資産：将来の節税効果（回収可能性が条件）→ BS左側に計上","自己資本比率50%以上が財務健全性の目安（業種により異なる）","オフバランス（簿外負債）：リース資産、IFRS適用でオンバランス化"],
+     exam:"BS左右の構造と主要勘定科目の分類、自己資本比率の計算、のれん計算は必出。流動・固定の区分（1年基準）も確認。"},
+    {title:"損益計算書（PL）の5段階利益",
+     body:`<p>PLは<strong>会計期間の経営成績</strong>（フロー）を示す。売上高から順に5段階の利益を計算する。</p><p>①<strong>売上総利益（粗利）</strong>＝売上高－売上原価<br>②<strong>営業利益</strong>＝粗利－販売費及び一般管理費（<em>本業の儲け</em>）<br>③<strong>経常利益</strong>＝営業利益＋営業外収益－営業外費用（受取利息・支払利息等。<em>毎期の実力値</em>）<br>④<strong>税引前当期純利益</strong>＝経常利益＋特別利益（固定資産売却益等）－特別損失（災害損失等）<br>⑤<strong>当期純利益</strong>＝税引前利益－法人税等（→BSの利益剰余金に加算）</p><p><strong>減価償却費</strong>は現金支出を伴わない非現金費用。PLでは費用、CF計算書（間接法）では加算調整される。</p>`,
+     formulas:["売上総利益 ＝ 売上高 − 売上原価","営業利益 ＝ 売上総利益 − 販管費","経常利益 ＝ 営業利益 ± 営業外損益","EBITDA ＝ 営業利益 ＋ 減価償却費（利息・税・償却前利益）"],
+     points:["営業利益：金融収支を含まない本業の稼ぐ力","経常利益：継続的な事業活動の実力値（特別損益を含まない）","特別損益：一時的・臨時的な損益（毎期の実力を測る際は除外）","減価償却費はキャッシュアウトなし → 営業CFでは純利益に加算（間接法）"],
+     exam:"5段階の利益（売上総利益→営業利益→経常利益→税引前純利益→当期純利益）の計算流れを完全暗記。営業利益と経常利益の違い（営業外損益の有無）は頻出。"},
+    {title:"キャッシュフロー計算書（CF計算書）",
+     body:`<p>CF計算書は<strong>実際の現金の増減</strong>を示す。利益があっても現金が不足すれば倒産する（<strong>黒字倒産</strong>）を防ぐための重要書類。</p><p>【3区分】①<strong>営業活動CF</strong>：本業で稼いだ現金（プラスが正常）②<strong>投資活動CF</strong>：設備投資・資産売却（成長投資中はマイナス正常）③<strong>財務活動CF</strong>：借入・返済・増資・配当。</p><p><strong>間接法</strong>（営業CF）：税引前純利益を出発点→非現金費用（減価償却費）を加算→売掛金増加を減算（未回収）→棚卸資産増加を減算（現金で購入済み）→買掛金増加を加算（後払い）→税金支払い。<br><strong>フリーCF</strong>（FCF）＝営業CF＋投資CF（企業が本当に稼いだ余剰資金）。</p>`,
+     formulas:["FCF（フリーキャッシュフロー）＝ 営業CF ＋ 投資CF","間接法：営業CF ＝ 税引前純利益 ＋減価償却費 −売掛金増 −棚卸増 ＋買掛金増 −税金","EBITDA（近似）≈ 営業CF（設備集約業界で企業価値評価に使用）"],
+     points:["営業CF間接法：減価償却費→加算、売掛金増加→減算、買掛金増加→加算","期末現金残高（CF計算書）＝ BSの現金及び預金（常に一致）","優良企業パターン：営業CF(+)・投資CF(−)・財務CF(−)","FCFがプラス → 成長投資後も余剰資金あり → 株主還元・M&A等に使える"],
+     exam:"間接法の加算・減算の判断（売掛金増加は減算、棚卸増加は減算、買掛金増加は加算）は毎年出題。FCFの計算も必须。"}
+  ]},
+  {title:"財務分析",sections:[
+    {title:"収益性分析とデュポン分解",
+     body:`<p>収益性指標は企業がどれだけ効率よく利益を上げているかを測る。<strong>ROE</strong>（自己資本利益率）は株主目線の投資効率。<strong>ROA</strong>（総資産利益率）は資産全体の稼ぐ力。</p><p><strong>デュポン分解</strong>：ROE＝売上高純利益率（収益性）×総資産回転率（効率性）×財務レバレッジ（安全性の逆）。ROEが低い原因を3要素で特定し、改善策を打てる。</p><p>A社（ROE10%：利益率2%×回転率1×レバレッジ5）はリスク高く不健全。B社（ROE10%：利益率5%×回転率2×レバレッジ1）は健全。ROEが同じでも中身が全く異なる。</p>`,
+     formulas:["ROE ＝ 純利益 ÷ 自己資本 × 100","ROA ＝ 営業利益（または純利益）÷ 総資産 × 100","ROE ＝ 売上高純利益率 × 総資産回転率 × 財務レバレッジ（デュポン分解）","財務レバレッジ ＝ 総資産 ÷ 自己資本"],
+     points:["ROE目標：日本の上場企業平均約10%、欧米では15%超が多い","デュポン分解：ROE低下の原因が利益率か回転率かレバレッジかを特定","PER（株価収益率）＝ 株価 ÷ EPS（1株当たり利益）","PBR（株価純資産倍率）＝ 株価 ÷ BPS（1株当たり純資産）1倍未満は解散価値以下"],
+     exam:"ROEのデュポン分解は超頻出。ROE＝2%×1.0×5＝10%のように各要素から計算し、どの要素が高/低かを判断できるよう練習。"},
+    {title:"安全性・効率性・BEP分析",
+     body:`<p><strong>安全性指標</strong>：<strong>流動比率</strong>（200%以上が目安）＝流動資産÷流動負債×100。<strong>当座比率</strong>（100%以上）＝当座資産（現金＋売掛金＋有価証券）÷流動負債×100。<strong>自己資本比率</strong>（高いほど安全）。<strong>インタレスト・カバレッジ・レシオ</strong>＝営業利益÷支払利息（1倍未満は危険）。</p><p><strong>効率性指標</strong>：<strong>総資産回転率</strong>＝売上高÷総資産（高いほど効率的）。<strong>売上債権回転日数</strong>＝売上債権÷売上高×365（短いほど回収が早い）。<strong>棚卸資産回転日数</strong>＝棚卸資産÷売上原価×365（短いほど在庫効率良）。</p><p><strong>損益分岐点（BEP）</strong>＝固定費÷限界利益率。<strong>安全余裕率</strong>＝（実際売上－BEP売上）÷実際売上×100。</p>`,
+     formulas:["流動比率 ＝ 流動資産 ÷ 流動負債 × 100（200%以上が目安）","当座比率 ＝ 当座資産 ÷ 流動負債 × 100（100%以上が目安）","BEP売上高 ＝ 固定費 ÷ 限界利益率　（限界利益率 ＝ 1 − 変動費率）","目標利益達成売上高 ＝ (固定費＋目標利益) ÷ 限界利益率"],
+     points:["当座比率：棚卸資産（換金に時間がかかる）を除いた即時支払能力","インタレスト・カバレッジ：1倍割れ＝営業利益で利息を賄えない（要注意）","売上債権回転日数が長い → 回収遅延・焦げ付きリスク","安全余裕率＝100%－損益分岐点比率（高いほど収益が安定）"],
+     exam:"流動比率・当座比率・BEP計算は必出計算問題。固定費200万・変動費率60%→BEP＝200÷0.4＝500万のパターンを完全マスター。"}
+  ]},
+  {title:"投資評価・資本コスト",sections:[
+    {title:"NPV・IRR・WACC",
+     body:`<p><strong>NPV法</strong>（正味現在価値法）：将来CFを資本コストで現在価値に割引き、初期投資を差し引く。NPV＞0なら投資実行価値あり。複数案では最大NPV案を選択。理論的に最も優れた手法。</p><p><strong>IRR法</strong>（内部収益率）：NPV＝0になる割引率。IRR＞資本コスト（WACC等）なら投資実行。相互排他的案件の比較ではNPV法が優先（IRRは複数存在する場合あり）。</p><p><strong>WACC</strong>（加重平均資本コスト）：負債コストと株主資本コストを資本構成割合で加重平均。負債コストは節税効果（(1－税率)を乗じる）がある点がポイント。</p>`,
+     formulas:["NPV ＝ Σ[CF_t ÷ (1＋r)^t] − 初期投資　（r：割引率）","WACC ＝ rd×(1−t)×D/(D+E) ＋ re×E/(D+E)","　※rd：負債コスト, re：株主資本コスト, t：税率, D：負債, E：自己資本","回収期間 ＝ 初期投資 ÷ 毎期CF（均等CF時）"],
+     points:["現在価値係数：1年後1÷(1+r)、2年後1÷(1+r)²（試験では表が与えられることが多い）","NPV法が投資評価の理論的最優手法（時間価値を適切に反映）","WACCが加重平均コスト→ IRR＞WACCなら価値創出","DCF法（割引キャッシュフロー法）：企業価値＝将来FCFの現在価値合計"],
+     exam:"NPVの計算（現価係数を使った割引）は毎年出る頻出計算。WACCの計算式（負債コストに(1－税率)を掛ける点）も必须。"}
+  ]}
+]},
+{name:"企業経営理論",icon:"🏢",chapters:[
+  {title:"経営戦略",sections:[
+    {title:"ポーターの競争戦略（5フォース・3つの基本戦略）",
+     body:`<p><strong>5フォース分析</strong>：業界の競争強度（＝収益性）を決める5つの力。①既存競合他社間の競争②新規参入の脅威③代替品・サービスの脅威④買い手の交渉力⑤売り手（供給業者）の交渉力。5フォースが弱い業界ほど収益機会が大きい。</p><p><strong>3つの基本戦略</strong>：①<strong>コスト・リーダーシップ</strong>（業界全体×低コスト）②<strong>差別化戦略</strong>（業界全体×ユニークな価値）③<strong>集中戦略</strong>（特定セグメント×コスト集中または差別化集中）。どれか1つに徹しないと<strong>スタック・イン・ザ・ミドル</strong>（中途半端で最悪）になる。</p><p><strong>バリューチェーン</strong>（価値連鎖）：主活動（購買物流・製造・出荷物流・マーケティング・サービス）＋支援活動（全般管理・HRM・技術開発・調達）。競争優位の源泉を特定するフレームワーク。</p>`,
+     formulas:[],
+     points:["5フォースは業界構造分析（外部環境）、SWOT・RBVは内部環境分析と組み合わせる","コアコンピタンス（ハメル＆プラハラード）：競合に模倣されにくい中核的能力","VRIO分析：Value・Rarity・Imitability（模倣困難性）・Organizationで競争優位を判断","ポジショニング学派（ポーター）vs 能力学派（コアコンピタンス）の対立も出題される"],
+     exam:"5フォースの各要素（5つを正確に）と3基本戦略は最頻出。スタック・イン・ザ・ミドルの概念も必ず覚える。"},
+    {title:"成長戦略・ポートフォリオ管理",
+     body:`<p><strong>アンゾフの成長マトリクス</strong>：製品（既存/新規）×市場（既存/新規）の4象限。①市場浸透（既存×既存・最低リスク）②製品開発（新製品×既存市場）③市場開拓（既存製品×新市場）④多角化（新製品×新市場・最高リスク）。</p><p><strong>PPM</strong>（BCG プロダクト・ポートフォリオ・マネジメント）：市場成長率×相対的市場シェアのマトリクス。①<strong>スター</strong>（高成長×高シェア）：投資継続②<strong>金のなる木</strong>（低成長×高シェア）：利益回収③<strong>問題児</strong>（高成長×低シェア）：選択的投資④<strong>負け犬</strong>（低成長×低シェア）：撤退。</p><p><strong>SWOT分析</strong>→クロスSWOT（SO/ST/WO/WT戦略）：強みと機会を活かす（SO）・強みで脅威を回避（ST）・弱みを改善して機会を活かす（WO）・最悪の事態を回避（WT）。</p>`,
+     formulas:[],
+     points:["多角化：関連（シナジー狙い・コア技術活用）vs 非関連（リスク分散）","PPMの問題点：相対シェアと市場成長率だけでは不十分（業界定義・シナジー無視等）","M&A動機：規模の経済・範囲の経済・技術取得・市場シェア拡大・時間の購入","アンゾフ：多角化のリスクが最も高い（新製品×新市場で情報・経験が少ない）"],
+     exam:"アンゾフの4象限（名称とリスク順）、PPMの4象限（名称と特徴と投資方針）は必出。SWOTのクロス分析も重要。"}
+  ]},
+  {title:"マーケティング",sections:[
+    {title:"STP戦略とマーケティングミックス（4P）",
+     body:`<p><strong>STP</strong>：S（セグメンテーション：市場細分化）→T（ターゲティング：標的市場選択）→P（ポジショニング：競合との差別化位置）の順に策定する。</p><p><strong>4P</strong>：①<strong>Product</strong>（製品：コア便益・製品レベル・ブランド・製品ライフサイクル）②<strong>Price</strong>（価格：コスト加算法・競合基準・需要基準・価値基準・スキミング/ペネトレーション）③<strong>Place</strong>（流通：直接/間接チャネル・チャネル管理・物流）④<strong>Promotion</strong>（プロモーション：広告・SP・PR・人的販売・ダイレクト）。</p><p><strong>製品ライフサイクル</strong>：導入期（赤字・シェア構築）→成長期（急成長・シェア投資）→成熟期（成熟・収穫・コスト管理）→衰退期（撤退または再活性化）。</p>`,
+     formulas:[],
+     points:["4Cへの転換：Product→顧客価値 / Price→顧客コスト / Place→利便性 / Promotion→コミュニケーション","スキミング価格：高価格→徐々に低価格（高関与・革新的製品）","ペネトレーション価格：低価格で市場浸透→シェア獲得後に利益回収","プッシュ戦略（流通業者へのリベート）vs プル戦略（消費者への広告で需要創出）"],
+     exam:"STPの流れ、4Pの各要素と具体例、製品ライフサイクルの各段階の特徴（利益・競合数・マーケティング戦略）は頻出。"},
+    {title:"消費者行動・普及理論",
+     body:`<p><strong>消費者購買意思決定プロセス</strong>（EBM モデル）：問題認識→情報探索→代替案評価→購買決定→購買後行動（認知的不協和）。高関与製品ほど情報探索が念入りになる。</p><p><strong>普及理論</strong>（ロジャーズ）：イノベーター（2.5%）→アーリーアダプター（13.5%）→アーリーマジョリティ（34%）→レイトマジョリティ（34%）→ラガード（16%）。<strong>キャズム</strong>（キャズム理論：ムーア）：アーリーアダプターとアーリーマジョリティの間に存在する大きな溝。新製品普及の最大の障壁。</p><p>顧客生涯価値（<strong>LTV</strong>）＝顧客1人が生涯にもたらす利益の現在価値。CRM（顧客関係管理）でLTVを最大化する。</p>`,
+     formulas:[],
+     points:["認知的不協和：購買後に選択を後悔する心理→企業はアフターフォローで解消","オピニオンリーダー（アーリーアダプター）の取り込みが普及加速のカギ","関与度：高関与（自動車・不動産）は熟慮購買 / 低関与（日用品）は習慣・衝動購買","ブランド・エクイティ（資産）：認知・知覚品質・ブランド連想・ロイヤルティの4要素"],
+     exam:"普及理論の5分類（各割合も含む）、キャズムの定義（どこに位置するか）は頻出。消費者購買プロセスの各段階も要確認。"}
+  ]},
+  {title:"組織論・人的資源管理",sections:[
+    {title:"組織構造と設計原則",
+     body:`<p><strong>組織設計の5原則</strong>：①専門化の原則②権限・責任一致の原則③統制範囲の原則（スパン・オブ・コントロール）④命令一元化の原則⑤例外の原則（権限委譲）。</p><p>【組織形態】<strong>機能別組織</strong>（専門化・効率的、部門間連携弱）→<strong>事業部制組織</strong>（自律的経営・利益責任、全社最適が損なわれる可能性）→<strong>マトリックス組織</strong>（機能×製品の二重指揮命令・命令一元化を破る）→<strong>プロジェクト組織</strong>（期限付き臨時）→<strong>SBU</strong>（戦略的事業単位）→<strong>カンパニー制</strong>（高度な独立性）。</p><p><strong>コンティンジェンシー理論</strong>：最適な組織形態は環境・技術・規模などの条件に依存する（唯一の最善組織はない）。</p>`,
+     formulas:[],
+     points:["ライン組織：単純・命令系統明快。ラインアンドスタッフ：ラインに専門スタッフを追加","機能別→事業部制への移行：多角化・規模拡大で分権化の必要性が生じる","マトリックス組織の欠点：二重指揮命令による混乱・責任の不明確化","ホラクラシー：階層なしの自律分散型組織（最近の出題傾向）"],
+     exam:"機能別・事業部制・マトリックス組織の特徴・メリデメは必出。統制範囲の原則（スパンが広いとフラットな組織になる）も重要。"},
+    {title:"モチベーション・リーダーシップ理論",
+     body:`<p>【主要なモチベーション理論】<br>①<strong>マズローの欲求5段階説</strong>：生理→安全→社会的（所属）→承認（尊重）→自己実現（低次から高次）<br>②<strong>ハーズバーグの2要因理論</strong>：<strong>衛生要因</strong>（整えても不満消去だけ：給与・労働条件・対人関係）と<strong>動機付け要因</strong>（満足を高める：達成感・承認・仕事そのもの・成長）<br>③<strong>マクレガーのXY理論</strong>：X理論（人は怠惰→管理・統制）vs Y理論（人は積極的→自律・参画）<br>④<strong>アルダファーのERG理論</strong>：存在（Existence）・関係（Relatedness）・成長（Growth）。欲求の退行もあり。</p><p><strong>リーダーシップ理論</strong>：PM理論（P：業績達成機能, M：集団維持機能）・SL理論（部下の成熟度に応じてスタイル変換）・変革型リーダーシップ（ビジョン提示・インスパイア）。</p>`,
+     formulas:[],
+     points:["ハーズバーグ：衛生要因（給与）を整えても動機付けにはならない（不満解消にすぎない）","期待理論（ブルーム）：動機付け強度＝期待×手段性×誘意性","PM理論：PM型が最優秀。Pm・pM型は中間。pm型が最低","SL理論：部下の成熟度が高い（M3・M4）ほど関与度を下げる"],
+     exam:"マズロー（5段階の順序）・ハーズバーグ（衛生要因 vs 動機付け要因・給与はどちらか）・マクレガー（X/Y理論）は必ず出る超頻出。"}
+  ]}
+]},
+{name:"運営管理",icon:"🏭",chapters:[
+  {title:"生産管理",sections:[
+    {title:"生産方式・工程管理・JIT",
+     body:`<p><strong>生産方式</strong>：受注生産（個別受注・ロット）vs 見込生産（大量）。セル生産（1人または少数で全工程担当・多能工化）vs ライン生産（コンベア流れ作業・大量・硬直的）。</p><p><strong>JIT（ジャスト・イン・タイム）</strong>：必要なものを必要な時に必要な量だけ生産（トヨタ生産方式の柱）。<strong>かんばん方式</strong>：後工程が前工程に引き取り指示（プル方式・引き方式）。<strong>平準化生産</strong>：需要変動を吸収して均一な生産リズムを維持。<strong>アンドン</strong>（異常を知らせる表示板）・<strong>ポカヨケ</strong>（ミス防止装置）。</p><p><strong>PERT</strong>（プログラム評価・レビュー技術）：ネットワーク工程図で<strong>クリティカルパス</strong>（最長経路＝全体工期を決める経路）を特定。クリティカルパス上の遅延が全体工期に直結。</p>`,
+     formulas:["タクトタイム ＝ 生産可能時間 ÷ 必要生産数（ラインの生産リズム）","稼働率 ＝ 実際生産量 ÷ 最大生産能力 × 100","PERT：クリティカルパス ＝ 最長所要時間経路（全作業を通じた最長の経路）"],
+     points:["プッシュ方式（MRP）：需要予測に基づき前工程から後工程へ生産指示","プル方式（JIT・かんばん）：後工程が前工程に引き取り指示（過剰在庫を防ぐ）","MRP（材料所要量計画）：製品の生産計画から部品・材料の調達を逆算","制約理論（TOC）：ボトルネック工程（制約資源）に集中して全体最適化"],
+     exam:"JITとかんばん方式（プル方式）の概念、PERT・クリティカルパスの計算は頻出。タクトタイムの計算も重要。"},
+    {title:"品質管理（QC7つ道具・IE・管理図）",
+     body:`<p><strong>QC7つ道具</strong>（定量的データ分析）：①<strong>パレート図</strong>（重点問題を優先度順に整理）②<strong>特性要因図</strong>（魚の骨：原因分析）③<strong>ヒストグラム</strong>（分布の把握）④<strong>散布図</strong>（2変数の相関）⑤<strong>管理図</strong>（工程の安定性監視）⑥<strong>チェックシート</strong>（データ収集）⑦<strong>層別</strong>（データを属性で分類）。</p><p><strong>新QC7つ道具</strong>（言語データ分析）：親和図・連関図・系統図・マトリックス図・PDPC法・アロー・ダイアグラム・マトリックスデータ解析（計量値を扱う唯一のツール）。</p><p><strong>管理図</strong>：UCL（管理上限）・CL（中心線）・LCL（管理下限）を設定し、点が範囲外に出たり連続して片側に並ぶと「工程に異常あり」と判断。</p>`,
+     formulas:["工程能力指数 Cp ＝ (規格上限 − 規格下限) ÷ 6σ（Cp≧1.33が良品の目安）","標準時間 ＝ 正味時間 × レーティング係数 × (1＋余裕率)","ABCウェイト：A品目（全品目の20%が売上の80%を占める）→重点管理"],
+     points:["特性要因図（魚の骨図）：4M（Man/Machine/Method/Material）で原因整理","パレート図：重点指向（少数の重要原因に集中）の原則を視覚化","QCサークル：職場単位の自主的品質改善活動","シックスシグマ：欠陥率100万分の3.4以下を目指す品質管理手法（GEが有名）"],
+     exam:"QC7つ道具の名称と用途（どんな分析に使うか）は必出。特性要因図＝魚の骨図。管理図でのUCL・LCLも確認。"}
+  ]},
+  {title:"店舗・販売管理",sections:[
+    {title:"商圏分析・店舗管理・SCM",
+     body:`<p><strong>ライリーの法則</strong>：2都市間の商圏分岐点を人口と距離から計算（距離の2乗に反比例・人口に比例）。<strong>ハフモデル</strong>：店舗への来店確率＝（売場面積÷移動時間²）÷Σ（競合含む同分母の合計）。売場面積に比例・距離（時間）の2乗に反比例。</p><p><strong>VMD</strong>（ビジュアル・マーチャンダイジング）：VP（ビジュアルプレゼンテーション）・PP（ポイントオブセールスプレゼンテーション）・IP（アイテムプレゼンテーション）の3段階。<strong>POSシステム</strong>：販売時点管理。単品管理・ABC分析・死に筋削除・売れ筋強化に活用。</p><p><strong>SCM</strong>（サプライチェーン管理）：原材料調達から最終消費者までのモノ・情報・金の流れを最適化。<strong>ブルウィップ効果</strong>：需要変動が川上に行くほど増幅される現象（情報共有で軽減）。</p>`,
+     formulas:["ハフモデル：来店確率 ＝ (S_i ÷ T_i²) ÷ Σ(S_j ÷ T_j²)　※S：売場面積、T：移動時間",],
+     points:["在庫回転率＝売上原価÷平均在庫額（高いほど在庫効率良い）","クロスMD：関連商品を近接配置（カレールー＋野菜）で購買促進","フランチャイズ：本部（フランチャイザー）がノウハウ提供、加盟店（フランチャイジー）がロイヤルティ支払","EOS（電子発注）・EDI（電子データ交換）・QR（クイックレスポンス）"],
+     exam:"ハフモデルの概念（売場面積に比例・距離の2乗に反比例）、POSシステムの活用、ブルウィップ効果は頻出。"}
+  ]}
+]},
+{name:"経営法務",icon:"⚖️",chapters:[
+  {title:"会社法",sections:[
+    {title:"株式会社の機関設計と株主の権利",
+     body:`<p><strong>株主総会</strong>：最高意思決定機関（定款変更・役員選任等）。<strong>取締役（会）</strong>：業務執行の決定と監督。<strong>代表取締役</strong>：対外的に会社を代表し業務執行。</p><p>【機関設計の3パターン】①<strong>監査役会設置会社</strong>（日本の上場会社標準）②<strong>指名委員会等設置会社</strong>（指名・報酬・監査の3委員会設置、執行役と取締役を分離）③<strong>監査等委員会設置会社</strong>（中間型。監査等委員が取締役として関与）。<br><strong>社外取締役</strong>：上場会社に2名以上義務付け（2021年会社法改正）。</p><p><strong>株主の権利</strong>：自益権（配当・残余財産分配）と共益権（議決権・株主総会招集請求権）。<strong>種類株式</strong>：議決権制限株式・優先配当株式・<strong>黄金株</strong>（拒否権付株式・敵対的買収防衛）。</p>`,
+     formulas:["普通決議：出席株主の議決権の過半数","特別決議：議決権の過半数を有する株主が出席し、出席株主の議決権の2/3以上","特殊決議（総株主の半数以上かつ議決権の3/4以上）：全部取得条項付き種類株式等"],
+     points:["子会社：親会社が議決権の50%超を保有","関連会社：議決権の20〜50%を保有（持分法適用）","取締役会決議：取締役の過半数出席・出席取締役の過半数賛成","組織再編（合併・会社分割・株式交換等）は原則として株主総会の特別決議が必要"],
+     exam:"機関設計の3パターン、普通決議・特別決議の要件、種類株式（特に黄金株）は頻出。M&Aの手法（株式譲渡・事業譲渡・合併の違い）も重要。"},
+    {title:"知的財産権（特許・商標・著作権・不競法）",
+     body:`<p><strong>特許法</strong>：発明（自然法則を利用した高度な技術的創作）を保護。出願日から<strong>20年</strong>（医薬品等は最大5年延長）。先願主義。特許要件：新規性・進歩性・産業上利用可能性。</p><p><strong>実用新案法</strong>：考案（物品の形状・構造の考案）を保護。登録日から<strong>10年</strong>。無審査登録（早い）。<br><strong>意匠法</strong>：物品のデザイン（形状・模様・色彩）を保護。登録日から<strong>25年</strong>（2020年改正）。<br><strong>商標法</strong>：商品・サービスの識別標識を保護。登録日から<strong>10年</strong>（更新可能・事実上永続）。<br><strong>著作権法</strong>：思想・感情を創作的に表現した著作物を登録不要で自動保護。著作者の死後<strong>70年</strong>（2018年改正で50年→70年）。</p><p><strong>不正競争防止法</strong>：営業秘密の保護（秘密管理性・有用性・非公知性の3要件）・周知表示の混同惹起・著名表示の冒用等を規制。</p>`,
+     formulas:["特許権：出願日から20年　　実用新案権：登録日から10年","意匠権：登録日から25年　商標権：登録日から10年（更新可能）","著作権：著作者の死後70年（法人著作物は公表後70年）"],
+     points:["職務発明：従業員の職務範囲の発明→原則として会社に帰属（2021年改正）","先使用権：特許出願前から実施していた者は継続使用できる（対抗手段）","著作者人格権（公表権・氏名表示権・同一性保持権）：著作者に一身専属・譲渡不可","特許と商標の大きな違い：商標は更新で永続保護できるが特許は20年で消滅"],
+     exam:"各知的財産権の保護期間（特許20年・商標10年更新可・著作権死後70年）は必須暗記。職務発明の原則（会社帰属）も頻出。"}
+  ]},
+  {title:"民法・その他",sections:[
+    {title:"契約・代理・時効・保証",
+     body:`<p><strong>契約成立</strong>：申込みと承諾の合致（諾成契約が原則）。意思表示の瑕疵：<strong>錯誤</strong>（重要な誤認→取消可）・<strong>詐欺</strong>（取消可）・<strong>強迫</strong>（取消可）・<strong>心裡留保</strong>（原則有効・相手方が知っていれば無効）・<strong>虚偽表示</strong>（当事者間は無効・善意の第三者には対抗不可）。</p><p><strong>代理</strong>：有権代理の効果は本人に帰属。<strong>無権代理</strong>は本人の追認がない限り本人に効果不帰属。<strong>表見代理</strong>：代理権があるように見えた場合、善意の相手方を保護（本人に効果帰属）。</p><p><strong>消滅時効</strong>（2020年民法改正）：権利行使できると「知った時から5年」または権利行使できる時から「10年」のいずれか早い方。<strong>保証</strong>：催告・検索の抗弁権あり。<strong>連帯保証</strong>：抗弁権なし・主たる債務者と同等の責任。</p>`,
+     formulas:["消滅時効：主観的起算点（知った時）から5年 or 客観的起算点から10年（どちらか早い方）","連帯保証：抗弁権なし（催告の抗弁権×・検索の抗弁権×）","普通保証：催告の抗弁権〇・検索の抗弁権〇"],
+     points:["錯誤・詐欺・強迫はいずれも「取消」（無効ではない）","心裡留保：「冗談のつもり」だが有効（相手方が善意無過失なら）","債権譲渡：債務者への通知または債務者の承諾が第三者対抗要件","取得時効：善意無過失なら10年、悪意（または有過失）なら20年"],
+     exam:"消滅時効の「5年/10年」要件（2020年改正）、連帯保証と普通保証の違い、表見代理の概念は頻出。錯誤・詐欺は「無効」ではなく「取消」の点も注意。"}
+  ]}
+]},
+{name:"経営情報システム",icon:"💻",chapters:[
+  {title:"情報戦略・システム開発",sections:[
+    {title:"IT戦略とEA・BPR",
+     body:`<p><strong>IT戦略の位置づけ</strong>：経営戦略→事業戦略→<strong>IT戦略</strong>のカスケード（上位戦略と整合性が必須）。<strong>IT投資評価</strong>：ROI・NPV・TCO（総保有コスト）・BSC（バランスト・スコアカード：財務・顧客・業務プロセス・学習と成長の4視点）。</p><p><strong>EA</strong>（エンタープライズ・アーキテクチャ）：業務・データ・アプリケーション・技術の4層（<strong>FEAF/TOGAF</strong>）を整合的に設計。<strong>BPR</strong>（ビジネス・プロセス・リエンジニアリング）：業務を抜本的に再設計（漸進的改善のBPIとは対比）。<strong>BPM</strong>（ビジネス・プロセス・マネジメント）：PDCAサイクルで継続的に業務プロセスを改善・管理。</p>`,
+     formulas:["ROI（IT投資）＝ (IT投資効果 − IT投資費用) ÷ IT投資費用 × 100","TCO ＝ 初期導入コスト ＋ 運用・保守コスト（総保有コスト）"],
+     points:["SaaS：ソフトウェアをクラウド提供（初期コスト低・カスタマイズ制限）","PaaS：開発基盤をクラウド提供 / IaaS：インフラをクラウド提供","ERP（基幹システム）：会計・生産・販売・人事を統合（SAP、Oracle等）","CRM：顧客情報一元管理で営業・マーケティング支援 / SCM：サプライチェーン最適化"],
+     exam:"BPRとBPMの違い（BPRは抜本的、BPMは継続的）、SaaS/PaaS/IaaSの区別は頻出。EA・TOGAFも出題実績あり。"},
+    {title:"システム開発・プロジェクト管理（EVM）",
+     body:`<p><strong>システム開発手法</strong>：<br>①<strong>ウォーターフォール</strong>：要件→設計→実装→テスト→運用（後戻り困難・仕様固定の大規模向き）<br>②<strong>アジャイル開発</strong>：短期スプリントを繰り返す反復型（スクラム・XP）→変化に柔軟・小中規模向き<br>③<strong>プロトタイピング</strong>：試作品で利用者と確認→要件が不明確な場合に有効</p><p><strong>EVM</strong>（アーンドバリュー管理）でプロジェクト進捗・コスト効率を客観的に管理：<br><strong>PV</strong>（計画価値）：この時点で完了しているべき作業のコスト計画値<br><strong>EV</strong>（アーンドバリュー）：実際に完了した作業のコスト計画値<br><strong>AC</strong>（実際コスト）：実際に発生したコスト</p>`,
+     formulas:["SPI（スケジュール効率指数）＝ EV ÷ PV　（1.0未満は遅延）","CPI（コスト効率指数）＝ EV ÷ AC　（1.0未満はコスト超過）","SV（スケジュール差異）＝ EV − PV　CV（コスト差異）＝ EV − AC"],
+     points:["ウォーターフォール：仕様変更が難しい / アジャイル：変化への対応力が高い","スクラム：スプリント（2〜4週）→スプリントレビュー→振り返りのサイクル","PMBOK：10の知識エリア（スコープ・スケジュール・コスト・品質・リスク等）","テスト工程：単体→結合→システム→受入（UAT）の順"],
+     exam:"EVMのEV・PV・ACとSPI・CPI計算は頻出計算問題（SPI＜1：遅延、CPI＜1：コスト超過）。ウォーターフォールとアジャイルの違いも必須。"}
+  ]},
+  {title:"IT基盤技術",sections:[
+    {title:"ネットワーク・DB・セキュリティ",
+     body:`<p><strong>OSI参照モデル</strong>（7層）：物理（L1）→データリンク（L2）→ネットワーク（L3：IP）→トランスポート（L4：TCP/UDP）→セッション（L5）→プレゼンテーション（L6）→アプリケーション（L7：HTTP/SMTP/DNS）。</p><p><strong>関係DB（RDB）</strong>：表・行・列で構成。<strong>SQL</strong>の基本文：SELECT/FROM/WHERE/GROUP BY/HAVING/ORDER BY。<strong>正規化</strong>（第1〜第3正規形）でデータの冗長性を排除。<strong>ACID特性</strong>：原子性（A）・一貫性（C）・独立性（I）・耐久性（D）。</p><p><strong>情報セキュリティ3要素</strong>（CIA）：機密性（C）・完全性（I）・可用性（A）。<strong>ISMS</strong>（ISO/IEC 27001）。主な脅威：フィッシング・ランサムウェア・SQLインジェクション・XSS・DoS/DDoS。</p>`,
+     formulas:["TCP：コネクション確立型・信頼性高（3ウェイハンドシェイク）","UDP：コネクションレス型・高速（リアルタイム通信向き）","RAID5：3台以上で分散パリティ（1台障害まで許容・読み取り速度向上）"],
+     points:["PKI（公開鍵基盤）：公開鍵で暗号化・秘密鍵で復号 / 秘密鍵で署名・公開鍵で検証","デジタル署名：送信者が秘密鍵で署名→受信者が公開鍵で検証（改ざん検知・本人確認）","ゼロトラスト：「信頼しない、常に確認する」セキュリティモデル（内部ネットワークも不信頼）","GDPR：EUの一般データ保護規則（日本の個人情報保護法の参考）"],
+     exam:"OSI参照モデルの各層とプロトコル（特にL3：IP、L4：TCP/UDP、L7：HTTP）は頻出。CIAの3要素・デジタル署名の仕組みも出題実績あり。"}
+  ]}
+]},
+{name:"中小企業経営・中小企業政策",icon:"🏪",chapters:[
+  {title:"中小企業の実態",sections:[
+    {title:"中小企業の定義・現状・課題",
+     body:`<p><strong>中小企業の定義</strong>（中小企業基本法）：<br>・製造業等：資本金3億円以下 または 従業員300人以下<br>・卸売業：資本金1億円以下 または 従業員100人以下<br>・小売業・飲食業：資本金5,000万円以下 または 従業員50人以下<br>・サービス業：資本金5,000万円以下 または 従業員100人以下</p><p><strong>小規模事業者</strong>：製造業等20人以下、商業・サービス業5人以下。企業数の約99%、雇用の約7割が中小企業・小規模事業者。</p><p><strong>主な経営課題</strong>：人手不足・後継者不在・DX推進の遅れ・販路開拓・資金調達。廃業率が開業率を上回る傾向（後継者不在が主因）。</p>`,
+     formulas:["中小企業基本法の定義：業種別の資本金上限と従業員上限（どちらか一方を満たせばOK）"],
+     points:["製造業：資本金3億以下 or 300人以下（最重要！他業種より大きい）","小売業：5,000万以下 or 50人以下（製造業の1/6）","小規模事業者は中小企業の中でもさらに小さな区分（製造20人以下・商/サ5人以下）","中小企業白書・小規模企業白書の最新動向（開廃業率・規模間賃金格差等）を確認"],
+     exam:"定義の数字（業種別の資本金・従業員数）は試験で必ず出題される。特に製造業（3億・300人）と小売業（5000万・50人）の比較で問われる。"},
+    {title:"事業承継・創業支援",
+     body:`<p><strong>事業承継の3類型</strong>：①親族内承継（後継者がいる場合）②役員・従業員への承継（MBO/EBO）③第三者への承継（M&A：株式譲渡・事業譲渡等）。後継者不在でM&A件数が増加傾向。</p><p><strong>事業承継税制</strong>：非上場株式等の贈与税・相続税の猶予制度。<strong>特例措置</strong>：特例承継計画（2024年3月末までに提出が必要）を作成した場合に100%猶予。一般措置より適用要件が緩和されている。</p><p><strong>創業支援</strong>：<strong>日本政策金融公庫</strong>の新創業融資制度（無担保・無保証人・創業前後の事業者対象）。各都道府県・市区町村の創業支援センター・インキュベーション施設。</p>`,
+     formulas:[],
+     points:["事業引継ぎ支援センター：後継者不在企業のM&A仲介支援（全都道府県設置）","経営承継円滑化法の3本柱：①金融支援②相続税・贈与税の納税猶予③遺留分特例","遺留分特例：会社に承継した自社株を遺留分算定対象外にできる","バトンズ（M&Aプラットフォーム）等のネットマッチングサービスの普及"],
+     exam:"事業承継3類型、事業承継税制（特例措置の内容・期限）、経営承継円滑化法の3本柱は頻出。日本政策金融公庫の役割も必须。"}
+  ]},
+  {title:"中小企業支援施策",sections:[
+    {title:"資金調達支援・補助金・経営支援機関",
+     body:`<p><strong>政策金融機関</strong>：<strong>日本政策金融公庫</strong>（3事業：国民生活事業・中小企業事業・農林水産事業）が民間金融機関を補完。<strong>商工組合中央金庫</strong>（組合員企業向け）も政策金融機関。</p><p><strong>信用保証協会</strong>：都道府県・市単位。中小企業の借入に信用保証→金融機関が貸しやすくなる。<strong>セーフティネット保証</strong>（経営環境悪化時）・<strong>危機関連保証</strong>（大規模経済危機時）。</p><p>主要<strong>補助金</strong>：①<strong>ものづくり補助金</strong>（革新的製品・サービス開発や生産効率化）②<strong>小規模事業者持続化補助金</strong>（販路開拓・業務効率化）③<strong>IT導入補助金</strong>（ITツール導入費用）。</p><p><strong>経営支援機関</strong>：商工会議所・商工会・中小企業支援センター・<strong>よろず支援拠点</strong>（無料の総合経営相談）・認定支援機関（経営改善計画策定支援等）。</p>`,
+     formulas:[],
+     points:["補助金は返済不要（ただし採択・要件充足が必要）、融資は借入（利子負担）","ものづくり補助金の採択率：概ね50〜60%。補助率：中小企業1/2、小規模事業者2/3","小規模事業者持続化補助金：上限50万円（特例は200万円）、補助率2/3","認定経営革新等支援機関：税務士・会計士・中小企業診断士等が認定機関として支援"],
+     exam:"信用保証協会の機能、日本政策金融公庫の3事業、各補助金の対象・補助率・上限額は頻出。よろず支援拠点の「無料・何でも相談」という特徴も覚える。"}
+  ]}
+]}
+];
+
+let currentTBSubject = 0;
+let currentTBChapter = 0;
+
+function selectTBSubject(idx, btn) {
+  currentTBSubject = idx;
+  currentTBChapter = 0;
+  document.querySelectorAll('#tbSubjectBtns button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTBChapters();
+  renderTBSections();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectTBChapter(idx, btn) {
+  currentTBChapter = idx;
+  document.querySelectorAll('#tbChapterBtns button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTBSections();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderTBChapters() {
+  const chapters = textbookData[currentTBSubject].chapters;
+  document.getElementById('tbChapterBtns').innerHTML = chapters
+    .map((ch, i) => `<button class="${i === 0 ? 'active' : ''}" onclick="selectTBChapter(${i},this)">${ch.title}</button>`)
+    .join('');
+}
+
+function renderTBSections() {
+  const chapter = textbookData[currentTBSubject].chapters[currentTBChapter];
+  const html = chapter.sections.map(sec => {
+    const formulaHtml = sec.formulas && sec.formulas.length
+      ? `<div class="tb-formula-box"><div class="tb-f-title">📐 重要計算式・定義</div>${sec.formulas.map(f => `<span class="tb-formula-item">${f}</span>`).join('')}</div>`
+      : '';
+    const pointsHtml = sec.points && sec.points.length
+      ? `<div class="tb-points"><div class="tb-points-title">✅ 重要ポイント</div><ul>${sec.points.map(p => `<li>${p}</li>`).join('')}</ul></div>`
+      : '';
+    const examHtml = sec.exam
+      ? `<div class="tb-exam-tip"><div class="tb-exam-label">🎯 試験のツボ</div><div class="tb-exam-text">${sec.exam}</div></div>`
+      : '';
+    return `<div class="tb-section"><h3>${sec.title}</h3><div class="tb-body">${sec.body}</div>${formulaHtml}${pointsHtml}${examHtml}</div>`;
+  }).join('');
+  document.getElementById('tbSections').innerHTML = html;
 }
 
 // ===================== GLOBAL SEARCH =====================
