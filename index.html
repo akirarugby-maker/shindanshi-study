@@ -269,6 +269,40 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .search-result-preview mark{background:#fde68a;color:#92400e;border-radius:2px;padding:0 1px;font-style:normal}
 .search-result-title mark{background:#fde68a;color:#92400e;border-radius:2px;padding:0 1px;font-style:normal}
 .search-no-results{text-align:center;color:#9ca3af;padding:20px 0;font-size:.9rem}
+/* Pop Quiz */
+.popquiz-widget{background:#fff;border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.popquiz-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:14px}
+.popquiz-header h3{font-size:.95rem;font-weight:800;color:#1e293b;margin:0 0 2px}
+.popquiz-subtitle{font-size:.78rem;color:#6b7280}
+.popquiz-refresh-btn{flex-shrink:0;padding:7px 12px;background:#f1f5f9;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.82rem;cursor:pointer;font-weight:600;color:#475569;font-family:inherit}
+.popquiz-refresh-btn:hover{background:#e2e8f0}
+.popquiz-empty{text-align:center;color:#9ca3af;padding:20px 0;font-size:.88rem;line-height:1.7}
+.popquiz-score-banner{border-radius:8px;padding:10px 14px;font-size:.88rem;font-weight:700;margin-bottom:12px;text-align:center}
+.popquiz-score-banner.excellent{background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0}
+.popquiz-score-banner.good{background:#fffbeb;color:#92400e;border:1.5px solid #fde68a}
+.popquiz-score-banner.poor{background:#fef2f2;color:#991b1b;border:1.5px solid #fecaca}
+.pq-q-card{border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.pq-q-card.pq-correct{border-color:#86efac;background:#f0fdf4}
+.pq-q-card.pq-wrong{border-color:#fca5a5;background:#fef2f2}
+.pq-q-header{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.pq-num{font-size:.75rem;font-weight:800;color:#fff;background:#6366f1;border-radius:5px;padding:2px 7px}
+.pq-tag{font-size:.72rem;font-weight:600;color:#6b7280;background:#f1f5f9;border-radius:4px;padding:2px 6px}
+.pq-badge-ok{font-size:.75rem;font-weight:700;color:#166534;background:#dcfce7;border-radius:4px;padding:2px 7px;margin-left:auto}
+.pq-badge-ng{font-size:.75rem;font-weight:700;color:#991b1b;background:#fee2e2;border-radius:4px;padding:2px 7px;margin-left:auto}
+.pq-q-text{font-size:.9rem;font-weight:600;color:#1e293b;line-height:1.6;margin-bottom:10px}
+.pq-opts{display:flex;flex-direction:column;gap:6px}
+.pq-opt{text-align:left;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:.84rem;cursor:pointer;background:#f8fafc;font-family:inherit;color:#374151;line-height:1.5}
+.pq-opt:not([disabled]):hover{border-color:#6366f1;background:#eef2ff;color:#3730a3}
+.pq-opt[disabled]{cursor:default}
+.pq-opt-correct{border-color:#22c55e!important;background:#dcfce7!important;color:#166534!important;font-weight:700}
+.pq-opt-wrong{border-color:#ef4444!important;background:#fee2e2!important;color:#991b1b!important}
+.pq-exp{font-size:.82rem;color:#374151;line-height:1.7;background:#f8fafc;border-radius:7px;padding:10px 12px;margin-top:10px;border-left:3px solid #6366f1}
+.pq-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pq-link-btn{padding:7px 13px;border:none;border-radius:7px;font-size:.8rem;cursor:pointer;font-weight:600;font-family:inherit}
+.pq-link-quiz{background:#ede9fe;color:#4f46e5}
+.pq-link-quiz:hover{background:#ddd6fe}
+.pq-link-slide{background:#e0f2fe;color:#0369a1}
+.pq-link-slide:hover{background:#bae6fd}
 /* Textbook tab */
 .tb-chapter-selector{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .tb-chapter-selector h4{font-size:.85rem;font-weight:700;color:#374151;margin-bottom:10px}
@@ -341,6 +375,9 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
     <div class="prog-countdown-suffix">日後</div>
     <div class="prog-countdown-phase" id="shindanPhase"></div>
   </div>
+
+  <!-- 抜き打ちテスト -->
+  <div id="popQuizWidget"></div>
 
   <!-- 総合進捗 -->
   <div class="prog-summary">
@@ -1716,6 +1753,7 @@ function init() {
   loadFC();
   loadQuiz();
   renderSchedule();
+  generatePopQuiz();
 }
 
 function saveProgress() {
@@ -2460,6 +2498,99 @@ function resetQuiz() {
   const header = document.querySelector('#tab-quiz .subject-selector h3');
   if (header) header.textContent = '✏️ 科目を選んでください';
   reloadCurrentSubject();
+}
+
+// ===================== POP QUIZ =====================
+let popQuizState = [];
+
+function getStudiedSubjectIndices() {
+  const p = getStudyProg();
+  const keys = Object.keys(p).filter(k => p[k]);
+  return SUBJECT_THEMES.map((_, si) =>
+    keys.some(k => k.startsWith('s' + si + '_')) ? si : -1
+  ).filter(si => si >= 0);
+}
+
+function generatePopQuiz() {
+  const studiedSIs = getStudiedSubjectIndices();
+  if (studiedSIs.length === 0) { popQuizState = []; renderPopQuiz(); return; }
+  let allQs = [];
+  studiedSIs.forEach(si => {
+    quizData.subjects[si].questions.forEach(q => allQs.push({ ...q, si }));
+  });
+  shuffle(allQs);
+  popQuizState = allQs.slice(0, 5).map(item => ({
+    q: { q: item.q, opts: item.opts, ans: item.ans, exp: item.exp },
+    si: item.si, answered: false, chosen: null
+  }));
+  renderPopQuiz();
+}
+
+function renderPopQuiz() {
+  const el = document.getElementById('popQuizWidget');
+  if (!el) return;
+  if (popQuizState.length === 0) {
+    el.innerHTML = '<div class="popquiz-widget"><div class="popquiz-header"><div><h3>⚡ 抜き打ちテスト</h3><div class="popquiz-subtitle">学習済みの分野からランダム出題</div></div></div><div class="popquiz-empty">📚 まだ学習を始めていません。スライド・問題演習などで学習を進めると自動でここに問題が表示されます。</div></div>';
+    return;
+  }
+  const allAnswered = popQuizState.every(it => it.answered);
+  const correctCount = popQuizState.filter(it => it.answered && it.chosen === it.q.ans).length;
+  let html = '<div class="popquiz-widget"><div class="popquiz-header"><div><h3>⚡ 抜き打ちテスト</h3><div class="popquiz-subtitle">学習済み範囲から' + popQuizState.length + '問ランダム出題</div></div><button class="popquiz-refresh-btn" onclick="generatePopQuiz()">🔄 新しい問題</button></div>';
+  if (allAnswered) {
+    const pct = Math.round(correctCount / popQuizState.length * 100);
+    const cls = pct >= 80 ? 'excellent' : pct >= 60 ? 'good' : 'poor';
+    const msg = pct >= 80 ? '🎉 素晴らしい！' : pct >= 60 ? '👍 もう少し！' : '💪 苦手リストに追加済みです。復習しましょう！';
+    html += '<div class="popquiz-score-banner ' + cls + '">結果：' + correctCount + ' / ' + popQuizState.length + ' 正解（' + pct + '%） ' + msg + '</div>';
+  }
+  popQuizState.forEach((item, qi) => {
+    const { q, si, answered, chosen } = item;
+    const isCorrect = answered && chosen === q.ans;
+    html += '<div class="pq-q-card' + (answered ? (isCorrect ? ' pq-correct' : ' pq-wrong') : '') + '">';
+    html += '<div class="pq-q-header"><span class="pq-num">Q' + (qi + 1) + '</span><span class="pq-tag">' + escHtml(SUBJECT_THEMES[si].name) + '</span>';
+    if (answered) html += isCorrect ? '<span class="pq-badge-ok">✅ 正解</span>' : '<span class="pq-badge-ng">❌ 苦手追加</span>';
+    html += '</div>';
+    html += '<div class="pq-q-text">' + escHtml(q.q) + '</div><div class="pq-opts">';
+    q.opts.forEach((opt, oi) => {
+      let cls = 'pq-opt';
+      if (answered) { if (oi === q.ans) cls += ' pq-opt-correct'; else if (oi === chosen) cls += ' pq-opt-wrong'; }
+      html += '<button class="' + cls + '" onclick="answerPopQuiz(' + qi + ',' + oi + ')"' + (answered ? ' disabled' : '') + '>' + (oi + 1) + '. ' + escHtml(opt) + '</button>';
+    });
+    html += '</div>';
+    if (answered) {
+      html += '<div class="pq-exp">' + escHtml(q.exp) + '</div>';
+      html += '<div class="pq-links"><button class="pq-link-btn pq-link-quiz" onclick="goToQuizFromPop(' + si + ',' + qi + ')">✏️ 問題演習で復習</button><button class="pq-link-btn pq-link-slide" onclick="goToSlideFromPop(' + si + ')">📖 スライドで復習</button></div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function answerPopQuiz(qi, chosen) {
+  if (!popQuizState[qi] || popQuizState[qi].answered) return;
+  const item = popQuizState[qi];
+  item.answered = true;
+  item.chosen = chosen;
+  if (chosen !== item.q.ans) {
+    addToWeakPool({ ...item.q, subject: SUBJECT_THEMES[item.si].name });
+    updateWeakBanner();
+  }
+  renderPopQuiz();
+}
+
+function goToQuizFromPop(si, qi) {
+  const item = popQuizState[qi];
+  if (!item) return;
+  showTab('quiz');
+  currentQuizSubject = si + 1;
+  document.querySelectorAll('#quizSubjectBtns button').forEach((b, i) => b.classList.toggle('active', i === si + 1));
+  reloadCurrentSubject();
+  navigateToQuestion({ ...item.q, subject: SUBJECT_THEMES[si].name });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToSlideFromPop(si) {
+  goToSlideFromSchedule(si, 0);
 }
 
 // ===================== SCHEDULE =====================
