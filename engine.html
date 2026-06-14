@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>診断士 合格エンジン</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans',sans-serif;background:#f1f5f9;color:#0f172a;min-height:100vh;padding-bottom:32px}
+#app{max-width:480px;margin:0 auto;padding:16px}
+
+/* Header */
+.pg-header{text-align:center;padding:24px 0 20px}
+.pg-title{font-size:1.6rem;font-weight:900;color:#4f46e5;letter-spacing:-.5px}
+.pg-sub{font-size:.8rem;color:#64748b;margin-top:4px}
+.days-badge{display:inline-block;background:#ede9fe;color:#4f46e5;font-size:.78rem;font-weight:700;border-radius:20px;padding:4px 14px;margin-top:8px}
+
+/* Streak */
+.streak{display:inline-flex;align-items:center;gap:6px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:20px;padding:6px 14px;font-size:.85rem;font-weight:700;color:#ea580c;margin-bottom:18px}
+
+/* Cards */
+.card{background:#fff;border-radius:16px;padding:18px 16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+/* Buttons */
+.btn-primary{display:block;width:100%;padding:18px;font-size:1.1rem;font-weight:800;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:14px;cursor:pointer;font-family:inherit;letter-spacing:.3px;box-shadow:0 4px 16px rgba(79,70,229,.35);transition:transform .1s,box-shadow .1s}
+.btn-primary:active{transform:scale(.98);box-shadow:0 2px 8px rgba(79,70,229,.25)}
+.btn-secondary{display:block;width:100%;padding:13px;font-size:.9rem;font-weight:700;background:#fff;color:#4f46e5;border:2px solid #e0e7ff;border-radius:12px;cursor:pointer;font-family:inherit;margin-top:8px;transition:border-color .15s}
+.btn-secondary:hover{border-color:#4f46e5}
+.btn-ghost{display:block;width:100%;padding:12px;font-size:.88rem;font-weight:600;background:transparent;color:#64748b;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;font-family:inherit;margin-top:8px}
+
+/* Score bars */
+.score-head{font-size:.72rem;font-weight:700;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+.score-row{margin-bottom:13px}
+.score-lbl{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.score-name{font-size:.83rem;font-weight:700;color:#334155}
+.score-num{font-size:.83rem;font-weight:800}
+.score-num.danger{color:#ef4444}
+.score-num.warn{color:#d97706}
+.score-num.good{color:#16a34a}
+.score-num.nd{color:#94a3b8;font-size:.72rem;font-weight:600}
+.bar-track{background:#f1f5f9;border-radius:999px;height:8px;position:relative;overflow:visible}
+.bar-fill{height:100%;border-radius:999px;transition:width .6s ease;min-width:2px}
+.bar-fill.danger{background:#ef4444}
+.bar-fill.warn{background:#d97706}
+.bar-fill.good{background:#16a34a}
+.bar-fill.nd{background:#e2e8f0;width:100%!important}
+.bar-mark{position:absolute;top:-4px;bottom:-4px;width:2.5px;border-radius:2px;z-index:1}
+.bm40{background:#d97706;left:40%}
+.bm60{background:#16a34a;left:60%}
+
+/* Subject selector */
+.subj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.subj-pick-btn{padding:12px 8px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;color:#334155;text-align:center;transition:all .15s}
+.subj-pick-btn:hover{border-color:#4f46e5;color:#4f46e5;background:#eef2ff}
+.back-btn{font-size:.82rem;color:#64748b;background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0;margin-bottom:14px}
+
+/* Session */
+.sess-header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.sess-prog-track{flex:1;background:#f1f5f9;border-radius:999px;height:7px}
+.sess-prog-fill{background:#4f46e5;height:100%;border-radius:999px;transition:width .3s}
+.sess-qnum{font-size:.75rem;font-weight:700;color:#64748b;white-space:nowrap}
+.subj-tag{display:inline-block;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff;margin-bottom:12px}
+.q-text{font-size:.98rem;font-weight:600;color:#0f172a;line-height:1.7;margin-bottom:20px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{text-align:left;padding:13px 14px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;font-size:.88rem;color:#1e293b;cursor:pointer;font-family:inherit;line-height:1.5;transition:border-color .15s,background .15s}
+.opt:not([disabled]):hover{border-color:#4f46e5;background:#eef2ff}
+.opt[disabled]{cursor:default}
+.opt.correct{border-color:#22c55e!important;background:#f0fdf4!important;color:#166534!important;font-weight:700}
+.opt.wrong{border-color:#ef4444!important;background:#fef2f2!important;color:#991b1b!important}
+.opt.dim{opacity:.45}
+.exp-box{margin-top:16px;padding:14px;background:#f8fafc;border-radius:12px;border-left:4px solid #4f46e5;font-size:.84rem;color:#334155;line-height:1.8}
+.result-lbl{display:flex;align-items:center;gap:7px;font-size:.95rem;font-weight:800;margin-bottom:10px}
+.result-lbl.ok{color:#16a34a}
+.result-lbl.ng{color:#dc2626}
+.next-btn{display:block;width:100%;margin-top:14px;padding:14px;font-size:.95rem;font-weight:800;background:#4f46e5;color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit}
+
+/* Results */
+.res-score{text-align:center;padding:20px 0 14px}
+.res-big{font-size:3.6rem;font-weight:900;line-height:1}
+.res-big.excellent{color:#16a34a}
+.res-big.good{color:#d97706}
+.res-big.poor{color:#dc2626}
+.res-lbl{font-size:.82rem;color:#64748b;margin-top:4px}
+.res-msg{font-size:.92rem;font-weight:700;margin-top:10px;color:#1e293b}
+.break-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:.85rem}
+.break-row:last-child{border-bottom:none}
+.break-name{color:#334155;font-weight:600}
+.break-val{font-weight:800}
+.delta{font-size:.72rem;font-weight:700;margin-left:4px}
+.delta.up{color:#16a34a}
+.delta.dn{color:#dc2626}
+.btn-row{display:flex;gap:8px;margin-top:4px}
+.btn-row .btn-primary{font-size:.9rem;padding:14px}
+.btn-row .btn-ghost{margin-top:0;flex:1}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ===== QUESTION DATA =====
+const SUBJS = [
+  {name:'経済学・経済政策', short:'経済学', color:'#6366f1'},
+  {name:'財務・会計', short:'財務', color:'#0ea5e9'},
+  {name:'企業経営理論', short:'経営理論', color:'#10b981'},
+  {name:'運営管理', short:'運営管理', color:'#f59e0b'},
+  {name:'経営法務', short:'法務', color:'#ef4444'},
+  {name:'経営情報システム', short:'情報', color:'#8b5cf6'},
+  {name:'中小企業経営・政策', short:'中小企業', color:'#ec4899'},
+];
+
+const ALL_Q = [
+  // Subject 0: 経済学
+  {s:0,q:"価格が1%上昇したとき、需要量が3%減少した。この財の需要の価格弾力性はいくらか？",opts:["0.33","1","3","0.5"],ans:2,exp:"需要の価格弾力性＝需要量の変化率÷価格の変化率＝3%÷1%＝3。弾力性が1より大きいので「弾力的」な財。"},
+  {s:0,q:"次のうち「拡張的財政政策」の例として正しいものはどれか？",opts:["増税と歳出削減","公共投資の増加と減税","政策金利の引き下げ","国債の買いオペレーション"],ans:1,exp:"拡張的財政政策は政府支出の増加（公共投資増）と減税により景気を刺激する政策。金利操作は金融政策（日銀の手段）。"},
+  {s:0,q:"GDPの計算式（支出面）として正しいものはどれか？",opts:["消費＋貯蓄＋輸出","消費＋投資＋政府支出＋純輸出","生産額の合計","賃金＋利潤＋地代＋利子"],ans:1,exp:"GDP（支出面）＝民間消費＋民間投資＋政府支出＋（輸出－輸入）。純輸出（輸出－輸入）がポイント。"},
+  {s:0,q:"日本銀行が「量的緩和政策」を行う目的として最も適切なものはどれか？",opts:["財政赤字の削減","物価を下げてデフレを加速","市場にお金を供給し景気を刺激","為替レートを円高に誘導"],ans:2,exp:"量的緩和は国債等を大量購入して市場にお金を供給し、金利を低下させて景気刺激・デフレ脱却を目指す政策。"},
+  {s:0,q:"円高が進んだ場合の影響として正しいものはどれか？",opts:["輸出企業の円換算収益が増加","海外旅行の費用が安くなる","輸入品の価格が上昇","日本からの観光客が増える"],ans:1,exp:"円高になると外貨が少ない円で買えるので海外旅行が安くなり輸入品も安くなる。輸出企業は円換算収益が減少する。"},
+  {s:0,q:"「ビルトインスタビライザー（自動安定化装置）」の例として適切なものはどれか？",opts:["公共工事の発注","中央銀行の公開市場操作","累進課税と失業保険","政府の緊急経済対策"],ans:2,exp:"ビルトインスタビライザーは景気変動に応じて自動的に作動する安定化機能。累進課税・失業保険給付がその代表例。"},
+  {s:0,q:"比較優位の原理に基づく自由貿易の考え方として正しいのはどれか？",opts:["絶対的に優れた国だけが貿易から利益を得る","各国が相対的に得意な財の生産に特化すれば全員が豊かになる","貿易は常に黒字国が赤字国から搾取する","保護関税で自国産業を守るべきだ"],ans:1,exp:"リカードの比較優位論：相対的に得意な財に特化して貿易することで双方が豊かになれる。これが自由貿易の根拠。"},
+  {s:0,q:"インフレーションが加速しているとき、中央銀行が取るべき金融政策として適切なものはどれか？",opts:["政策金利を引き下げる","国債を大量に購入する","政策金利を引き上げる","財政支出を拡大するよう政府に要請する"],ans:2,exp:"インフレ加速時は金利を引き上げる（引き締め的金融政策）。金利上昇により借入コストが増し、消費・投資が抑制されてインフレを鎮静化。"},
+  {s:0,q:"「IS-LMモデル」において、政府が公共投資を増加させた場合の短期的効果として正しいものはどれか？",opts:["IS曲線が左シフトしGDPと利子率がともに低下","IS曲線が右シフトしGDPと利子率がともに上昇","LM曲線が右シフトしGDPが上昇・利子率が低下","IS曲線が右シフトし、GDPが上昇・利子率が低下"],ans:1,exp:"財政支出の増加はIS曲線を右シフト。GDPと利子率がともに上昇。利子率上昇が民間投資を抑制する「クラウディングアウト」も生じる。"},
+  {s:0,q:"「購買力平価（PPP）説」に基づく為替レートの決定要因として最も適切なものはどれか？",opts:["各国間の金利差","各国の貿易量の差","各国間の物価水準の差","各国の政府債務残高の差"],ans:2,exp:"PPP説は各国の物価水準の差が為替レートを決定するという理論。一物一価の法則に基づく。"},
+  {s:0,q:"ケインズの「乗数効果」において、限界消費性向が0.8のとき、政府支出100億円増加のGDP増加額は？",opts:["100億円","200億円","500億円","800億円"],ans:2,exp:"乗数＝1÷（1－0.8）＝5。GDP増加額＝100億×5＝500億円。限界消費性向が高いほど乗数効果が大きい。"},
+  {s:0,q:"「フィリップス曲線」が示す関係として正しいものはどれか？",opts:["金利と物価の正の相関","失業率と物価上昇率のトレードオフ関係","GDP成長率と財政赤字の正の相関","円高と輸出量の負の相関"],ans:1,exp:"フィリップス曲線は失業率とインフレ率の間に負の相関（トレードオフ）があることを示す。"},
+  {s:0,q:"「デフレスパイラル」に関する記述として正しいものはどれか？",opts:["物価上昇が賃金上昇を促す好循環","物価下落→企業収益減→賃金下落→消費減→さらなる物価下落という悪循環","金融緩和によって引き起こされる物価の急騰","輸出増加が国内物価を上昇させる連鎖"],ans:1,exp:"デフレスパイラルは物価下落が景気悪化を招き、さらに物価が下落するという悪循環。"},
+  {s:0,q:"「完全競争市場」の条件として正しくないものはどれか？",opts:["多数の売り手と買い手が存在する","財の均一性（同質財）","企業が価格支配力を持つ","情報の完全性"],ans:2,exp:"完全競争市場の条件：多数売買者、同質財、価格受容者（プライステイカー）、自由参入退出、情報の完全性。価格支配力を持つのは独占・寡占市場の特徴。"},
+  {s:0,q:"「市場の失敗」が起きる原因として適切でないものはどれか？",opts:["外部不経済の発生","公共財の過少供給","情報の非対称性","競争市場での価格決定"],ans:3,exp:"競争市場での価格決定は市場メカニズムが正常に機能している状態。市場の失敗の主な原因は①外部性②公共財③情報の非対称性④独占・寡占。"},
+
+  // Subject 1: 財務・会計
+  {s:1,q:"固定費が120万円、変動費率が40%のとき、損益分岐点売上高はいくらか？",opts:["200万円","300万円","180万円","240万円"],ans:0,exp:"損益分岐点売上高＝固定費÷（1－変動費率）＝120万÷0.6＝200万円。"},
+  {s:1,q:"「流動資産÷流動負債×100」で計算される財務指標は何か？",opts:["自己資本比率","流動比率","総資本回転率","ROE"],ans:1,exp:"流動比率＝流動資産÷流動負債×100。短期的な支払い能力を示す指標。200%以上が理想的。"},
+  {s:1,q:"損益計算書で「売上総利益」の計算式として正しいものはどれか？",opts:["売上高－販売費及び一般管理費","売上高－売上原価","営業利益＋営業外収益","経常利益－特別損失"],ans:1,exp:"売上総利益（粗利）＝売上高－売上原価。ここから販売費・一般管理費を引くと営業利益になる。"},
+  {s:1,q:"ROE（自己資本利益率）の計算式として正しいものはどれか？",opts:["営業利益÷総資産×100","当期純利益÷自己資本×100","経常利益÷売上高×100","純資産÷総資本×100"],ans:1,exp:"ROE＝当期純利益÷自己資本×100。株主が投じた資本に対してどれだけ利益を上げたかを示す。"},
+  {s:1,q:"「黒字倒産」が発生する原因として最も適切なものはどれか？",opts:["売上高が費用を下回った","利益は出ているが現金（キャッシュ）が不足した","自己資本比率が低すぎた","借入金の金利が高すぎた"],ans:1,exp:"黒字倒産は、PLでは利益が出ていても売掛金の回収遅れ等でキャッシュが枯渇して支払いができなくなること。"},
+  {s:1,q:"キャッシュフロー計算書の3区分として正しいものはどれか？",opts:["製造活動・販売活動・管理活動CF","営業活動・投資活動・財務活動CF","短期CF・中期CF・長期CF","固定CF・変動CF・特別CF"],ans:1,exp:"CF計算書は①営業活動CF（本業の現金収支）②投資活動CF（設備投資等）③財務活動CF（借入・返済・配当）の3区分。"},
+  {s:1,q:"ROEをデュポン分解した式として正しいものはどれか？",opts:["ROE＝売上高成長率×市場シェア×利益率","ROE＝売上高純利益率×総資産回転率×財務レバレッジ","ROE＝営業利益率×資産回転率×株価倍率","ROE＝粗利率×販管費率×自己資本比率"],ans:1,exp:"ROEのデュポン分解：売上高純利益率×総資産回転率×財務レバレッジ。3要素のどこに課題があるかで改善策が変わる。"},
+  {s:1,q:"「WACC（加重平均資本コスト）」の説明として最も正しいものはどれか？",opts:["企業の売上高を資本金で割った指標","負債コストと株主資本コストを資本構成比率で加重平均した企業全体の資本コスト","銀行が融資審査で使う貸出金利の平均","社員一人当たりの平均給与コスト"],ans:1,exp:"WACCは負債コストと株主資本コストを負債・株式の構成比で加重平均したもの。企業が投資する際のハードルレート。"},
+  {s:1,q:"NPV法（正味現在価値法）による設備投資判断の基準として正しいものはどれか？",opts:["NPVが最も大きい投資案を必ず採用する","NPVが0を上回る場合、投資を実行すべきと判断する","NPVが回収期間3年以内なら投資を実行する","NPVが会社の目標利益率を超えれば実行する"],ans:1,exp:"NPV法ではNPV＞0のとき投資を実行すべきと判断する。将来CFの現在価値合計が初期投資を上回ることを意味する。"},
+  {s:1,q:"「経常利益」の計算式として正しいものはどれか？",opts:["売上高－売上原価","営業利益＋営業外収益－営業外費用","売上総利益－販売費及び一般管理費","税引前当期純利益－法人税等"],ans:1,exp:"経常利益＝営業利益＋営業外収益－営業外費用。企業の通常の事業活動全体の収益力を示す重要指標。"},
+  {s:1,q:"自己資本比率が50%の会社で総資産が200億円の場合、純資産はいくらか？",opts:["50億円","100億円","150億円","200億円"],ans:1,exp:"純資産＝総資産×自己資本比率＝200億×0.5＝100億円。"},
+  {s:1,q:"「安全余裕率」が高い企業の特徴として正しいものはどれか？",opts:["固定費が高く損益分岐点が高い","売上高が損益分岐点を大きく上回っており売上減少でも赤字になりにくい","流動比率が200%以上で短期の支払い能力が高い","自己資本比率が高く財務安定性が高い"],ans:1,exp:"安全余裕率＝（実際の売上高－損益分岐点売上高）÷実際の売上高×100。高いほど赤字にならない余裕が大きい。"},
+  {s:1,q:"減価償却費に関する記述のうち正しいものはどれか？",opts:["現金が実際に支払われる費用である","定率法では毎年同額を費用に計上する","費用としてPLに計上されるが実際のキャッシュアウトは発生しない（非現金費用）","土地も建物と同様に毎年減価償却できる"],ans:2,exp:"減価償却費は費用（PL）に計上されるが現金支出は資産購入時のみ。土地は非償却資産。非現金費用なのでCF計算では利益に加算する。"},
+  {s:1,q:"「PBR（株価純資産倍率）1倍割れ」の意味として最も適切なものはどれか？",opts:["株価が1,000円を下回っている状態","市場が企業の清算価値より低い価値をつけており経営効率の改善が求められる","配当利回りが1%以下","売上高が純資産を下回っている"],ans:1,exp:"PBR1倍割れは市場が「今すぐ清算した方が株主にとって価値が高い」と評価している状態。東証がPBR1倍割れ企業に改善を求めている。"},
+  {s:1,q:"「インタレスト・カバレッジ・レシオ（ICR）」が1.0倍を下回った場合の意味として正しいものはどれか？",opts:["株主へのROEが1.0倍以上","営業利益で支払利息をまかなえておらず財務上の危険水域にある","自己資本比率が低下して財務が不安定","売上高成長率が鈍化してきた"],ans:1,exp:"ICR＝営業利益÷支払利息。1.0倍未満は本業の利益で利息も払えない状態で非常に危険。3倍以上が安全。"},
+
+  // Subject 2: 企業経営理論
+  {s:2,q:"SWOT分析における「O（機会）」の例として最も適切なものはどれか？",opts:["自社の優れた技術力","競合他社の価格攻勢","高齢化社会による介護市場の拡大","自社の資金力不足"],ans:2,exp:"O（機会）は外部環境のプラス要因。高齢化という社会変化は介護・医療市場の拡大という「機会」になる。"},
+  {s:2,q:"PPMで「高市場成長率・高相対シェア」の事業を何と呼ぶか？",opts:["金のなる木","問題児","花形","負け犬"],ans:2,exp:"花形（Star）＝高成長・高シェア。将来有望だが成長のために多くの投資が必要。金のなる木の利益を花形に投資するのがPPMの基本。"},
+  {s:2,q:"マーケティングの4Pのうち「Place」が意味するものはどれか？",opts:["製品の価格設定","広告・プロモーション活動","流通チャネル・販売場所","製品の品質・機能"],ans:2,exp:"4PのPlace（流通）は商品をどのチャネルでどんな販売場所で売るかを決める要素。"},
+  {s:2,q:"「コアコンピタンス」を最も正確に説明しているものはどれか？",opts:["市場で最も大きなシェアを持つ強み","競合が容易に模倣できない企業固有の中核能力","財務的に最も収益性の高い事業領域","業界全体に通用する標準的な能力"],ans:1,exp:"コアコンピタンス（ハメル＆プラハラード）は顧客に特定の利益をもたらし、競合他社が容易に模倣できない企業固有の能力。"},
+  {s:2,q:"「STP分析」の正しい順序はどれか？",opts:["ポジショニング→セグメンテーション→ターゲティング","ターゲティング→ポジショニング→セグメンテーション","セグメンテーション→ターゲティング→ポジショニング","ターゲティング→セグメンテーション→ポジショニング"],ans:2,exp:"STP分析：①Segmentation（市場細分化）→②Targeting（顧客層選択）→③Positioning（差別化位置づけ）。"},
+  {s:2,q:"ポーターの競争戦略における「集中戦略」の特徴として正しいものはどれか？",opts:["業界全体を対象に最低価格を実現する","特定の顧客・地域・製品に経営資源を集中する","全顧客に独自の付加価値を提供する","コストと差別化を同時に追求する"],ans:1,exp:"集中戦略は特定のセグメント（ニッチ市場）に絞ってコスト優位または差別化を図る戦略。中小企業が大企業に対抗する際に有効。"},
+  {s:2,q:"アンゾフの成長マトリクスで「既存製品×新市場」の成長戦略を何と呼ぶか？",opts:["市場浸透戦略","市場開発戦略","製品開発戦略","多角化戦略"],ans:1,exp:"市場開発戦略（Market Development）＝既存製品のまま新しい市場（新地域・新顧客層）を開拓する戦略。"},
+  {s:2,q:"「マズローの欲求5段階説」において、最高次の欲求はどれか？",opts:["安全の欲求","所属・愛情の欲求","承認（尊重）の欲求","自己実現の欲求"],ans:3,exp:"マズローの欲求階層（低→高）：①生理的欲求②安全③所属・愛情④承認⑤自己実現。"},
+  {s:2,q:"「ハーズバーグの二要因理論」における「衛生要因」の説明として正しいものはどれか？",opts:["仕事の達成感や責任感など満足感をもたらす要因","給与・労働条件・対人関係など不満を防ぐが満足感にはつながらない要因","社員の生産性を高める最も重要な要因","外部から与えられる報酬全般"],ans:1,exp:"衛生要因：給与・会社方針・人間関係・労働条件→不満防止はできるが満足感は生まない。動機づけ要因（達成感・承認）が満足感につながる。"},
+  {s:2,q:"「バランス・スコアカード（BSC）」の4つの視点として正しいものはどれか？",opts:["コスト・品質・スピード・革新","財務・顧客・内部プロセス・学習と成長","市場・製品・競合・環境","投資家・顧客・社員・社会"],ans:1,exp:"BSCの4視点：①財務②顧客③内部ビジネスプロセス④学習と成長。財務指標だけの短期視点を解消し戦略を多面的に管理。"},
+  {s:2,q:"「アンゾフの成長マトリクス」で最もリスクが高い成長戦略はどれか？",opts:["市場浸透戦略","市場開発戦略","製品開発戦略","多角化戦略"],ans:3,exp:"多角化戦略（新製品×新市場）は既存の製品も市場も異なる全く新しい領域への進出。最もリスクが高い。"},
+  {s:2,q:"「ブルーオーシャン戦略」の基本的な考え方として正しいものはどれか？",opts:["競争の激しい既存市場でシェアを奪い合う","既存の競合との競争を避け、新たな市場空間を創造する","コスト削減と価格競争で業界リーダーシップを確立する","他社の戦略を模倣して安全に市場に参入する"],ans:1,exp:"ブルーオーシャン戦略（キム＆モボルニュ）：競争のない新市場を創造する。バリューイノベーション（コスト削減と顧客価値向上の同時達成）が中心。"},
+  {s:2,q:"ポーターのバリューチェーン分析で「主活動」に含まれないものはどれか？",opts:["製造・オペレーション","ロジスティクス（物流）","人事・労務管理","マーケティング・販売"],ans:2,exp:"バリューチェーンの主活動：購買物流→製造→出荷物流→マーケティング・販売→サービス。人事管理は支援活動。"},
+  {s:2,q:"「コーポレートガバナンス」の目的として最も適切なものはどれか？",opts:["社員の給与水準を引き上げること","経営者の暴走を防ぎ株主・ステークホルダーの利益を守ること","政府規制への対応を効率化すること","競合他社との協調を促進すること"],ans:1,exp:"コーポレートガバナンスは経営者がステークホルダーの利益に反した行動をとらないよう監視・規律づける仕組み。"},
+  {s:2,q:"「プロダクト・ライフサイクル（PLC）」の導入期の特徴として正しいものはどれか？",opts:["競合が多く激しい価格競争が起きる","売上・利益ともに高く市場が成熟している","販売量が少なく広告費等の初期費用が大きく赤字になりやすい","製品の差別化が困難になる"],ans:2,exp:"PLC導入期：売上低く費用（開発・広告）が大きい→赤字になりやすい。成長期→売上急増、成熟期→競争激化、衰退期→売上下落。"},
+
+  // Subject 3: 運営管理
+  {s:3,q:"トヨタ生産方式の「ジャスト・イン・タイム（JIT）」の基本理念として最も正しいものはどれか？",opts:["できるだけ多くの在庫を持って欠品を防ぐ","必要なものを必要なときに必要な量だけ生産する","品質よりもスピードを優先して生産する","大量生産でコストを最小化する"],ans:1,exp:"JITは「必要なものを、必要なときに、必要な量だけ」生産・供給することで在庫を最小化し、リードタイムを短縮する。"},
+  {s:3,q:"QC7つ道具のうち「不良の原因と結果の関係を魚の骨の形で表す」図はどれか？",opts:["パレート図","ヒストグラム","特性要因図","管理図"],ans:2,exp:"特性要因図（石川ダイアグラム・フィッシュボーン図）は問題の原因を魚の骨のような形で整理する分析ツール。"},
+  {s:3,q:"SCM（サプライチェーン・マネジメント）の目的として最も適切なものはどれか？",opts:["工場内の生産ラインを効率化する","原材料調達から消費者への販売まで全体を最適化する","顧客との関係を管理してリピートを増やす","会計・人事・販売を統合管理する"],ans:1,exp:"SCMは原材料調達→製造→物流→販売という一連のサプライチェーン全体を一体的に管理・最適化する手法。"},
+  {s:3,q:"ECRS原則のうち「E」が意味するものはどれか？",opts:["Extend（拡張）","Eliminate（排除）","Exchange（交換）","Enhance（強化）"],ans:1,exp:"ECRSはEliminate（排除）→Combine（結合）→Rearrange（交換）→Simplify（簡素化）の4原則で作業改善を行うIEの考え方。"},
+  {s:3,q:"「5S活動」の5つの要素として正しいものはどれか？",opts:["生産・品質・安全・コスト・納期","計画・実行・確認・改善・標準化","整理・整頓・清掃・清潔・躾","戦略・組織・システム・スキル・スタイル"],ans:2,exp:"5S＝整理・整頓・清掃・清潔・躾。製造現場改善の基本で、安全性・品質・効率向上に直結。"},
+  {s:3,q:"「PDCAサイクル」における「C（Check）」フェーズの説明として正しいものはどれか？",opts:["計画を立案するフェーズ","計画に基づいて実施するフェーズ","実施結果を評価・測定するフェーズ","問題点を改善して標準化するフェーズ"],ans:2,exp:"PDCAサイクル：P（計画）→D（実施）→C（評価・測定）→A（改善・標準化）の繰り返しで継続的改善を推進。"},
+  {s:3,q:"製造業における「ボトルネック工程」の説明として正しいものはどれか？",opts:["最も低コストで効率的な工程","全工程の中で処理能力が最も低く生産全体のスピードを制約する工程","品質基準が最も厳しい工程","自動化が最も進んでいる工程"],ans:1,exp:"ボトルネック工程は生産ライン全体の処理能力が最低の工程。全体の生産量はボトルネックの処理能力で決まるため改善優先度が最も高い。"},
+  {s:3,q:"「かんばん方式」の仕組みとして正しいものはどれか？",opts:["生産計画をもとに上流から下流へ指示を出す「プッシュ型」","後工程が必要な分だけ前工程から引き取る「プル型」","コンピュータシステムが自動で発注を制御する方式","外部の物流会社が在庫管理を担う方式"],ans:1,exp:"かんばん方式は後工程が必要なとき必要な量だけ前工程にかんばん（カード）で指示・引き取るプル型生産システム。"},
+  {s:3,q:"「クリティカルパス（CP）」の説明として正しいものはどれか？",opts:["プロジェクトの中で最もコストが高い作業経路","プロジェクトの中で余裕時間がゼロで全体納期を決定する最長の作業経路","最短で完了できる最も効率的な作業経路","作業者が最も忙しい工程の経路"],ans:1,exp:"PERT/CPM分析でのクリティカルパスは全体完了時間を決定する最長の経路。CPの短縮が納期短縮の鍵。"},
+  {s:3,q:"「ISO 9001」が対象とする分野として正しいものはどれか？",opts:["環境マネジメントシステム","品質マネジメントシステム","情報セキュリティマネジメントシステム","職業安全衛生マネジメントシステム"],ans:1,exp:"ISO規格の区分：ISO 9001（品質）、ISO 14001（環境）、ISO 27001（情報セキュリティ）、ISO 45001（労働安全衛生）。"},
+  {s:3,q:"「BPR（ビジネスプロセス・リエンジニアリング）」の特徴として正しいものはどれか？",opts:["既存業務を少しずつ改善するカイゼン型アプローチ","業務プロセスを根本から見直しコスト・品質・スピードを劇的に改善する抜本的再設計","在庫をゼロにする需要連動型生産管理","部品の品質を統計的手法で管理するSPC手法"],ans:1,exp:"BPR（Business Process Reengineering）：根本的な問いから出発して業務プロセスを再設計し、劇的な改善を目指す。漸進的改善（カイゼン）との対比が重要。"},
+  {s:3,q:"定量発注方式の特徴として正しいものはどれか？",opts:["一定の時間間隔で発注する","在庫が発注点を下回ったときに一定量を発注する","需要予測に基づいて毎回最適量を発注する","発注量は毎回異なる"],ans:1,exp:"定量発注方式（発注点方式）＝在庫が一定量（発注点）を下回ったときに決まった量を発注。需要が比較的安定した品目に適する。"},
+  {s:3,q:"ABC分析を在庫管理に適用する場合「Aランク」品目の管理方法として最も適切なものはどれか？",opts:["簡略化した管理で手間を省く","重点的に詳細管理を行う","定期的に廃棄・削減を検討する","他のランクと同一の管理方法をとる"],ans:1,exp:"ABC分析：A（上位20%品目が売上の80%）→重点管理、B→標準管理、C→簡略管理。パレートの80-20の法則を応用。"},
+  {s:3,q:"ハフの確率モデルの考え方として正しいものはどれか？",opts:["人口が多い地域ほど必ず来店者数が多い","競合店の存在に関わらず距離だけで集客力が決まる","売場面積（魅力）に比例し距離（摩擦）に反比例して来店確率が決まる","価格が安い店舗に必ず客が集まる"],ans:2,exp:"ハフモデル：来店確率は店舗の魅力（売場面積等）に比例し、距離に反比例する。商業施設の出店計画・商圏設定に使われる定量的手法。"},
+  {s:3,q:"「物流の5機能」として正しいものはどれか？",opts:["生産・加工・組立・検査・梱包","輸送・保管・荷役・包装・流通加工（＋情報）","調達・製造・販売・回収・廃棄","受注・発注・納品・返品・代金回収"],ans:1,exp:"物流の5機能：①輸送②保管③荷役④包装⑤流通加工（＋情報）。物流コスト削減はSCM最適化の重要課題。"},
+
+  // Subject 4: 経営法務
+  {s:4,q:"株式会社における「株主有限責任の原則」とはどういうことか？",opts:["株主は会社の全ての負債に無制限の責任を負う","株主は出資額を限度とした責任のみ負う","株主は経営の結果に対して無制限に責任を負う","株主は会社の損失を個人資産で必ず補填する"],ans:1,exp:"株主有限責任の原則：株主が負う責任は自分が出資した金額が上限。会社が倒産しても個人財産は取られない。"},
+  {s:4,q:"特許権の保護期間として正しいものはどれか？",opts:["権利者の死後50年","出願日から10年","出願日から20年","登録日から永続的に保護"],ans:2,exp:"特許権の保護期間は出願日から20年。医薬品・農薬は最大5年延長で25年まで保護可。実用新案は出願から10年。"},
+  {s:4,q:"著作権に関する説明として正しいものはどれか？",opts:["特許庁に登録しないと保護されない","創作と同時に自動的に発生する","保護期間は著作者の生存中のみ","著作権は財産権のみで人格権はない"],ans:1,exp:"著作権は「創作と同時に自動的に発生する」権利（無方式主義）。登録不要。著者の死後70年保護。"},
+  {s:4,q:"「36協定」に関する記述として正しいものはどれか？",opts:["締結すれば時間外労働を無制限に命じることができる","締結せずとも時間外労働は可能","締結後に労働基準監督署に届け出る必要がある","正社員にのみ適用される"],ans:2,exp:"36協定は締結だけでなく労働基準監督署への届出も必要。2019年の働き方改革で月45時間・年360時間の上限規制が導入。"},
+  {s:4,q:"「不正競争防止法」が禁止する行為として正しいものはどれか？",opts:["正当な競合他社の製品を宣伝で批判する","退職した従業員が自ら起業する","会社の営業秘密を不正に取得・使用する","安い価格で競合より先に販売する"],ans:2,exp:"不正競争防止法は周知・著名な商品表示の模倣、営業秘密の不正取得・使用、品質等の誤認惹起行為等を規制。"},
+  {s:4,q:"労働基準法における法定労働時間として正しいものはどれか？",opts:["週35時間・1日7時間","週40時間・1日8時間","週45時間・1日9時間","週48時間・1日10時間"],ans:1,exp:"労働基準法：労働時間は週40時間・1日8時間が上限。超える時間外労働には36協定の締結と割増賃金（1.25倍以上）が必要。"},
+  {s:4,q:"「特許権」と「商標権」の違いとして正しいものはどれか？",opts:["商標権は出願から20年、特許権は登録から永続","特許権は技術的アイデアを保護し商標権はブランド識別（名称・ロゴ等）を保護する","商標権は自動発生し特許権は登録が必要","両者は保護対象が同一で保護期間のみ異なる"],ans:1,exp:"特許権：新規な発明・技術的アイデアを保護（出願から20年）。商標権：名称・ロゴ等の識別標識を保護（登録から10年・更新で実質永続）。"},
+  {s:4,q:"「意匠権」が保護する対象として正しいものはどれか？",opts:["技術的なアイデア・発明","ブランド名やロゴマーク","物品の外観デザイン（形状・模様・色彩）","著作物（小説・音楽・絵画）"],ans:2,exp:"意匠権は物品・建築物・画像の外観を保護する産業財産権。登録から25年。"},
+  {s:4,q:"「会社法」における株式会社の設立要件として正しいものはどれか？",opts:["最低資本金は1,000万円以上が必要","取締役は最低3名必要","発起人1名・資本金1円以上でも設立可能","公証人役場での認証は不要"],ans:2,exp:"2006年会社法施行で最低資本金規制撤廃（1円でも可）、発起人1名でも可。ただし定款は公証人の認証が必要。"},
+  {s:4,q:"民法の「契約の成立」について正しいものはどれか？",opts:["書面でなければ契約は成立しない","申込みと承諾の意思表示が合致した時点で成立する","公証人の認証がなければ法的効力がない","契約書に双方の印鑑がある場合のみ有効"],ans:1,exp:"民法では申込みと承諾の合意（意思の合致）により契約が成立し、書面・印鑑は不要（諾成契約・不要式契約）。"},
+  {s:4,q:"「独占禁止法」が禁止する「カルテル」の説明として正しいものはどれか？",opts:["企業が単独で価格支配力を行使する独占行為","競合する複数の企業が価格・数量等について不当に協定（談合）する行為","一つの企業が複数の市場を支配する行為","企業が取引先を差別的に扱う行為"],ans:1,exp:"カルテルは競合企業間で価格・生産量・販売地域等を協定する行為。独禁法違反として公正取引委員会が取り締まる。"},
+  {s:4,q:"「知的財産権」の分類で「産業財産権」に含まれないものはどれか？",opts:["特許権","実用新案権","著作権","意匠権"],ans:2,exp:"産業財産権（特許庁所管）：特許権・実用新案権・意匠権・商標権の4つ。著作権は文化庁所管で創作と同時に発生。"},
+  {s:4,q:"「民事再生法」と「会社更生法」の違いとして正しいものはどれか？",opts:["民事再生は清算型、会社更生は再建型","民事再生は現経営陣が続投可能、会社更生は管財人が経営を引き継ぐのが原則","両者とも中小企業専用の制度","民事再生は裁判所の関与なし、会社更生は裁判所が管理"],ans:1,exp:"民事再生：現経営陣続投可・中小企業に多用。会社更生：大企業向け・管財人が経営を引き継ぐ。"},
+  {s:4,q:"「下請代金支払遅延等防止法（下請法）」の主な規制内容として正しいものはどれか？",opts:["下請企業の最低賃金を定める","発注企業が下請企業への代金を不当に遅延させたり減額したりすることを禁止する","下請企業の取引先選定を政府が規制する","下請企業の品質基準を統一する"],ans:1,exp:"下請法は親事業者が下請事業者に対して行う受領拒否・支払遅延・代金減額・買いたたき等の不当行為を禁止する法律。"},
+  {s:4,q:"「景品表示法」が規制する行為として正しいものはどれか？",opts:["競合他社への批判的な広告","消費者に対して商品・サービスの品質や価格について不当に優良・有利と誤認させる表示","企業間の契約における不当な価格設定","社員への過大なノルマ設定"],ans:1,exp:"景品表示法は不当表示（優良誤認・有利誤認）と過大な景品類の提供を規制。消費者庁が所管。"},
+
+  // Subject 5: 経営情報システム
+  {s:5,q:"「ERP」の正式名称と主な目的として正しいものはどれか？",opts:["External Relationship Platform：顧客との関係管理","Enterprise Resource Planning：基幹業務を統合管理","Electronic Retail Process：電子商取引管理","Efficient Risk Protection：リスク管理システム"],ans:1,exp:"ERP（企業資源計画）は会計・人事・販売・購買・在庫・生産など企業の基幹業務を一つのシステムで統合管理するソフトウェア。"},
+  {s:5,q:"インターネットの通信プロトコルとして最も基本的なものはどれか？",opts:["HTTP","TCP/IP","HTML","SQL"],ans:1,exp:"TCP/IPはインターネットの基盤となる通信プロトコル。IPがデータの宛先を管理し、TCPが確実なデータ転送を保証。"},
+  {s:5,q:"情報セキュリティの「CIA」が意味する3要素として正しいものはどれか？",opts:["競合・革新・優位性","機密性・完全性・可用性","顧客・革新・分析","中央情報局・国際機関・連合"],ans:1,exp:"情報セキュリティのCIA：Confidentiality（機密性）・Integrity（完全性）・Availability（可用性）。"},
+  {s:5,q:"「アジャイル開発」の特徴として最も適切なものはどれか？",opts:["要件を最初に全て確定してから開発を始める","短い開発サイクルを繰り返して段階的に機能を完成させる","外部委託で開発期間を最短にする","大規模システム開発で計画通りに進める"],ans:1,exp:"アジャイル開発はスプリント（2〜4週間）を繰り返し、動くソフトウェアをリリース→フィードバック→改善を続ける手法。"},
+  {s:5,q:"「DX（デジタルトランスフォーメーション）」の説明として最も適切なものはどれか？",opts:["社内のペーパーレス化（紙の電子化）","IT部門を設置してシステム管理を強化すること","デジタル技術を活用してビジネスモデルや組織を変革すること","ERPシステムを導入して業務効率化を図ること"],ans:2,exp:"DXはデジタル技術でビジネスモデル・組織文化・提供価値そのものを変革すること。ペーパーレスや業務システム導入はDXの入口に過ぎない。"},
+  {s:5,q:"「ランサムウェア」の説明として最も正確なものはどれか？",opts:["ネットワークの通信速度を低下させるマルウェア","ファイルを暗号化して身代金（ransom）を要求するマルウェア","スパムメールを大量送信するソフトウェア","パソコンの画面を盗撮するスパイウェア"],ans:1,exp:"ランサムウェアは感染したPCのファイルを暗号化して使用不能にし、復号の見返りに金銭を要求するマルウェア。"},
+  {s:5,q:"「クラウドコンピューティング」のSaaS（Software as a Service）の例として最も適切なものはどれか？",opts:["サーバーの仮想化環境を提供するサービス","開発環境をネット経由で提供するサービス","ソフトウェアをインターネット経由で利用するサービス","データセンターの建物を貸し出すサービス"],ans:2,exp:"SaaSはソフトウェアをインターネット経由でサービスとして提供。例：Gmail・Salesforce・freee・Office365。"},
+  {s:5,q:"「正規化」をデータベース設計の文脈で説明した場合、最も正しいものはどれか？",opts:["データを圧縮してストレージを節約すること","データの重複を排除して一貫性を保つテーブル設計","データをABC順に並び替えること","暗号化でデータを守ること"],ans:1,exp:"正規化はデータベースのテーブル設計において、データの重複を排除し更新異常を防ぐための設計手法。"},
+  {s:5,q:"「ウォーターフォール型開発」の特徴として正しいものはどれか？",opts:["短期サイクルで開発→フィードバック→改善を繰り返す","各工程を順番に完了させてから次工程に進む（後戻りが難しい）","顧客と毎週ミーティングして要件を柔軟に変更する","プロトタイプを早期に作成して顧客の反応を確認する"],ans:1,exp:"ウォーターフォール型：要件定義→設計→開発→テスト→移行の順番に進み、原則として前工程に戻らない。"},
+  {s:5,q:"「ビッグデータ」の特徴を表す「3V」として正しいものはどれか？",opts:["Volume（量）・Velocity（速度）・Variety（多様性）","Value（価値）・Vision（ビジョン）・Verification（検証）","Vertical（垂直）・Volatile（揮発性）・Visible（可視性）","Variable（変動）・Virtual（仮想）・Volumetric（体積）"],ans:0,exp:"ビッグデータの3V：Volume（膨大なデータ量）・Velocity（高速なデータ生成・処理速度）・Variety（多様な形式）。"},
+  {s:5,q:"「IoT（Internet of Things）」の例として最も適切なものはどれか？",opts:["クラウドにデータを保存するサービス","インターネット経由でソフトを利用するSaaSサービス","センサー付き機械がネットワークに接続して稼働データを自動送信する仕組み","スマートフォンでビデオ会議を行うシステム"],ans:2,exp:"IoTは機械・設備にセンサーと通信機能を搭載し、インターネット経由でデータを収集・分析・制御する技術。"},
+  {s:5,q:"「VPN（Virtual Private Network）」の説明として正しいものはどれか？",opts:["インターネット上にソフトウェアを公開するサービス","公衆回線を暗号化・トンネリングして安全な専用回線のように使う技術","企業内のサーバーを外部公開する設定","複数のサーバーを仮想的に一台にまとめる技術"],ans:1,exp:"VPNはインターネット等の公共回線を暗号化してあたかも専用回線のような安全な通信路を構築する技術。"},
+  {s:5,q:"「フィッシング詐欺」の手口として正しいものはどれか？",opts:["コンピュータに無断でソフトをインストールする","偽のメール・サイトでIDやパスワードを騙し取る","大量のデータを送りつけてサーバーをダウンさせる","ファイルを暗号化して身代金を要求する"],ans:1,exp:"フィッシングは銀行やECサイトを装った偽メールで偽サイトに誘導し、ログイン情報・クレジットカード番号を騙し取る手口。"},
+  {s:5,q:"「RPA（Robotic Process Automation）」の説明として正しいものはどれか？",opts:["実際の産業用ロボットを使って製造工程を自動化する技術","PCで行う定型的・反復的な業務操作をソフトウェアロボットで自動化する技術","AIが高度な判断を行い経営意思決定を自動化するシステム","クラウド上でデータ処理を自動化するインフラサービス"],ans:1,exp:"RPAはPC上のデータ入力・転記・照合など定型業務をソフトウェアロボットが自動実行する技術。"},
+  {s:5,q:"「AIにおける機械学習」の説明として正しいものはどれか？",opts:["人間が全てのルールをプログラムで記述し機械が実行する","データから自動的にパターン・規則を学習して予測・判断を改善するAI技術","人間の脳の神経回路を完全に再現したシステム","インターネット検索を高速化するアルゴリズム"],ans:1,exp:"機械学習はデータを学習してモデルを構築し、新しいデータに対して予測・分類等を行うAI手法。"},
+
+  // Subject 6: 中小企業経営・政策
+  {s:6,q:"中小企業基本法に基づく「製造業等」の中小企業の定義として正しいものはどれか？",opts:["資本金1億円以下または従業員100人以下","資本金3億円以下または従業員300人以下","資本金5千万円以下または従業員50人以下","資本金10億円以下または従業員1,000人以下"],ans:1,exp:"製造業等：資本金3億円以下 または 従業員300人以下。卸売業：1億以下or100人以下。小売業：5,000万以下or50人以下。サービス業：5,000万以下or100人以下。"},
+  {s:6,q:"「よろず支援拠点」の説明として正しいものはどれか？",opts:["都道府県が運営する有料の経営コンサルティング機関","中小企業庁が全都道府県に設置した無料の経営相談窓口","商工会議所が独自に運営する会員向けサービス","政府系金融機関の窓口"],ans:1,exp:"よろず支援拠点は経済産業省・中小企業庁が全国47都道府県に設置した無料の経営相談窓口。幅広い経営課題に対応。"},
+  {s:6,q:"「ものづくり補助金」の対象として正しいものはどれか？",opts:["新入社員の採用費用","広告・チラシの制作費","革新的な設備投資・試作品開発・生産プロセス改善","社員旅行・福利厚生費"],ans:2,exp:"ものづくり補助金は中小企業が行う革新的な設備投資・試作品開発・生産プロセス改善を支援（補助率1/2等）。"},
+  {s:6,q:"中小企業が金融機関から融資を受ける際、担保・実績が少なくても保証人となってくれる公的機関はどれか？",opts:["日本銀行","財務省","信用保証協会","中小企業基盤整備機構"],ans:2,exp:"信用保証協会は中小企業の融資保証を行う公的機関。担保・信用力が不十分でも信用保証協会の保証で融資を受けやすくなる。"},
+  {s:6,q:"「BCP（事業継続計画）」の説明として最も正しいものはどれか？",opts:["毎年の事業計画・予算計画","緊急事態が発生しても事業を継続または早期復旧するための計画","銀行への返済計画","環境への配慮を示すCSR計画"],ans:1,exp:"BCPは自然災害・感染症・サイバー攻撃等の緊急事態が発生しても重要な業務を継続または早期に再開するための計画。"},
+  {s:6,q:"中小企業基本法に基づく「小売業」の中小企業の定義として正しいものはどれか？",opts:["資本金3億円以下または従業員300人以下","資本金1億円以下または従業員100人以下","資本金5,000万円以下または従業員50人以下","資本金1,000万円以下または従業員20人以下"],ans:2,exp:"小売業：資本金5,000万円以下 または 従業員50人以下。「50人」は頻出。"},
+  {s:6,q:"「小規模企業」の定義として製造業等の場合の従業員数は？",opts:["5人以下","20人以下","50人以下","100人以下"],ans:1,exp:"小規模企業の定義：製造業等→従業員20人以下、商業・サービス業→従業員5人以下。"},
+  {s:6,q:"「商工会」と「商工会議所」の違いとして正しいものはどれか？",opts:["商工会議所は農村地区に多く商工会は大都市に多い","商工会は主に市町村（町村部）を基盤とし商工会議所は主に市（都市部）を基盤とする","両者は全く同じ機能を持つ組織","商工会は国が運営し商工会議所は民間が運営する"],ans:1,exp:"商工会：町村部の小規模事業者を支援。商工会議所：市（都市部）の中小企業を対象。"},
+  {s:6,q:"「中小企業倒産防止共済（経営セーフティ共済）」の仕組みとして正しいものはどれか？",opts:["倒産した際に給付金が自動的に支給される保険","取引先の倒産時に連鎖倒産を防ぐため無担保・無保証で融資を受けられる共済","従業員の退職金を積み立てる共済","設備投資の費用を補助する制度"],ans:1,exp:"経営セーフティ共済：取引先が倒産して売掛金が回収できないとき、無担保・無保証で積立額の10倍（最大8,000万円）まで融資を受けられる制度。掛け金は損金算入可能。"},
+  {s:6,q:"「事業承継税制」の説明として正しいものはどれか？",opts:["事業承継時の贈与税・相続税の納税を猶予・免除する制度","事業承継に伴う引越し費用を補助する制度","後継者の経営能力を評価する国家資格制度","外部からの後継者候補を紹介する支援制度"],ans:0,exp:"事業承継税制（特例措置）：後継者が自社株式を先代から贈与・相続する際の贈与税・相続税の納税を猶予・免除する制度。"},
+  {s:6,q:"「小規模事業者持続化補助金」の目的として最も適切なものはどれか？",opts:["大規模な設備投資を支援する","小規模事業者の販路開拓・生産性向上の取組を支援する","従業員の採用費用を補助する","研究開発・試作品開発を支援する"],ans:1,exp:"小規模事業者持続化補助金は販路開拓・業務効率化を支援。チラシ・ウェブサイト・展示会等が補助対象。"},
+  {s:6,q:"「IT導入補助金」の説明として正しいものはどれか？",opts:["ITエンジニアの採用費を補助する制度","中小企業・小規模事業者のITツール（ソフトウェア等）導入を支援する補助金","政府のIT調達を効率化するプログラム","大企業のDX投資を支援する補助金"],ans:1,exp:"IT導入補助金は中小企業・小規模事業者が業務効率化のためにITツールを導入する費用を補助。"},
+  {s:6,q:"中小企業診断士に関する記述として正しいものはどれか？",opts:["中小企業の資金調達を直接行う金融機関","唯一の経営コンサルタントの国家資格","税務申告を代行できる税務の専門家","法律的な問題を代理で解決する専門家"],ans:1,exp:"中小企業診断士は経営コンサルタントの唯一の国家資格（中小企業支援法に基づく）。"},
+  {s:6,q:"「経営革新計画」の承認を受けた中小企業が受けられるメリットとして正しいものはどれか？",opts:["法人税が恒久的に免除される","低利融資・信用保証の特例など各種支援が受けられる","補助金が申請不要で自動的に支給される","中小企業診断士の資格が付与される"],ans:1,exp:"経営革新計画の承認企業は低利融資・信用保証の特例・補助金申請時の加点などの支援が受けられる。"},
+  {s:6,q:"「日本政策金融公庫」の中小企業向け融資の特徴として正しいものはどれか？",opts:["民間銀行より高い金利で融資を行う","創業期や担保・実績が不十分な事業者にも比較的融資しやすい政府系金融機関","融資審査は一切なく申請すれば全て融資される","大企業のみを対象とした政策融資機関"],ans:1,exp:"日本政策金融公庫は政府系金融機関として、民間銀行では融資が難しい創業期・担保不足の中小企業にも政策的に融資を行う。"},
+];
+
+// ===== STATE =====
+let view = 'home'; // 'home' | 'subjectSelect' | 'session' | 'results'
+let session = { qs: [], idx: 0, answers: [], subjectFilter: null };
+let prevPredictions = {};
+
+// ===== STORAGE =====
+const PK = 'eng_perf', SK = 'eng_streak', HK = 'eng_hist';
+function loadPerf() { try { return JSON.parse(localStorage.getItem(PK) || '{}'); } catch(e) { return {}; } }
+function savePerf(p) { localStorage.setItem(PK, JSON.stringify(p)); }
+function qId(q) { return q.q.slice(0, 40); }
+
+function recordAnswer(q, correct) {
+  const p = loadPerf();
+  const id = qId(q);
+  if (!p[id]) p[id] = { a: 0, c: 0, t: 0 };
+  p[id].a++; if (correct) p[id].c++; p[id].t = Date.now();
+  savePerf(p);
+}
+
+function getStreak() {
+  try { return JSON.parse(localStorage.getItem(SK) || '{"d":"","c":0}'); } catch(e) { return {d:'',c:0}; }
+}
+function updateStreak() {
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  const s = getStreak();
+  if (s.d === today) return s.c;
+  const c = s.d === yesterday ? s.c + 1 : 1;
+  localStorage.setItem(SK, JSON.stringify({ d: today, c }));
+  return c;
+}
+
+// ===== SCORE PREDICTION =====
+function predictScore(si) {
+  const p = loadPerf();
+  const qs = ALL_Q.filter(q => q.s === si);
+  let a = 0, c = 0;
+  qs.forEach(q => { const r = p[qId(q)]; if (r) { a += r.a; c += r.c; } });
+  if (a < 5) return null;
+  return Math.round(25 + (c / a) * 65);
+}
+
+function scoreClass(n) {
+  if (n === null) return 'nd';
+  if (n < 40) return 'danger';
+  if (n < 60) return 'warn';
+  return 'good';
+}
+
+// ===== ADAPTIVE SELECTION =====
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function selectSession(si = null) {
+  const perf = loadPerf();
+  let pool = si !== null ? ALL_Q.filter(q => q.s === si) : ALL_Q;
+  const scored = pool.map(q => {
+    const p = perf[qId(q)];
+    let w;
+    if (!p) w = 1.5 + Math.random() * 0.5;
+    else w = (1 - p.c / p.a) * 2.5 + 0.3 + Math.random() * 0.3;
+    return { q, w };
+  });
+  scored.sort((a, b) => b.w - a.w);
+  const picked = [], cnt = {};
+  const maxPerSubj = si !== null ? 10 : 3;
+  for (const { q } of scored) {
+    if (!cnt[q.s]) cnt[q.s] = 0;
+    if (cnt[q.s] < maxPerSubj) { picked.push(q); cnt[q.s]++; if (picked.length >= 10) break; }
+  }
+  if (picked.length < 10) {
+    for (const { q } of scored) {
+      if (!picked.includes(q)) { picked.push(q); if (picked.length >= 10) break; }
+    }
+  }
+  return shuffle(picked);
+}
+
+// ===== DAYS UNTIL EXAM =====
+function daysUntil() {
+  const exam = new Date('2027-07-31');
+  const now = new Date();
+  return Math.max(0, Math.ceil((exam - now) / 86400000));
+}
+
+// ===== RENDER =====
+function render() {
+  const app = document.getElementById('app');
+  if (view === 'home') app.innerHTML = renderHome();
+  else if (view === 'subjectSelect') app.innerHTML = renderSubjectSelect();
+  else if (view === 'session') app.innerHTML = renderSession();
+  else if (view === 'results') app.innerHTML = renderResults();
+}
+
+function renderHome() {
+  const streak = getStreak().c;
+  const days = daysUntil();
+  let html = `<div class="pg-header">
+    <div class="pg-title">⚡ 合格エンジン</div>
+    <div class="pg-sub">中小企業診断士 1次試験 アダプティブ演習</div>
+    <div class="days-badge">試験まで ${days} 日</div>
+  </div>`;
+  if (streak > 0) html += `<div style="text-align:center;margin-bottom:14px"><span class="streak">🔥 ${streak}日連続</span></div>`;
+  html += `<div style="margin-bottom:20px">
+    <button class="btn-primary" onclick="startSession(null)">⚡ 今すぐ10問を解く</button>
+    <button class="btn-secondary" onclick="showSubjectSelect()">📚 科目を絞って練習</button>
+    <button class="btn-ghost" onclick="startWeak()">⚠️ 苦手問題だけ練習</button>
+  </div>`;
+  html += `<div class="card"><div class="score-head">科目別 予測得点</div>`;
+  SUBJS.forEach((s, i) => {
+    const sc = predictScore(i);
+    const cls = scoreClass(sc);
+    const w = sc !== null ? Math.min(sc, 100) : 100;
+    html += `<div class="score-row">
+      <div class="score-lbl">
+        <span class="score-name">${s.short}</span>
+        <span class="score-num ${cls}">${sc !== null ? sc + '点' : '未計測'}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill ${cls}" style="width:${w}%"></div>
+        <div class="bar-mark bm40"></div>
+        <div class="bar-mark bm60"></div>
+      </div>
+    </div>`;
+  });
+  html += `<div style="margin-top:14px;font-size:.72rem;color:#94a3b8;display:flex;gap:12px">
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d97706;vertical-align:middle;margin-right:3px"></span>40点ライン</span>
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a;vertical-align:middle;margin-right:3px"></span>60点ライン</span>
+    <span>5問以上解くと予測開始</span>
+  </div>`;
+  html += `</div>`;
+  return html;
+}
+
+function renderSubjectSelect() {
+  let html = `<button class="back-btn" onclick="goHome()">← ホームへ戻る</button>
+  <div class="card"><div class="score-head" style="margin-bottom:10px">科目を選んでください</div>
+  <div class="subj-grid">`;
+  SUBJS.forEach((s, i) => {
+    const sc = predictScore(i);
+    const label = sc !== null ? `${s.short} ${sc}点` : s.short;
+    html += `<button class="subj-pick-btn" onclick="startSession(${i})" style="border-color:${s.color}20;color:${s.color}">${label}</button>`;
+  });
+  html += `</div></div>`;
+  return html;
+}
+
+function renderSession() {
+  const q = session.qs[session.idx];
+  const answered = session.answers[session.idx] !== undefined;
+  const chosen = session.answers[session.idx];
+  const pct = ((session.idx + (answered ? 1 : 0)) / session.qs.length) * 100;
+  const subj = SUBJS[q.s];
+
+  let html = `<div class="card">
+    <div class="sess-header">
+      <div class="sess-prog-track"><div class="sess-prog-fill" style="width:${pct}%"></div></div>
+      <span class="sess-qnum">Q${session.idx + 1} / ${session.qs.length}</span>
+    </div>
+    <span class="subj-tag" style="background:${subj.color}">${subj.short}</span>
+    <div class="q-text">${q.q}</div>
+    <div class="opts">`;
+
+  const labels = ['A','B','C','D'];
+  q.opts.forEach((opt, i) => {
+    let cls = 'opt';
+    if (answered) {
+      if (i === q.ans) cls += ' correct';
+      else if (i === chosen) cls += ' wrong';
+      else cls += ' dim';
+    }
+    html += `<button class="${cls}" onclick="answer(${i})" ${answered ? 'disabled' : ''}>${labels[i]}. ${opt}</button>`;
+  });
+
+  html += `</div>`;
+
+  if (answered) {
+    const ok = chosen === q.ans;
+    html += `<div class="exp-box">
+      <div class="result-lbl ${ok ? 'ok' : 'ng'}">${ok ? '✅ 正解！' : '❌ 不正解'}</div>
+      ${q.exp}
+    </div>`;
+    const isLast = session.idx >= session.qs.length - 1;
+    html += `<button class="next-btn" onclick="${isLast ? 'showResults()' : 'nextQ()'}">${isLast ? '結果を見る 🏁' : '次へ →'}</button>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+function renderResults() {
+  const total = session.qs.length;
+  const correct = session.answers.filter((a, i) => a === session.qs[i].ans).length;
+  const pct = Math.round(correct / total * 100);
+  const cls = pct >= 80 ? 'excellent' : pct >= 60 ? 'good' : 'poor';
+  const msgs = {excellent:'🎉 素晴らしい！この調子で継続を', good:'👍 もう少し！苦手を絞り込もう', poor:'💪 復習あり。苦手が特定できた'};
+
+  // Subject breakdown
+  const breakdown = {};
+  session.qs.forEach((q, i) => {
+    if (!breakdown[q.s]) breakdown[q.s] = {s:0,n:0};
+    breakdown[q.s].n++;
+    if (session.answers[i] === q.ans) breakdown[q.s].s++;
+  });
+
+  let html = `<div class="card">
+    <div class="res-score">
+      <div class="res-big ${cls}">${correct}<span style="font-size:1.8rem;font-weight:700;color:#94a3b8"> / ${total}</span></div>
+      <div class="res-lbl">正解（${pct}%）</div>
+      <div class="res-msg">${msgs[cls]}</div>
+    </div>
+    <div style="border-top:1.5px solid #f1f5f9;margin-top:14px;padding-top:14px">`;
+
+  Object.entries(breakdown).forEach(([si, b]) => {
+    const prev = prevPredictions[si];
+    const curr = predictScore(parseInt(si));
+    let delta = '';
+    if (prev !== null && prev !== undefined && curr !== null) {
+      const d = curr - prev;
+      if (d > 0) delta = `<span class="delta up">▲${d}</span>`;
+      else if (d < 0) delta = `<span class="delta dn">▼${Math.abs(d)}</span>`;
+    }
+    const sc = scoreClass(curr);
+    html += `<div class="break-row">
+      <span class="break-name">${SUBJS[si].short} ${b.s}/${b.n}問</span>
+      <span class="break-val"><span class="score-num ${sc}">${curr !== null ? curr + '点' : '--'}${delta}</span></span>
+    </div>`;
+  });
+
+  html += `</div></div>
+  <div class="btn-row">
+    <button class="btn-primary" style="flex:2" onclick="startSession(${session.subjectFilter !== null ? session.subjectFilter : 'null'})">もう10問！</button>
+    <button class="btn-ghost" style="flex:1" onclick="goHome()">ホームへ</button>
+  </div>`;
+  return html;
+}
+
+// ===== ACTIONS =====
+function goHome() { view = 'home'; render(); }
+function showSubjectSelect() { view = 'subjectSelect'; render(); }
+
+function startSession(si) {
+  prevPredictions = {};
+  SUBJS.forEach((_, i) => { prevPredictions[i] = predictScore(i); });
+  const qs = selectSession(si);
+  session = { qs, idx: 0, answers: [], subjectFilter: si };
+  updateStreak();
+  view = 'session';
+  render();
+}
+
+function startWeak() {
+  const perf = loadPerf();
+  const weak = ALL_Q.filter(q => {
+    const p = perf[qId(q)];
+    return p && p.a > 0 && (p.c / p.a) < 0.6;
+  });
+  if (weak.length === 0) { alert('苦手問題がまだありません。まず通常の練習を始めましょう！'); return; }
+  prevPredictions = {};
+  SUBJS.forEach((_, i) => { prevPredictions[i] = predictScore(i); });
+  const qs = shuffle(weak).slice(0, 10);
+  session = { qs, idx: 0, answers: [], subjectFilter: null };
+  updateStreak();
+  view = 'session';
+  render();
+}
+
+function answer(optIdx) {
+  if (session.answers[session.idx] !== undefined) return;
+  session.answers[session.idx] = optIdx;
+  const q = session.qs[session.idx];
+  recordAnswer(q, optIdx === q.ans);
+  render();
+}
+
+function nextQ() {
+  if (session.idx < session.qs.length - 1) { session.idx++; render(); window.scrollTo({top:0,behavior:'smooth'}); }
+}
+
+function showResults() { view = 'results'; render(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+// ===== INIT =====
+render();
+</script>
+</body>
+</html>
