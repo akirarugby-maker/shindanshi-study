@@ -140,6 +140,33 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .kk-badge-r4{background:#0891b2}
 .kk-badge-r3{background:#059669}
 .kk-badge-r7{background:#dc2626}
+.nj-head{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:18px 20px;max-width:900px;margin:0 auto 14px}
+.nj-head h2{font-size:1.15rem;color:#1f2937}
+.nj-head .nj-ind{font-size:.85rem;color:#6b7280;margin-top:4px}
+.nj-body{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);max-width:900px;margin:0 auto 14px;overflow:hidden}
+.nj-body summary{padding:14px 20px;font-weight:700;cursor:pointer;background:#f8fafc;color:#334155}
+.nj-text{padding:6px 20px 18px;max-height:65vh;overflow-y:auto;font-size:.92rem;line-height:1.85;color:#1f2937}
+.nj-text p{margin:8px 0;text-indent:1em}
+.nj-text h4{margin:14px 0 4px;font-size:.95rem;color:#334155}
+.nj-table{border-collapse:collapse;margin:10px 0;font-size:.82rem;display:block;overflow-x:auto;max-width:100%}
+.nj-table th,.nj-table td{border:1px solid #cbd5e1;padding:4px 8px;text-align:right;white-space:nowrap}
+.nj-table th{background:#eef2ff;text-align:center}
+.nj-table td:first-child{text-align:left}
+.nj-q{background:#fff;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:18px 20px;max-width:900px;margin:0 auto 14px}
+.nj-q-title{font-weight:800;color:#4338ca;margin-bottom:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.nj-q-meta{font-size:.75rem;font-weight:700;color:#fff;background:#6366f1;border-radius:999px;padding:2px 10px}
+.nj-prompt{font-size:.92rem;line-height:1.75;color:#1f2937;margin-bottom:10px}
+.nj-ans{width:100%;min-height:110px;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:.95rem;line-height:1.7;font-family:inherit;resize:vertical;box-sizing:border-box}
+.nj-ans:focus{outline:none;border-color:#6366f1}
+.nj-count{text-align:right;font-size:.8rem;color:#64748b;margin-top:4px}
+.nj-count.over{color:#dc2626;font-weight:700}
+.nj-reveal{margin-top:10px}
+.nj-guide{display:none;margin-top:10px;padding:14px 16px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:10px;font-size:.9rem;line-height:1.7}
+.nj-guide.open{display:block}
+.nj-guide h5{font-size:.85rem;color:#92400e;margin:6px 0 4px}
+.nj-guide ul{padding-left:1.2em;margin:0}
+.nj-example{background:#fff;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;white-space:pre-wrap}
+.nj-note{font-size:.75rem;color:#9ca3af;margin-top:8px}
 .kk-badge-r6{background:#ea580c}
 .kk-official{font-size:.72rem;font-weight:700;color:#dc2626;border:1px solid #dc2626;border-radius:999px;padding:1px 8px}
 .kk-question .kk-table{border-collapse:collapse;margin:8px 0;font-size:.85rem;font-weight:400;max-width:100%;display:block;overflow-x:auto}
@@ -360,6 +387,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
   <button onclick="showTab('calc')">🔢 計算練習</button>
   <button onclick="showTab('youtube')">📺 YouTube検索</button>
   <button onclick="showTab('textbook')">📘 テキスト</button>
+  <button onclick="showTab('niji')">✍️ 2次試験</button>
 </nav>
 
 <!-- TAB 1: SCHEDULE -->
@@ -777,6 +805,17 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
   <div id="tbSections"></div>
 </div>
 
+<div id="tab-niji" class="tab-content">
+  <div class="subject-selector">
+    <h3 style="margin-bottom:4px">✍️ 2次試験（筆記）演習</h3>
+    <p style="font-size:.8rem;color:#6b7280;margin-bottom:8px">与件文を読み、字数制限内で解答を書いてから解答例・着眼点を確認しましょう（本試験は各事例80分）</p>
+    <div class="subject-btns" id="nijiYearBtns"></div>
+    <div class="subject-btns" id="nijiCaseBtns" style="margin-top:8px"></div>
+  </div>
+  <div id="nijiArea"></div>
+</div>
+
+<script src="niji-data.js"></script>
 <script>
 // ===================== DATA =====================
 
@@ -2229,12 +2268,88 @@ function showTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  const idx = ['schedule','slides','flashcards','quiz','kakomon','calc','youtube','textbook'].indexOf(tab);
+  const idx = ['schedule','slides','flashcards','quiz','kakomon','calc','youtube','textbook','niji'].indexOf(tab);
+  if (tab === 'niji' && !document.getElementById('nijiArea').innerHTML) renderNiji();
   if (idx >= 0) document.querySelectorAll('nav button')[idx].classList.add('active');
   if (tab === 'kakomon' && kakomonQuestions.length === 0) filterKakomonQuestions();
   if (tab === 'schedule') renderSchedule();
   if (tab === 'textbook' && !document.getElementById('tbChapterBtns').innerHTML) { renderTBChapters(); renderTBSections(); }
 }
+
+// ===================== 2次試験 =====================
+let nijiYear = null;
+let nijiCase = null;
+
+function nijiCases() { return typeof nijiData !== 'undefined' ? nijiData : []; }
+
+function nijiKey(c, i) { return 'niji:' + c.year + ':' + c.case + ':' + i; }
+
+function nijiLoad(key) { try { return localStorage.getItem(key) || ''; } catch (e) { return ''; } }
+function nijiSave(key, v) { try { localStorage.setItem(key, v); } catch (e) {} }
+
+function nijiLen(s) { return [...s.replace(/\r?\n/g, '')].length; }
+
+function renderNiji() {
+  const cases = nijiCases();
+  const area = document.getElementById('nijiArea');
+  if (!cases.length) { area.innerHTML = '<p style="text-align:center;padding:32px;color:#888">2次試験データを読み込めませんでした</p>'; return; }
+  const years = [...new Set(cases.map(c => c.year))];
+  if (!nijiYear) nijiYear = years[0];
+  if (!nijiCase) nijiCase = cases.find(c => c.year === nijiYear).case;
+  document.getElementById('nijiYearBtns').innerHTML = years.map(y =>
+    `<button class="${y === nijiYear ? 'active' : ''}" onclick="selectNijiYear('${y}')">${y.replace('R', '令和')}年度</button>`).join('');
+  document.getElementById('nijiCaseBtns').innerHTML = cases.filter(c => c.year === nijiYear).map(c =>
+    `<button class="${c.case === nijiCase ? 'active' : ''}" onclick="selectNijiCase('${c.case}')">${c.case}（${c.theme}）</button>`).join('');
+  const c = cases.find(x => x.year === nijiYear && x.case === nijiCase);
+  const qs = c.questions.map((q, i) => {
+    const saved = nijiLoad(nijiKey(c, i));
+    const limitTxt = q.limit ? `${q.limit}字以内` : '字数指定なし';
+    return `<div class="nj-q">
+      <div class="nj-q-title">${q.no}${q.sub ? '（' + q.sub + '）' : ''}<span class="nj-q-meta">配点${q.points}点</span><span class="nj-q-meta" style="background:#0891b2">${limitTxt}</span></div>
+      <div class="nj-prompt">${q.prompt}</div>
+      <textarea class="nj-ans" id="njAns${i}" placeholder="ここに解答を書く（自動保存）" oninput="onNijiInput(${i})">${saved.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
+      <div class="nj-count" id="njCount${i}"></div>
+      <button class="btn-secondary nj-reveal" onclick="toggleNijiGuide(${i})">💡 解答例・着眼点を見る</button>
+      <div class="nj-guide" id="njGuide${i}">
+        <h5>着眼点</h5>${q.approach}
+        <h5>解答例${q.limit ? `（${nijiLen(q.example)}字）` : ''}</h5><div class="nj-example">${q.example}</div>
+        <div class="nj-note">※問題は公式（一般社団法人 日本中小企業診断士協会連合会）。2次試験の模範解答は公表されていないため、解答例・着眼点は本アプリ独自の一例です。</div>
+      </div>
+    </div>`;
+  }).join('');
+  area.innerHTML = `
+    <div class="nj-head"><h2>${c.year.replace('R', '令和')}年度 ${c.case}（${c.theme}）</h2><div class="nj-ind">${c.industry}</div></div>
+    <details class="nj-body" open><summary>📄 与件文（タップで開閉）</summary><div class="nj-text">${c.body}</div></details>
+    ${qs}`;
+  c.questions.forEach((q, i) => updateNijiCount(i));
+}
+
+function selectNijiYear(y) {
+  nijiYear = y;
+  const first = nijiCases().find(c => c.year === y);
+  if (!nijiCases().some(c => c.year === y && c.case === nijiCase)) nijiCase = first.case;
+  renderNiji();
+}
+
+function selectNijiCase(cs) { nijiCase = cs; renderNiji(); }
+
+function currentNijiCase() { return nijiCases().find(x => x.year === nijiYear && x.case === nijiCase); }
+
+function updateNijiCount(i) {
+  const c = currentNijiCase();
+  const q = c.questions[i];
+  const n = nijiLen(document.getElementById('njAns' + i).value);
+  const el = document.getElementById('njCount' + i);
+  el.textContent = q.limit ? `${n} / ${q.limit}字` : `${n}字`;
+  el.classList.toggle('over', !!q.limit && n > q.limit);
+}
+
+function onNijiInput(i) {
+  nijiSave(nijiKey(currentNijiCase(), i), document.getElementById('njAns' + i).value);
+  updateNijiCount(i);
+}
+
+function toggleNijiGuide(i) { document.getElementById('njGuide' + i).classList.toggle('open'); }
 
 // ===================== SLIDES =====================
 function selectSlideSubject(idx, btn) {
