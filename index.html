@@ -168,6 +168,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .nj-example{background:#fff;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;white-space:pre-wrap}
 .nj-note{font-size:.75rem;color:#9ca3af;margin-top:8px}
 .kk-badge-r6{background:#ea580c}
+.kk-badge-r5s{background:#b45309}
 .kk-official{font-size:.72rem;font-weight:700;color:#dc2626;border:1px solid #dc2626;border-radius:999px;padding:1px 8px}
 .kk-question .kk-table{border-collapse:collapse;margin:8px 0;font-size:.85rem;font-weight:400;max-width:100%;display:block;overflow-x:auto}
 .kk-question .kk-table th,.kk-question .kk-table td{border:1px solid #d1d5db;padding:4px 8px;text-align:left;vertical-align:top}
@@ -591,6 +592,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
         <button class="active" onclick="selectKakomonYear(0,this)">全年度</button>
         <button onclick="selectKakomonYear(7,this)">R7年度（本試験）</button>
         <button onclick="selectKakomonYear(6,this)">R6年度（本試験）</button>
+        <button onclick="selectKakomonYear('5再',this)">R5年度 再試験（本試験）</button>
         <button onclick="selectKakomonYear(5,this)">R5年度</button>
         <button onclick="selectKakomonYear(4,this)">R4年度</button>
         <button onclick="selectKakomonYear(3,this)">R3年度</button>
@@ -3521,7 +3523,7 @@ function loadKakomonQuestion() {
   }
   kakomonAnsweredFlag = false;
   const q = kakomonQuestions[currentKakomonQ];
-  const yearClass = q.year === 'R7' ? 'kk-badge-r7' : q.year === 'R6' ? 'kk-badge-r6' :q.year === 'R5' ? 'kk-badge-r5' : q.year === 'R4' ? 'kk-badge-r4' : 'kk-badge-r3';
+  const yearClass = q.year === 'R7' ? 'kk-badge-r7' : q.year === 'R6' ? 'kk-badge-r6' : q.year === 'R5再' ? 'kk-badge-r5s' : q.year === 'R5' ? 'kk-badge-r5' : q.year === 'R4' ? 'kk-badge-r4' : 'kk-badge-r3';
   const backBtn = kakomonNavSource === 'slide'
     ? `<button class="slide-back-btn" onclick="returnToSlideFromKakomon()" style="margin-bottom:14px">← スライド学習に戻る</button>`
     : kakomonNavSource === 'fc'
