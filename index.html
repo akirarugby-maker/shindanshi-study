@@ -393,7 +393,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 <header>
   <h1>📚 中小企業診断士 一次試験 学習アプリ</h1>
   <p>7科目を体系的に学習できる総合学習ツール</p>
-  <span class="app-version" title="この番号が新しければ最新版です">Ver. 2026.10.30.4</span>
+  <span class="app-version" title="この番号が新しければ最新版です">Ver. 2026.10.30.5</span>
 </header>
 <nav id="mainNav">
   <button class="active" onclick="clearNavBack();showTab('schedule')">📅 スケジュール</button>
@@ -652,7 +652,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 <div id="tab-youtube" class="tab-content">
   <div class="yt-intro">
     <h2>📺 YouTube動画で学ぶ</h2>
-    <p>ボタンを押すと「中小企業診断士 ＜科目名／トピック＞ わかりやすい 解説」でYouTube検索が開きます。スライドで基礎を学んだ後、動画で理解を深めましょう。</p>
+    <p>ボタンを押すと、TBC受験研究会の講義動画を公開している<strong>早稲田出版のYouTubeチャンネル</strong>の中を、そのテーマで検索した結果が開きます（講義は速修テキストに対応）。<br><a href="https://www.youtube.com/@%E6%97%A9%E7%A8%B2%E7%94%B0%E5%87%BA%E7%89%88-q3o/playlists" target="_blank" rel="noopener">▶ 早稲田出版チャンネルの再生リスト一覧を開く</a></p>
   </div>
 
   <!-- QUICK: 7 subject buttons -->
@@ -4206,10 +4206,7 @@ function returnToQuiz() {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function openSlideYoutube(title, subj) {
-  const query = encodeURIComponent('中小企業診断士 ' + subj + ' ' + title + ' わかりやすい 解説');
-  window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
-}
+function openSlideYoutube(title, subj) { wasedaSearch(shortTopic(title)); }
 
 let kakomonNavSource = null;
 let kakomonReturnSubject = 0;
@@ -5260,10 +5257,18 @@ function showKakomonComplete() {
 }
 
 // ===================== YOUTUBE SEARCH =====================
-function openYoutube(topic) {
-  const query = encodeURIComponent('中小企業診断士 ' + topic + ' わかりやすい 解説');
-  window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
+// TBC受験研究会の講義動画を公開している早稲田出版チャンネルの中を検索する
+const WASEDA_CHANNEL = 'https://www.youtube.com/@' + encodeURIComponent('早稲田出版-q3o');
+function wasedaSearch(topic) {
+  window.open(WASEDA_CHANNEL + '/search?query=' + encodeURIComponent(topic), '_blank');
 }
+function shortTopic(text) {
+  const t = stripTags(text).replace(/[（(【\[].*?[）)】\]]/g, ' ').replace(/[、。：:；;／/＝=→]+/g, ' ').replace(/(って何|とは|とは何|入門|の基本|の基礎)?[？?！!]*$/, '').replace(/\s+/g, ' ').trim();
+  if (t.length <= 24) return t;
+  const parts = t.split(/[\s・]+/).filter(w => w.length >= 2);
+  return parts.slice(0, 3).join(' ').slice(0, 30);
+}
+function openYoutube(topic) { wasedaSearch(topic); }
 
 function openYoutubeCustom() {
   const val = document.getElementById('ytCustomInput').value.trim();
@@ -5724,10 +5729,7 @@ function findTextbookSection(subj, text) {
 
 function escAttr(s) { return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' '); }
 
-function ytQuery(subj, topic) {
-  const q = encodeURIComponent('中小企業診断士 ' + LINK_SUBJECTS[subj] + ' ' + topic + ' わかりやすい 解説');
-  window.open('https://www.youtube.com/results?search_query=' + q, '_blank');
-}
+function ytQuery(subj, topic) { wasedaSearch(shortTopic(topic)); }
 
 function tbLinksHtml(subj, sec, si) {
   const tokens = contentTokens(sec.title + ' ' + (sec.points || []).join(' '));
