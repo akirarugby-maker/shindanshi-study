@@ -393,7 +393,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 <header>
   <h1>📚 中小企業診断士 一次試験 学習アプリ</h1>
   <p>7科目を体系的に学習できる総合学習ツール</p>
-  <span class="app-version" title="この番号が新しければ最新版です">Ver. 2026.10.30.5</span>
+  <span class="app-version" title="この番号が新しければ最新版です">Ver. 2026.10.30.6</span>
 </header>
 <nav id="mainNav">
   <button class="active" onclick="clearNavBack();showTab('schedule')">📅 スケジュール</button>
@@ -652,7 +652,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 <div id="tab-youtube" class="tab-content">
   <div class="yt-intro">
     <h2>📺 YouTube動画で学ぶ</h2>
-    <p>ボタンを押すと、TBC受験研究会の講義動画を公開している<strong>早稲田出版のYouTubeチャンネル</strong>の中を、そのテーマで検索した結果が開きます（講義は速修テキストに対応）。<br><a href="https://www.youtube.com/@%E6%97%A9%E7%A8%B2%E7%94%B0%E5%87%BA%E7%89%88-q3o/playlists" target="_blank" rel="noopener">▶ 早稲田出版チャンネルの再生リスト一覧を開く</a></p>
+    <p>ボタンを押すと、TBC受験研究会の講義動画（<strong>早稲田出版チャンネル・2026年版速修テキスト対応</strong>）のうち、そのテーマに対応する動画が直接開きます。科目ボタンはその科目の再生リストを開きます。対応する動画が見つからないテーマは、チャンネル内の検索結果が開きます。<br><a href="https://www.youtube.com/@%E6%97%A9%E7%A8%B2%E7%94%B0%E5%87%BA%E7%89%88-q3o/playlists" target="_blank" rel="noopener">▶ 早稲田出版チャンネルの再生リスト一覧を開く</a></p>
   </div>
 
   <!-- QUICK: 7 subject buttons -->
@@ -4050,7 +4050,7 @@ function loadSlide() {
   if (bestKakomonQ) {
     actionHtml += `<button class="slide-action-btn slide-kk-btn" onclick="goToKakomonFromSlide()">📝 関連過去問へ</button>`;
   }
-  actionHtml += `<button class="slide-action-btn slide-yt-btn" onclick="openSlideYoutube('${safeTitle}','${safeSubj}')">▶ YouTube で理解を深める</button>`;
+  actionHtml += ytButtonHtml(currentSlideSubject, s.title + '\u0001' + s.points.join(' '), 'slide-action-btn slide-yt-btn');
   actionHtml += tbButtonHtml(currentSlideSubject, s.title + ' ' + s.points.join(' '), 'slide');
   document.getElementById('slideActionBtns').innerHTML = actionHtml;
   autoCheckSlide(currentSlideSubject, currentSlide);
@@ -4206,7 +4206,7 @@ function returnToQuiz() {
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function openSlideYoutube(title, subj) { wasedaSearch(shortTopic(title)); }
+function openSlideYoutube(title, subj) { openLecture(subjectIndexOf(subj), title); }
 
 let kakomonNavSource = null;
 let kakomonReturnSubject = 0;
@@ -4479,7 +4479,7 @@ function showCard() {
     } else {
       kakomonLinkEl.innerHTML = '';
     }
-    document.getElementById('fcTextLink').innerHTML = tbButtonHtml(subjIdx, c.term + ' ' + c.term + ' ' + (c.def || ''), 'fc') + ytButtonHtml(subjIdx, c.term);
+    document.getElementById('fcTextLink').innerHTML = tbButtonHtml(subjIdx, c.term + ' ' + c.term + ' ' + (c.def || ''), 'fc') + ytButtonHtml(subjIdx, c.term + '\u0001' + (c.def || ''));
   } else {
     linkEl.innerHTML = '';
     quizLinkEl.innerHTML = '';
@@ -5263,12 +5263,55 @@ function wasedaSearch(topic) {
   window.open(WASEDA_CHANNEL + '/search?query=' + encodeURIComponent(topic), '_blank');
 }
 function shortTopic(text) {
-  const t = stripTags(text).replace(/[（(【\[].*?[）)】\]]/g, ' ').replace(/[、。：:；;／/＝=→]+/g, ' ').replace(/(って何|とは|とは何|入門|の基本|の基礎)?[？?！!]*$/, '').replace(/\s+/g, ' ').trim();
+  const t = stripTags(String(text).split('\u0001')[0]).replace(/[（(【\[].*?[）)】\]]/g, ' ').replace(/[、。：:；;／/＝=→]+/g, ' ').replace(/(って何|とは|とは何|入門|の基本|の基礎)?[？?！!]*$/, '').replace(/\s+/g, ' ').trim();
   if (t.length <= 24) return t;
   const parts = t.split(/[\s・]+/).filter(w => w.length >= 2);
   return parts.slice(0, 3).join(' ').slice(0, 30);
 }
-function openYoutube(topic) { wasedaSearch(topic); }
+// TBC受験研究会の講義動画（早稲田出版チャンネル、2026年版速修テキスト対応）。[動画ID, 題名, 補足キーワード]
+const lectureData = {"pl":{"A":"PLV5sNcOKpZnyCdfZYXqMguqv7LezdFg_3","B":"PLV5sNcOKpZnyrtA1yi6LGYj2SqsNzKLIW","C":"PLV5sNcOKpZnz92HYy4qrZwM8kQ5qtZS_-","D":"PLV5sNcOKpZnz2wIMlqGkMZofXsxpeTazg","E":"PLV5sNcOKpZnzgnw2LsOvYsBAac-_DTznA","F":"PLV5sNcOKpZnwxFBRcyWhLhkvX60kCr52l","G":"PLV5sNcOKpZnzhGPaz4Ag7Z2sdfzD0cqYa"},"v":{"A":[["wZrBI2Men7M","p00 経済学・経済政策の学習法","学習法"],["jdyluuSTvYs","p001-017 第１章Ⅰ経済学の基礎","学習法"],["RZqjpHvx9us","p018-025 第１章Ⅱ物価と名目・実質 Ⅲ安定均衡と市場の調整過程",""],["hTkDemKnJtw","p026-034 第１章Ⅳ国民経済計算",""],["9Qw2fMvhx10","p038-062 第２章財市場（生産物市場）の分析第1節消費関数の理解～第6節投資曲線の導出",""],["lPDByEymPj8","p063-073 第２章財市場（生産物市場）の分析第7節IS曲線の導出",""],["q354oBn0Q84","p074-088 第３章資産市場（貨幣市場・債券市場）の分析第１節貨幣の需要と供給第２節貨幣供給量の理解",""],["QSs4Kfs8q7o","p089-096 第３章資産市場（貨幣市場・債券市場）の分析第３節LM曲線の導出",""],["xAWrf5tg3Lk","p098-116 第４章財市場（IS曲線）と貨幣市場（LM曲線）の分析",""],["_yRPENCObR4","p118-130 第５章国際マクロ経済学 第１節経常収支と貯蓄・投資バランス 第２節外国貿易乗数 第３節外国為替相場の決定",""],["nbSCrAXE0XU","p131-157 第5章 4節 外国為替相場決定理論 ５節マンデル＝フレミング・モデル(変動為替相場制) 6節 マンデル＝フレミング・モデル(固定為替相場制)",""],["Zs-Jtml-HM8","p158-174 第６章 Ⅰ 消費者行動理論の概要 Ⅱ 無差別曲線理論",""],["spGBS55om-c","p175-185 第６章 Ⅲ 需要の弾力性 Ⅳ その他の無差別曲線の理論",""],["NJ4bmXmVcK8","p186-198 第７章 Ⅰ 生産者行動理論の概要 Ⅱ 費用関数の理解",""],["dPIn6s2uvSg","p199-209 第７章 Ⅲ 利潤最大化行動と損益分岐点 Ⅳ 等産出量曲線と等費用曲線",""],["7icuPP_SabA","p210-229 第８章 Ⅰ 独占市場の企業行動 Ⅱ 寡占市場の企業行動 Ⅲ 独占的競争市場",""],["bkDJTYicErU","p230-243 第９章 Ⅰ 余剰分析 Ⅱ パレート最適 Ⅲ 外部効果（外部性）",""],["RM2L8ywmVoM","p244-265 第９章 Ⅳ 外部効果の内部化 Ⅴ 公共財 Ⅵ 自然独占 Ⅶ 情報の非対称性",""],["stvM33n-E9g","p266-283 第10章 Ⅰ 比較生産費説（比較優位論） Ⅱ 生産要素の国際移動 Ⅲ 余剰分析による説明（小国モデル） Ⅳ 保護貿易",""],["sFze__AJEiw","p284-301 第11章 Ⅰ 総需要曲線 Ⅱ 総供給曲線 Ⅲ 総需要・総供給分析",""],["LBnXDvhDeno","p302-317 第12章 Ⅰ 景気動向指数 Ⅱ 各種統計の概要",""],["oTMqwSI1_zQ","p318-332 第13章 Ⅰ その他マクロ経済理論 Ⅱ ケインズ以外の投資理論 Ⅲ ケインズ以外の消費理論",""],["jX5CC_0L3j0","p333-342 第13章 Ⅳ 経済成長理論 Ⅴ 所得分配の公平性（公正性） Ⅵ その他経済政策の理論",""]],"B":[["DzDUOIyYrqI","p00 財務・会計の学習法","学習法"],["IDON0dQGG-k","第１章 超Ａランク過去問題",""],["S0QKxcHM8EA","p004-013 第１章 Ⅰ 財務・会計の概要","学習法"],["ox6aEALR9Xo","p014-023 第１章 Ⅱ 簿記の基礎",""],["u-NDL0jGgRM","第２章 超Ａランク過去問題p079-084 b",""],["BtTknWwJNC4","p032-035 第２章 Ⅰ 貸借対照表の知識【1】(1)～(3)",""],["XfjZcycZMuk","p035-040 第２章 Ⅰ 貸借対照表の知識【1】(4)～(6)",""],["Tck45ULBdL0","p040-043 第２章 Ⅰ 貸借対照表の知識【1】(7)～(9)",""],["ERfV8Fniat4","p044-047 第２章 Ⅰ 貸借対照表の知識【２】",""],["kMQIN3K7S-M","p047-049 第２章 Ⅰ 貸借対照表の知識【３】",""],["HdHMhC1lT2A","p049-054 第２章 Ⅰ 貸借対照表の知識【４】【５】",""],["SRNglBYiCpY","p055-058 第２章 Ⅰ 貸借対照表の知識【６】",""],["Ig7OLuqt2Lw","p059-061 第２章 Ⅱ 損益計算書の知識",""],["Af5CXyaxoZ0","p062-063 第２章 Ⅲ 決算整理事項【１】","減価償却 引当金 棚卸 売上原価 経過勘定 有価証券"],["gUTuRDyLv5Q","p063-067 第２章 Ⅲ 決算整理事項【２】","減価償却 引当金 棚卸 売上原価 経過勘定 有価証券"],["0_hqgzwWro8","p067-070 第２章 Ⅲ 決算整理事項【３】","減価償却 引当金 棚卸 売上原価 経過勘定 有価証券"],["dB_wXEA_UYU","p070-073 第２章 Ⅲ 決算整理事項【４】","減価償却 引当金 棚卸 売上原価 経過勘定 有価証券"],["Ngmx8OgHc6M","p073-078 第２章 Ⅲ 決算整理事項【５】【６】","減価償却 引当金 棚卸 売上原価 経過勘定 有価証券"],["N6CZj0-b5Xc","第３章 超Ａランク過去問題p139-145 b",""],["qEATVoiYOD4","p088-089 第３章 Ⅰ 株主資本等変動計算書の知識",""],["L8uf3jmyL0g","p090-100 第３章 Ⅱ キャッシュ・フロー計算書の知識",""],["uWUf1Do2Z98","p101-103 第３章 Ⅲ 税務会計と税効果会計の知識【１】",""],["co4jJaIHTRk","p103-108 第３章 Ⅲ 税務会計と税効果会計の知識【２】",""],["qeOkeSIiNIU","p108-112 第３章 Ⅳ 連結財務諸表の知識【１】～【３】",""],["Y2-sDYHQhKM","p112-117 第３章 Ⅳ 連結財務諸表の知識【４】～【６】",""],["dpqYln3rPvQ","p118-120 第３章 Ⅴ その他の会計に関する知識【１】","リース 外貨 退職給付 減損 ソフトウェア 研究開発 収益認識"],["FO8ayxcSLRI","p120-125 第３章 Ⅴ その他の会計に関する知識【２】(1)～(3)","リース 外貨 退職給付 減損 ソフトウェア 研究開発 収益認識"],["zCIxU_W6Shs","p125-129 第３章 Ⅴ その他の会計に関する知識【２】(4)～(6)","リース 外貨 退職給付 減損 ソフトウェア 研究開発 収益認識"],["k5Uhry_d9RE","p129-134 第３章 Ⅴ その他の会計に関する知識【３】【４】","リース 外貨 退職給付 減損 ソフトウェア 研究開発 収益認識"],["Tf7OGap7SZA","p134-138 第３章 Ⅴ その他の会計に関する知識【５】【６】","リース 外貨 退職給付 減損 ソフトウェア 研究開発 収益認識"],["4R2LFX_u_kc","第４章 超Ａランク過去問題p183-189",""],["f-UMHZgrTjE","p148-155 第４章 Ⅰ 原価計算の関連知識",""],["5aGBEZg2U3U","p156-160 第４章 Ⅱ 製造原価報告書",""],["zGLhi0adGN8","p164-170 第４章 Ⅲ 原価計算の種類【２】",""],["DcleLCKwgcE","p170-175 第４章 Ⅲ 原価計算の種類【３】",""],["-I-T7SVgdUI","p175-182 第４章 Ⅲ 原価計算の種類【４】～【６】",""],["AWkz7E78q6M","p161-163 第４章 Ⅲ 原価計算の種類【１】",""],["CHn--XTLTcs","第５章 超Ａランク過去問題p216-223",""],["vzYOnETu6q0","p192-197 第５章 Ⅰ 収益性・効率性分析",""],["_V3c4v4Lcvs","p198-203 第５章 Ⅱ 安全性分析",""],["8HnyWudZZkM","p204-207 第５章 Ⅲ 生産性分析",""],["1CgYAuVc3zU","p208-215 第５章 Ⅳ CVP分析",""],["bZnJFMFX5Yo","第６章 超Ａランク過去問題p233-240",""],["W0kT4plgD2Y","p226-228 第６章 Ⅰ 利益管理",""],["y1vDVgFm4Uo","p229 232 第６章 Ⅱ 資金管理",""],["rS_taU3ioS8","第７章 超Ａランク過去問題p268-273",""],["X4u9RukmS8Q","p244 253 第７章 Ⅰ ファイナンスの基礎",""],["0EUw58lc4GM","p254-256 第７章 Ⅱ 意思決定","差額原価 埋没原価 機会原価 業務的意思決定"],["qup3I7vX6TE","p257-267 第7章 Ⅲ正味現在価値法～Ⅵその他投資の意思決定手法","差額原価 埋没原価 機会原価 業務的意思決定"],["UJdpqiyuRF8","第８章 超Ａランク過去問題",""],["BwjjObbuGzw","p276-280 第８章 Ⅰ 資金調達の形態","増資 社債 内部金融 外部金融 企業間信用"],["YH-hCQNjPsc","第９章 超Ａランク過去問題p305-310",""],["5TjWyci2S8I","p290-294 第９章 Ⅰ 資本コスト",""],["UIcAWJ7vGEk","p295-299 第９章 Ⅱ 最適資本構成",""],["tHJW3nd0YQE","p300-304 第９章 Ⅲ ペイアウト政策","配当政策 自社株買い 配当性向"],["Kz4FCjIr-xA","p312-331 第10章 Ⅰ 企業価値の概要 Ⅱ その他企業価値の関連知識",""],["PQK7dabR2Ys","p332-344 第11章 Ⅰ リターンとリスク Ⅱ リターンとリスクの指標 Ⅲ リスク管理","ポートフォリオ CAPM 標準偏差 相関係数 分散投資"],["pFACQ9ElxYQ","p345-366 第11章 Ⅳ 為替リスクとリスクの回避","為替予約 オプション デリバティブ 先物"],["qjm0oFQLHgU","p368-384 第12章 Ⅰ タックスシールド Ⅱ 正味現在価値とリスク Ⅲ 不確実性下の意思決定","差額原価 埋没原価 機会原価 業務的意思決定"]],"C":[["t35dihrmEpk","p00 企業経営理論の学習法","学習法"],["dekXakMx1eA","p004-011 第１章経営戦略の概要第１節経営戦略の策定","学習法"],["G5xRAe2hOec","p012-017 第１章経営戦略の概要第２節ドメイン第３節戦略論を理解するための経済学の用語",""],["RZH1BFI5YQs","p020-024 第２章成長戦略第１節成長戦略の概要","アンゾフ 成長ベクトル 製品市場マトリックス"],["c93zIcKZZ5E","p025-035 第２章成長戦略第２節多角化戦略第３節M＆A","多角化 シナジー ルメルト M&A"],["vm1DFCX5yeY","p38-48 第３章 競争戦略Ⅰ-Ⅱ","5フォース 業界構造 ポーター 競争優位 基本戦略 コストリーダーシップ 差別化 集中"],["l8FM9p2CKHM","p49-51 第３章 競争戦略Ⅲ",""],["8xy08kbJfDY","p52-54 第３章 競争戦略Ⅳ",""],["DWbgCPkr_lc","p55-61 第３章 競争戦略Ⅴ",""],["Y9O2LuIKGZQ","p62-66 第３章 競争戦略Ⅵ-Ⅶ",""],["xTcYCeG8d8Y","p070-079 第４章 経営資源戦略Ⅰ-Ⅱ","経営資源 RBV VRIO コアコンピタンス PPM"],["jK_tfcZ7FFM","p080-090 第４章 経営資源戦略Ⅲ-Ⅳ","経営資源 RBV VRIO コアコンピタンス PPM"],["rGw9mjlMmXk","p092-102 第５章 イノベーションと技術経営（MOT）Ⅰ-Ⅱ","イノベーション 技術経営 A-Uモデル 製品アーキテクチャ オープンイノベーション"],["GWrjQFIEQxs","p103-114 第５章 イノベーションと技術経営（MOT）Ⅲ-Ⅳ","イノベーション 技術経営 A-Uモデル 製品アーキテクチャ オープンイノベーション"],["Gxt6UysBXUg","p116-131 第６章 企業の社会的責任とその他戦略論の知識Ⅰ-Ⅱ","CSR ESG コーポレートガバナンス 国際経営"],["EIkF7l9KU2s","p132-140 第７章 Ⅰ 組織論の基礎","バーナード 組織の3要素 組織均衡 サイモン 意思決定"],["OwWezIBbW9Q","p141-145 第７章 Ⅱ 環境に組み込まれた組織【１】","資源依存 取引コスト 制度的同型化 個体群生態学 組織間関係 ネットワーク"],["iwzjhbG41tk","p146-149 第７章 Ⅱ 環境に組み込まれた組織【２】","資源依存 取引コスト 制度的同型化 個体群生態学 組織間関係 ネットワーク"],["MNQN-ELhu5c","p149-153 第７章 Ⅱ 環境に組み込まれた組織【３】～【５】","資源依存 取引コスト 制度的同型化 個体群生態学 組織間関係 ネットワーク"],["7PxWSHPzPZQ","p156-160 第８章 Ⅰ 組織構造と組織デザイン【１】～【２】","機能別組織 事業部制 マトリックス組織 ガルブレイス コンティンジェンシー"],["GUOHziRN4wc","p160-167 第８章 Ⅰ 組織構造と組織デザイン【３】～【４】","機能別組織 事業部制 マトリックス組織 ガルブレイス コンティンジェンシー"],["nTyhkuBFxpA","p168-175 第８章 Ⅱ 組織文化",""],["dfPX7UtLUh0","p180-186 第９章 Ⅰ キャリア・マネジメント Ⅱ モチベーション【１】",""],["AMjJKDIXmOs","p186-193 第９章 Ⅱ モチベーション【２】～【６】",""],["SquooguiuAg","p194-205 第９章 Ⅲ リーダーシップ",""],["O6FIAiUsjz8","p206-210 第９章 Ⅳ コンフリクト・マネジメント",""],["kN0p7t8o4ZU","p214-221 第10章 Ⅰ 組織の長期適応と発展過程 Ⅱ 組織活性化","組織のライフサイクル"],["5YenFyOfBnw","p222-226 第10章 Ⅲ ナレッジ・マネジメントと組織学習",""],["S_YDH9dcttQ","p227-233 第10章 Ⅳ 組織変革",""],["svDoNsDikvY","p236-253 第11章 Ⅰ 人的資源管理の意義と人事・労務情報 Ⅱ 雇用管理と能力開発 （中小企業診断士2026年度速修テキスト）026年度速修テキスト）",""],["4UmH-qkOsNY","p254-292 第12章 Ⅰ 労働基準法 Ⅱ 労働安全衛生法 Ⅲ 労働保険・社会保険 Ⅳ その他の労働関連法規",""],["_UN-wVvDOyE","p294-300 第13章 Ⅰ マーケティングの基礎【１】～【４】",""],["Crz64NemoGE","p301-306 第13章 Ⅱマーケティングの考え方【１】 Ⅲソーシャル・マーケティング【１】～【３】",""],["HuR70d74of8","p310-319 第14章 Ⅰ 消費者行動分析【１】～【２】",""],["-HDfo-tZkH0","p319-334 第14章 Ⅰ消費者行動分析【３】～【５】 Ⅱ標的市場の決定【１】～【４】",""],["6ZpNxo5IWC8","p338-351 第15章 Ⅰ 製品戦略",""],["L5T46T5rjGc","p352-364 第15章 Ⅱ ブランド戦略",""],["MLOZJ04KdWo","p365-374 第15章 Ⅲ 価格戦略",""],["BgisRkOFvFo","p375-383 第15章 Ⅳ 流通チャネル戦略",""],["j543oeRbwoc","p384-398 第15章 Ⅴ コミュニケーション戦略",""],["dDfIkChuVHs","p404-411 第16章 Ⅰ 関係性マーケティング【１】～【２】Ⅱ顧客関係性管理（CRM）【１】～【３】",""],["YyRhRtGHd7A","p412-428 第16章III サービス・マーケティング【1】～【4】IV ダイレクト・マーケティング【1】～【2】V その他のマーケティング用語【１】",""]],"D":[["YKgIYoSzGIQ","p00 店舗販売管理の学習法","学習法"],["GTTcAoijLqU","p004-019 第１章第１節店舗施設に関する法律知識","学習法"],["812kEZ9cVAM","p020-045 第１章 Ⅱ－Ⅳ","店舗立地 商圏 商業集積 ショッピングセンター 商店街 店舗設計 店舗レイアウト 照明 色彩 什器"],["amzvziYz8y0","p046-066 第２章 Ⅰ－Ⅲ","マーチャンダイジング 商品計画 品揃え カテゴリーマネジメント 商品予算 仕入 値入 GMROI 交差比率"],["FSh8zRGycug","p067-087 第２章 Ⅳ －Ⅴ","価格設定 価格政策 値下げ 販売促進 インストアプロモーション ISP 陳列 VMD フェイシング"],["g7OjZwqhYoc","p088-094 第３章 Ⅰ 商品在庫管理",""],["kaiyGh_VTfw","p095-118 第３章 Ⅱ輸配送管理 Ⅲ物流センター管理",""],["ma5S8wSGe0g","第４章 超Aランク過去問題",""],["L8a518MYtAY","p120-132 第４章 Ⅰ 店舗システム",""],["Gn1zjVFFMNI","p133-150 第４章 Ⅱ 取引情報・物流情報システム",""],["VtlFp45wZ_Q","p149-175 第５章 生産管理の基礎",""],["AqPYRqGbMxc","p176-185 第６章 Ⅰ 工場のレイアウト",""],["ewy46dii2D4","p186-192 第６章 Ⅱ 製品開発・製品設計",""],["5I8fWyir3R8","p193-200 第６章 Ⅲ 生産方式・管理方式【１】～【２】",""],["foR1cGmhiS4","p200-207 第６章 Ⅲ 生産方式・管理方式【３】～【４】",""],["uJxPzP4oJN0","p208-213 第６章 Ⅳ 生産計画【1】【2】",""],["_uDdFM1yXMI","p214-220 第６章 Ⅳ 生産計画【3】【4】",""],["oxpYWX6zgrU","p221-238 第６章 Ⅴ 資材管理",""],["8XNS9LF4PbM","p244-257 第７章 Ⅰ 品質管理",""],["zQ1hg9E-JOA","p258-267 第７章 Ⅱ 生産統制 Ⅲ 作業管理",""],["8yCdiaUtBEU","p268-284 第７章 Ⅳ IE Ⅴ 方法研究 Ⅵ 作業測定",""],["_VuXhDWStOE","p285-295 第７章 Ⅶ 設備管理 Ⅷ その他のオペレーション",""],["IlFg9Grs6zE","p302-317 第８章 Ⅰ生産システムの情報化 Ⅱ生産技術に関する知識 Ⅲ廃棄物等の管理",""]],"E":[["yEKDF_EfZ8I","p00 経営法務の学習法","学習法"],["-bvpddjFk8E","p006-009 第１章 Ⅰ 試験で問われる法律と民法総則の知識【１】～【３】","学習法"],["ZlAQbzkUn9c","p009-015 第１章 Ⅰ 試験で問われる法律と民法総則の知識【４】～【８】","学習法"],["7-dqebKNg4M","p015-022 第１章 Ⅰ 試験で問われる法律と民法総則の知識【９】～【13】","意思表示 代理 時効 制限行為能力"],["iTkJaJjCDLs","p022-032 第１章 Ⅰ 試験で問われる法律と民法総則の知識【14】～【16】","意思表示 代理 時効 制限行為能力"],["UGpS9wvVE8U","p033-041 第１章 経営法務の概要と民法 Ⅱ 物権法",""],["ltVJDR8LG3Y","p042-049 第１章 経営法務の概要と民法 Ⅲ 債権総則【１】～【７】",""],["XT4mpZCb1AU","p049-055 第１章 経営法務の概要と民法 Ⅲ 債権総則【８】",""],["jTrYN2t2JyM","p055-060 第１章 経営法務の概要と民法 Ⅲ 債権総則【９】～【11】",""],["I51tawFf0tA","p061-071 第１章 経営法務の概要と民法 Ⅳ 契約【１】～【５】",""],["jCJ4GewSpgE","p071-078 第１章 経営法務の概要と民法 Ⅳ 契約【６】～【10】",""],["j9O2BNQm0RM","p079-089 第１章 経営法務の概要と民法 Ⅴ 相続",""],["T-gNosy_rtY","p98-101 第２章 知的財産法 Ⅰ 知的財産権概論",""],["XecU4_3KWbM","p102-111 第２章 知的財産法 Ⅱ 特許法【1】～【3】",""],["P_TVfvziuu0","p111-120 第２章 知的財産法 Ⅱ 特許法【4】",""],["iwEJRERqS_4","p120-132 第２章 知的財産法 Ⅱ 特許法【５】～【６】",""],["HxlEtlVrNcM","p133-140 第２章 知的財産法 Ⅲ 実用新案法",""],["pAJvnoncGCI","p141-158 第２章 知的財産法 Ⅳ 意匠法",""],["pikvJKfHk9k","p159-170 第２章 知的財産法 Ⅴ 商標法【１】～【２】",""],["Y9amQbQVARE","p170-181 第２章 知的財産法 Ⅴ 商標法【３】～【５】",""],["fmJQ_Pk6YmI","p182-194 第２章 知的財産法 Ⅵ 著作権法",""],["1WQIUYkadng","p195-205 第２章 知的財産法 Ⅶ 不正競争防止法","営業秘密 周知表示 著名表示"],["ZgvJvhYb-hM","p220-227 第３章 会社法 Ⅰ 会社法の概要",""],["ahppf3iKcMo","p228-234 第３章 会社法 Ⅱ 株式【１】～【２】",""],["pAJgSri7jSk","p234-244 第３章 会社法 Ⅱ 株式【３】～【８】",""],["vxuzEVFe7lI","p245-247 第３章 会社法 Ⅲ 機関 【１】","株主総会 取締役 取締役会 監査役 会計参与 会計監査人 委員会"],["RNDZQewt7gg","p247-254 第３章 会社法 Ⅲ 機関 【２】～【３】","株主総会 取締役 取締役会 監査役 会計参与 会計監査人 委員会"],["C6KXKlpwHT8","p254-262 第３章 会社法 Ⅲ 機関 【４】～【５】","株主総会 取締役 取締役会 監査役 会計参与 会計監査人 委員会"],["8o5cBelizns","p262-275 第３章 会社法 Ⅲ 機関 【６】～【12】","株主総会 取締役 取締役会 監査役 会計参与 会計監査人 委員会"],["F25WF4RSxw8","p276-283 第３章 会社法 Ⅳ 計算",""],["6DWmAH1FV88","p284-291 第３章 会社法 Ⅴ 設立",""],["bPDzvlPJ14I","p292-300 第３章 会社法 Ⅵ 資金調達",""],["1pBuq-lhaVU","p301-310 第３章 会社法 Ⅶ 組織の基礎的変更【１】～【４】","合併 会社分割 株式交換 株式移転 事業譲渡 組織再編"],["qcuAfXx8gAA","p311-321 第３章 会社法 Ⅶ 組織の基礎的変更【５】～【８】","合併 会社分割 株式交換 株式移転 事業譲渡 組織再編"],["iAMJaFedgR4","p322-326 第３章 会社法 Ⅷ 持分会社",""],["klSNptwh6Z4","p340-351 第４章 倒産法 Ⅰ 倒産法総説 Ⅱ 倒産法各説",""],["1ZJb0boR41w","p356-364 第５章 その他の法務知識 Ⅰ 企業活動に関する法律知識【1】～【3】","独占禁止法 下請法 景品表示法 製造物責任 消費者契約法 個人情報保護法 特定商取引法"],["VpXR-m9iAas","p364-372 第５章 その他の法務知識 Ⅰ 企業活動に関する法律知識【4】～【6】","独占禁止法 下請法 景品表示法 製造物責任 消費者契約法 個人情報保護法 特定商取引法"],["qjzUY5kugjc","p372-375 第５章 その他の法務知識 Ⅰ 企業活動に関する法律知識【7】","独占禁止法 下請法 景品表示法 製造物責任 消費者契約法 個人情報保護法 特定商取引法"],["Aw6P6mtqmag","p376-390 第５章 その他の法務知識 Ⅱ 資本市場へのアクセスと手続","金融商品取引法 上場"]],"F":[["RhRVUBNK1NY","p001-005 経営情報システムの学習方法","学習法"],["_yEeQM4GJyo","p006-010 第１章 Ⅰ経営戦略と情報化【1】～【3】","学習法"],["LxyoTeay5hI","p011-020 第１章 Ⅱ経営革新と情報システム【1】～【3】","ERP SCM CRM 電子商取引 EC"],["dR8DU2LHk2c","p021-029 第１章 Ⅱ経営革新と情報システム【4】","DX デジタルトランスフォーメーション AI IoT ビッグデータ"],["IeaRFjL5bLg","p029-037 第１章 Ⅱ経営革新と情報システム【5】","情報化社会 Society5.0 プラットフォーム"],["LdTx9XI72ek","p050-059 第２章 Ⅰハードウェア【1】～【2】","CPU メモリ 主記憶 キャッシュ 記憶装置"],["zMoFh7AMGSc","p059-073 第２章 Ⅰハードウェア【3】～【5】","入出力装置 インタフェース 記憶装置 RAID HDD SSD"],["3bNlmJknIR8","p074-085 第２章 Ⅱソフトウェア【1】～【3】","OS オペレーティングシステム ミドルウェア ファームウェア"],["yfrYq9ZQyVQ","p086-105 第２章 Ⅱソフトウェア【4】～【7】Ⅲアルゴリズムとデータ構造","プログラム言語 OSS アルゴリズム データ構造 スタック キュー"],["OzIa9mIkXFM","p106-116 第２章 Ⅳ情報処理システムの形態と関連技術【1】～【3】","集中処理 分散処理 クライアントサーバ 仮想化"],["SqdJvZjQWos","p116-130 第２章 Ⅳ情報処理システムの形態と関連技術【4】～【6】","クラウド 稼働率 信頼性 冗長化"],["UC4paHfcdIU","p131-145 第２章 Ⅴファイルとデータベース【1】～【6】","データベース 正規化 ER図 SQL"],["N9MRhzj198M","p146-152 第２章 Ⅴファイルとデータベース【7】～【9】","トランザクション 排他制御 データウェアハウス"],["9nWdt3UUEFk","p166-175 第３章 Ⅰ通信ネットワーク","LAN WAN OSI参照モデル TCP/IP プロトコル 無線LAN"],["DSV5jDW0kH8","p176-182 第３章 Ⅱインターネット【1】","IPアドレス サブネット DNS"],["NoxDhOjLvpE","p182-201 第３章 Ⅱインターネット【2】～【5】","Web HTTP 電子メール セキュリティ 暗号 認証 ファイアウォール"],["cVmRggTnlOc","p214-218 第４章 Ⅰ 情報システムの開発 【1】","開発モデル ウォーターフォール"],["MCrIhiw0Qf0","p218-227 第４章 Ⅰ 情報システムの開発 【2】~【3】","アジャイル スクラム 要件定義 UML"],["RgJYJCkib5I","p227-236 第４章 Ⅰ 情報システムの開発 【4】~【6】","テスト 品質 見積り"],["W39L0sZBAb0","p236-243 第４章 Ⅰ 情報システムの開発 【7】~【8】）","プロジェクト管理 PMBOK WBS"],["S4Po63pVP_c","p244-257 第４章 Ⅱ 情報システムの評価 【1】～【6】","EVM システム監査 IT投資評価 ファンクションポイント"],["wWP2Be_zMww","p258-268 第４章 Ⅲ 情報システムの運用 【1】~【3】","ITIL ITサービスマネジメント SLA"],["JyY_-Jpd4_A","p268-283 第４章 Ⅲ 情報システムの運用 【4】~【6】","情報セキュリティ ISMS BCP リスク"],["dg--VlvDMeM","p296-299 第５章 Ⅰ統計解析の基礎","平均 分散 標準偏差 相関 回帰"],["0YIYGN8JqTo","p300-308 第５章 Ⅱ確率分布 Ⅲ検定・推定 Ⅳ多変量解析","正規分布 仮説検定 推定 多変量解析"]],"G":[["SNvctBxRaes","2026年版特訓問題集１（中小企業白書）講義動画【0】はじめに中小企業経営の学習法","学習法"],["ovT4ZX6y_-U","2026年版特訓問題集１（中小企業白書）講義動画【1】全体構造攻略編のポイント","中小企業白書 統計 企業数 従業者数 付加価値"],["vfUAr2LcPVc","2026年版特訓問題集１（中小企業白書）講義動画【2】重要ポイント攻略編のポイント","中小企業白書 統計 開業率 廃業率 財務指標"],["NWkmrFsSQZw","2026年版特訓問題集１（中小企業白書）講義動画【3】択一・短答問題攻略編のポイント第１問～第10問","中小企業白書 統計"],["kzvnFTIUuLo","2026年版特訓問題集１（中小企業白書）講義動画【3】択一・短答問題攻略編のポイント","中小企業白書 統計"],["-huyro4K6mY","2026年版特訓問題集２（中小企業施策）講義動画【0】はじめに 中小企業政策の学習法","学習法"],["XSS2CsD9CjM","2026年版特訓問題集２（中小企業施策）講義動画【1】重要法令編のポイント","中小企業基本法 定義 小規模企業振興基本法 中小企業等経営強化法 下請法"],["k7cjkzQxAbM","2026年版特訓問題集２（中小企業施策）講義動画【2】頻出基本編のポイント","経営革新計画 経営力向上計画 信用保証 日本政策金融公庫 共済 補助金"],["0hqKKvcyJWs","2026年版特訓問題集２（中小企業施策）講義動画【3】重要図表編のポイント","施策 支援機関 よろず支援拠点 金融支援 税制"],["XO-TRRnnLnA","2026年版特訓問題集２（中小企業施策）講義動画【4】応用編のポイント","事業承継 創業 再生 海外展開"],["dAv7zYk4UOs","2026年版特訓問題集［2］中小企業経営・政策 改正論点","改正 新しい施策"]]}};
+
+// text は「題名\u0001補足」。まず題名だけで照合し、見つからなければ補足まで広げて高い一致度のものだけ採用
+const LECTURE_WIDE_MIN = 18;
+function lectureFor(subj, text) {
+  const list = lectureData.v['ABCDEFG'[subj]] || [];
+  const [title, extra] = String(text).split('\u0001');
+  const wantsMethod = /学習法|勉強法/.test(title);
+  const cand = list.filter(r => wantsMethod || r[2] !== '学習法');
+  const key = 'lec' + subj + (wantsMethod ? 'm' : '');
+  const textOf = r => r[1] + ' ' + r[2];
+  let i = rankedBest(key, cand, contentTokens(title), textOf);
+  if (i < 0 && extra) {
+    i = rankedBest(key, cand, contentTokens(title + ' ' + extra), textOf);
+    if (rankedBest.lastScore < LECTURE_WIDE_MIN) i = -1;
+  }
+  return i >= 0 ? cand[i] : null;
+}
+
+function lectureLabel(r) {
+  return '▶ 講義動画：' + r[1].replace(/^p\d+[-－]\d+\s*/, '').slice(0, 26);
+}
+
+function openLecture(subj, text) {
+  const r = subj >= 0 ? lectureFor(subj, text) : null;
+  if (r) window.open('https://www.youtube.com/watch?v=' + r[0], '_blank');
+  else wasedaSearch(shortTopic(text));
+}
+
+function openYoutube(topic) {
+  const si = LINK_SUBJECTS.findIndex(n => n === topic);
+  if (si >= 0) { window.open('https://www.youtube.com/playlist?list=' + lectureData.pl['ABCDEFG'[si]], '_blank'); return; }
+  let best = null, bestSubj = -1, bestLen = 0;
+  for (let s = 0; s < 7; s++) {
+    const r = lectureFor(s, topic);
+    if (r) {
+      const len = contentTokens(topic).filter(t => (r[1] + ' ' + r[2]).toLowerCase().includes(t)).join('').length;
+      if (len > bestLen) { best = r; bestSubj = s; bestLen = len; }
+    }
+  }
+  if (best) window.open('https://www.youtube.com/watch?v=' + best[0], '_blank');
+  else wasedaSearch(topic);
+}
 
 function openYoutubeCustom() {
   const val = document.getElementById('ytCustomInput').value.trim();
@@ -5700,6 +5743,7 @@ function rankedBest(key, items, tokens, textOf) {
     tokens.forEach(tok => { if (t.includes(tok)) { raw += tok.length; sc += weight(tok); } });
     if (raw >= LINK_MIN_SCORE && sc > bestScore) { bestScore = sc; best = i; }
   });
+  rankedBest.lastScore = bestScore;
   return best;
 }
 
@@ -5729,7 +5773,7 @@ function findTextbookSection(subj, text) {
 
 function escAttr(s) { return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' '); }
 
-function ytQuery(subj, topic) { wasedaSearch(shortTopic(topic)); }
+function ytQuery(subj, topic) { openLecture(subj, topic); }
 
 function tbLinksHtml(subj, sec, si) {
   const tokens = contentTokens(sec.title + ' ' + (sec.points || []).join(' '));
@@ -5739,7 +5783,7 @@ function tbLinksHtml(subj, sec, si) {
   if (r.cardIdx >= 0) h += `<button class="link-btn lb-fc" onclick="linkFromTB('fc',${si},${r.cardIdx})">🃏 カード：${flashcardsData.subjects[subj].cards[r.cardIdx].term}</button>`;
   if (r.quizIdx >= 0) h += `<button class="link-btn lb-quiz" onclick="linkFromTB('quiz',${si},${r.quizIdx})">✏️ 問題演習</button>`;
   if (r.kkHit) h += `<button class="link-btn lb-kk" onclick="linkFromTB('kakomon',${si},0)">📝 過去問</button>`;
-  h += `<button class="link-btn lb-yt" onclick="ytQuery(${subj},'${escAttr(sec.title)}')">▶ YouTube</button></div>`;
+  h += ytButtonHtml(subj, sec.title + '\u0001' + (sec.points || []).join(' ')) + '</div>';
   return h;
 }
 
@@ -5880,8 +5924,11 @@ function tbButtonHtml(subj, text, from) {
 let tbLinkSeq = 0;
 const tbLinkTexts = {};
 
-function ytButtonHtml(subj, topic) {
-  return `<button class="link-btn lb-yt" onclick="event.stopPropagation();ytQuery(${subj},'${escAttr(topic)}')">▶ YouTube</button>`;
+function ytButtonHtml(subj, topic, cls) {
+  const r = lectureFor(subj, topic);
+  const key = 'yt' + (++tbLinkSeq);
+  tbLinkTexts[key] = topic;
+  return `<button class="${cls || 'link-btn lb-yt'}" onclick="event.stopPropagation();ytQuery(${subj},tbLinkTexts['${key}'])">${r ? lectureLabel(r) : '▶ YouTube検索'}</button>`;
 }
 
 function decorateYoutubeTab() {
