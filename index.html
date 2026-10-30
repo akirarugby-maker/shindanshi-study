@@ -363,6 +363,16 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 .tb-body{font-size:.91rem;line-height:1.85;color:#374151}
 .tb-body p{margin-bottom:10px}
 .tb-body strong{color:#1e293b}
+.link-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1}
+.link-bar-label{font-size:.75rem;font-weight:700;color:#64748b;margin-right:2px}
+.link-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.link-btn{border:none;border-radius:999px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;color:#fff;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit}
+.link-btn:hover{opacity:.88}
+.lb-slide{background:#2563eb}.lb-fc{background:#7c3aed}.lb-quiz{background:#059669}.lb-kk{background:#d97706}.lb-yt{background:#dc2626}.lb-tb{background:#0f766e}
+.fc-text-link{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:6px}
+.lb-tb-mini{border:1px solid #0f766e;background:#fff;color:#0f766e;border-radius:999px;padding:4px 8px;font-size:.8rem;cursor:pointer;margin-left:-2px}
+.nav-back-float{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:1000;background:#1e293b;color:#fff;border:none;border-radius:999px;padding:10px 18px;font-size:.85rem;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:pointer;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-section.tb-flash{box-shadow:0 0 0 3px #0f766e;transition:box-shadow .3s}
 .tb-body .tb-table{border-collapse:collapse;margin:8px 0 12px;font-size:.84rem;display:block;overflow-x:auto;max-width:100%}
 .tb-body .tb-table th,.tb-body .tb-table td{border:1px solid #cbd5e1;padding:4px 8px;text-align:left;vertical-align:top}
 .tb-body .tb-table th{background:#eef2ff}
@@ -383,19 +393,20 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
 <header>
   <h1>📚 中小企業診断士 一次試験 学習アプリ</h1>
   <p>7科目を体系的に学習できる総合学習ツール</p>
-  <span class="app-version" title="この番号が新しければ最新版です">Ver. 2026.10.30.3</span>
+  <span class="app-version" title="この番号が新しければ最新版です">Ver. 2026.10.30.4</span>
 </header>
 <nav id="mainNav">
-  <button class="active" onclick="showTab('schedule')">📅 スケジュール</button>
-  <button onclick="showTab('slides')">📖 スライド学習</button>
-  <button onclick="showTab('flashcards')">🃏 フラッシュカード</button>
-  <button onclick="showTab('quiz')">✏️ 問題演習</button>
-  <button onclick="showTab('kakomon')">📝 過去問</button>
-  <button onclick="showTab('calc')">🔢 計算練習</button>
-  <button onclick="showTab('youtube')">📺 YouTube検索</button>
-  <button onclick="showTab('textbook')">📘 テキスト</button>
-  <button onclick="showTab('niji')">✍️ 2次試験</button>
+  <button class="active" onclick="clearNavBack();showTab('schedule')">📅 スケジュール</button>
+  <button onclick="clearNavBack();showTab('slides')">📖 スライド学習</button>
+  <button onclick="clearNavBack();showTab('flashcards')">🃏 フラッシュカード</button>
+  <button onclick="clearNavBack();showTab('quiz')">✏️ 問題演習</button>
+  <button onclick="clearNavBack();showTab('kakomon')">📝 過去問</button>
+  <button onclick="clearNavBack();showTab('calc')">🔢 計算練習</button>
+  <button onclick="clearNavBack();showTab('youtube')">📺 YouTube検索</button>
+  <button onclick="clearNavBack();showTab('textbook')">📘 テキスト</button>
+  <button onclick="clearNavBack();showTab('niji')">✍️ 2次試験</button>
 </nav>
+<button id="navBackBtn" class="nav-back-float" onclick="doNavBack()" style="display:none"></button>
 
 <!-- TAB 1: SCHEDULE -->
 <div id="tab-schedule" class="tab-content active">
@@ -532,6 +543,7 @@ nav button:hover:not(.active){background:#f8fafc;color:#334155}
         <div id="fcSlideLink"></div>
         <div id="fcQuizLink"></div>
         <div id="fcKakomonLink"></div>
+        <div id="fcTextLink" class="fc-text-link"></div>
       </div>
     </div>
   </div>
@@ -3895,6 +3907,7 @@ function showTab(tab) {
   if (tab === 'kakomon' && kakomonQuestions.length === 0) filterKakomonQuestions();
   if (tab === 'schedule') renderSchedule();
   if (tab === 'textbook' && !document.getElementById('tbChapterBtns').innerHTML) { renderTBChapters(); renderTBSections(); }
+  if (tab === 'youtube') decorateYoutubeTab();
 }
 
 // ===================== 2次試験 =====================
@@ -4038,6 +4051,7 @@ function loadSlide() {
     actionHtml += `<button class="slide-action-btn slide-kk-btn" onclick="goToKakomonFromSlide()">📝 関連過去問へ</button>`;
   }
   actionHtml += `<button class="slide-action-btn slide-yt-btn" onclick="openSlideYoutube('${safeTitle}','${safeSubj}')">▶ YouTube で理解を深める</button>`;
+  actionHtml += tbButtonHtml(currentSlideSubject, s.title + ' ' + s.points.join(' '), 'slide');
   document.getElementById('slideActionBtns').innerHTML = actionHtml;
   autoCheckSlide(currentSlideSubject, currentSlide);
 }
@@ -4468,10 +4482,12 @@ function showCard() {
     } else {
       kakomonLinkEl.innerHTML = '';
     }
+    document.getElementById('fcTextLink').innerHTML = tbButtonHtml(subjIdx, c.term + ' ' + c.term + ' ' + (c.def || ''), 'fc') + ytButtonHtml(subjIdx, c.term);
   } else {
     linkEl.innerHTML = '';
     quizLinkEl.innerHTML = '';
     kakomonLinkEl.innerHTML = '';
+    document.getElementById('fcTextLink').innerHTML = '';
   }
 }
 
@@ -4598,7 +4614,8 @@ function selectAnswer(idx) {
   const slideTitle = slidesData[subjIdx][bestSlide].title;
   const slideBtn = `<button class="quiz-slide-btn" onclick="goToSlideFromQuiz(${subjIdx},${bestSlide})">📖 スライドで確認：${slideTitle}</button>`;
   const weakTag = isWeakReviewMode && isCorrect ? '<span class="weak-cleared-tag">✅ 苦手リストから削除</span>' : '';
-  fb.innerHTML = `<strong>${isCorrect ? '✅ 正解！' : '❌ 不正解 → 苦手リストに追加'}</strong><br>${q.exp}${slideBtn}${weakTag}`;
+  const linkRow = `<div class="link-row">${tbButtonHtml(subjIdx, q.q + ' ' + (q.exp || ''), 'quiz')}${ytButtonHtml(subjIdx, slideTitle)}</div>`;
+  fb.innerHTML = `<strong>${isCorrect ? '✅ 正解！' : '❌ 不正解 → 苦手リストに追加'}</strong><br>${q.exp}${slideBtn}${linkRow}${weakTag}`;
   document.getElementById('btnNextQ').style.display = 'inline-block';
   const skipBtn = document.getElementById('btnSkipQ');
   if (skipBtn) skipBtn.style.display = 'none';
@@ -5108,7 +5125,14 @@ function filterKakomonQuestions() {
   }
   const keyword = kakomonNavKeyword;
   kakomonNavKeyword = null;
-  if (keyword) {
+  const navTokens = kakomonNavTokens;
+  kakomonNavTokens = null;
+  if (navTokens && navTokens.length) {
+    const scored = all.map(q => ({q, score: scoreTokenMatch(navTokens, stripTags(q.q) + ' ' + (q.exp || ''))}));
+    const relevant = scored.filter(x => x.score >= LINK_MIN_SCORE).sort((a, b) => b.score - a.score).map(x => x.q);
+    const rest = shuffle(scored.filter(x => x.score < LINK_MIN_SCORE).map(x => x.q));
+    kakomonQuestions = [...relevant, ...rest];
+  } else if (keyword) {
     const scored = all.map(q => ({q, score: scoreKakomonMatch(q, keyword)}));
     const relevant = scored.filter(x => x.score > 0).sort((a, b) => b.score - a.score).map(x => x.q);
     const rest = shuffle(scored.filter(x => x.score === 0).map(x => x.q));
@@ -5170,6 +5194,25 @@ function loadKakomonQuestion() {
   document.getElementById('kakomonArea').innerHTML = html;
 }
 
+function kakomonLinkRow(q) {
+  const subj = subjectIndexOf(q.subject);
+  if (subj < 0) return '';
+  const text = stripTags(q.q) + ' ' + (q.exp || '');
+  const r = findRelated(subj, contentTokens(text));
+  let h = '<div class="link-row">';
+  if (r.slideIdx >= 0) h += `<button class="link-btn lb-slide" onclick="linkFromKakomon('slide',${subj},${r.slideIdx})">📖 スライド：${slidesData[subj][r.slideIdx].title}</button>`;
+  if (r.cardIdx >= 0) h += `<button class="link-btn lb-fc" onclick="linkFromKakomon('fc',${subj},${r.cardIdx})">🃏 カード：${flashcardsData.subjects[subj].cards[r.cardIdx].term}</button>`;
+  h += tbButtonHtml(subj, text, 'kakomon');
+  h += ytButtonHtml(subj, q.topic || (r.slideIdx >= 0 ? slidesData[subj][r.slideIdx].title : LINK_SUBJECTS[subj]));
+  return h + '</div>';
+}
+
+function linkFromKakomon(kind, subj, target) {
+  const ki = currentKakomonQ;
+  if (kind === 'slide') openSlideAt(subj, target); else openCardAt(subj, target);
+  setNavBack('過去問', () => { activateTab('kakomon'); currentKakomonQ = ki; loadKakomonQuestion(); });
+}
+
 function selectKakomonAnswer(idx) {
   if (kakomonAnsweredFlag) return;
   kakomonAnsweredFlag = true;
@@ -5186,7 +5229,7 @@ function selectKakomonAnswer(idx) {
   });
   const feedback = document.getElementById('kkFeedback');
   feedback.style.display = 'block';
-  feedback.innerHTML = `<div class="kk-result ${isCorrect ? 'kk-ok' : 'kk-ng'}">${isCorrect ? '✅ 正解！' : '❌ 不正解'}</div><div class="kk-exp">${q.exp}</div>${q.no ? '<div class="kk-note">※問題・正解は公式発表（一般社団法人 日本中小企業診断士協会連合会）、解説は本アプリ独自のものです。</div>' : ''}`;
+  feedback.innerHTML = `<div class="kk-result ${isCorrect ? 'kk-ok' : 'kk-ng'}">${isCorrect ? '✅ 正解！' : '❌ 不正解'}</div><div class="kk-exp">${q.exp}</div>${q.no ? '<div class="kk-note">※問題・正解は公式発表（一般社団法人 日本中小企業診断士協会連合会）、解説は本アプリ独自のものです。</div>' : ''}${kakomonLinkRow(q)}`;
   const skipBtn = document.getElementById('kkSkipBtn');
   if (skipBtn) skipBtn.style.display = 'none';
   const nextBtn = document.getElementById('kkNextBtn');
@@ -5598,7 +5641,7 @@ function renderTBChapters() {
 
 function renderTBSections() {
   const chapter = textbookData[currentTBSubject].chapters[currentTBChapter];
-  const html = chapter.sections.map(sec => {
+  const html = chapter.sections.map((sec, si) => {
     const formulaHtml = sec.formulas && sec.formulas.length
       ? `<div class="tb-formula-box"><div class="tb-f-title">📐 重要計算式・定義</div>${sec.formulas.map(f => `<span class="tb-formula-item">${f}</span>`).join('')}</div>`
       : '';
@@ -5608,9 +5651,252 @@ function renderTBSections() {
     const examHtml = sec.exam
       ? `<div class="tb-exam-tip"><div class="tb-exam-label">🎯 試験のツボ</div><div class="tb-exam-text">${sec.exam}</div></div>`
       : '';
-    return `<div class="tb-section"><h3>${sec.title}</h3><div class="tb-body">${sec.body}</div>${formulaHtml}${pointsHtml}${examHtml}</div>`;
+    return `<div class="tb-section" id="tbsec-${si}"><h3>${sec.title}</h3><div class="tb-body">${sec.body}</div>${formulaHtml}${pointsHtml}${examHtml}${tbLinksHtml(currentTBSubject, sec, si)}</div>`;
   }).join('');
   document.getElementById('tbSections').innerHTML = html;
+}
+
+// ===================== テキストと各学習の連動 =====================
+const LINK_SUBJECTS = ['経済学・経済政策','財務・会計','企業経営理論','運営管理','経営法務','経営情報システム','中小企業経営・中小企業政策'];
+const LINK_MIN_SCORE = 4;
+let navBack = null;
+
+function subjectIndexOf(name) {
+  const i = LINK_SUBJECTS.indexOf(name);
+  return i >= 0 ? i : LINK_SUBJECTS.findIndex(n => name && n.startsWith(name.slice(0, 4)));
+}
+
+function stripTags(s) { return String(s || '').replace(/<[^>]+>/g, ' '); }
+
+// ひらがなの並び（助詞・送り仮名）と記号で区切り、漢字・カタカナ・英数字の語を取り出す
+const HIRAGANA_TERMS = ['のれん', 'かんばん', 'ばらつき', 'ひも付き'];
+function contentTokens(text) {
+  const seen = new Set();
+  const t = stripTags(text).toLowerCase();
+  t.split(/[\s\u3040-\u309f、。，．・：:；;（）()［］\[\]【】「」『』〈〉《》＜＞<>！？!?\/／＝=＋+−\-×÷→←↑↓~〜…％%＆&,.'"’”①-⑳]+/)
+    .forEach(w => { if (w.length >= 2 && !/^\d+$/.test(w)) seen.add(w); });
+  HIRAGANA_TERMS.forEach(w => { if (t.includes(w)) seen.add(w); });
+  return [...seen];
+}
+
+// まれな語ほど重く数える（IDF）。コレクションごとに本文を小文字化してキャッシュする
+const idfCache = {};
+function rankedBest(key, items, tokens, textOf) {
+  if (!idfCache[key]) idfCache[key] = { texts: items.map(it => stripTags(textOf(it)).toLowerCase()), df: {} };
+  const c = idfCache[key], n = c.texts.length;
+  const weight = tok => {
+    if (c.df[tok] === undefined) c.df[tok] = c.texts.reduce((a, t) => a + (t.includes(tok) ? 1 : 0), 0);
+    const df = c.df[tok];
+    return df === 0 || df > n * 0.5 ? 0 : tok.length * Math.log((n + 1) / df);
+  };
+  let best = -1, bestScore = 0;
+  c.texts.forEach((t, i) => {
+    let raw = 0, sc = 0;
+    tokens.forEach(tok => { if (t.includes(tok)) { raw += tok.length; sc += weight(tok); } });
+    if (raw >= LINK_MIN_SCORE && sc > bestScore) { bestScore = sc; best = i; }
+  });
+  return best;
+}
+
+function findRelated(subj, tokens) {
+  const slideIdx = rankedBest('slide' + subj, slidesData[subj] || [], tokens, s => s.title + ' ' + (s.points || []).join(' '));
+  const cardIdx = rankedBest('fc' + subj, flashcardsData.subjects[subj].cards, tokens, c => c.term + ' ' + (c.def || ''));
+  const quizIdx = rankedBest('quiz' + subj, quizData.subjects[subj].questions, tokens, q => q.q + ' ' + (q.exp || ''));
+  const kkHit = rankedBest('kk' + subj, kakomonData.subjects[subj].questions, tokens, q => q.q + ' ' + (q.exp || '')) >= 0;
+  return { slideIdx, cardIdx, quizIdx, kkHit };
+}
+
+function textbookSectionsOf(subj) {
+  const key = 'tbsecs' + subj;
+  if (!idfCache[key + 'list']) {
+    const list = [];
+    textbookData[subj].chapters.forEach((ch, ci) => ch.sections.forEach((sec, si) => list.push({ ch: ci, sec: si, title: sec.title, text: sec.title + ' ' + sec.title + ' ' + (sec.points || []).join(' ') + ' ' + stripTags(sec.exam) })));
+    idfCache[key + 'list'] = list;
+  }
+  return idfCache[key + 'list'];
+}
+
+function findTextbookSection(subj, text) {
+  const list = textbookSectionsOf(subj);
+  const i = rankedBest('tbsecs' + subj, list, contentTokens(text), x => x.text);
+  return i >= 0 ? list[i] : null;
+}
+
+function escAttr(s) { return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' '); }
+
+function ytQuery(subj, topic) {
+  const q = encodeURIComponent('中小企業診断士 ' + LINK_SUBJECTS[subj] + ' ' + topic + ' わかりやすい 解説');
+  window.open('https://www.youtube.com/results?search_query=' + q, '_blank');
+}
+
+function tbLinksHtml(subj, sec, si) {
+  const tokens = contentTokens(sec.title + ' ' + (sec.points || []).join(' '));
+  const r = findRelated(subj, tokens);
+  let h = '<div class="link-bar"><span class="link-bar-label">🔗 関連学習</span>';
+  if (r.slideIdx >= 0) h += `<button class="link-btn lb-slide" onclick="linkFromTB('slide',${si},${r.slideIdx})">📖 スライド：${slidesData[subj][r.slideIdx].title}</button>`;
+  if (r.cardIdx >= 0) h += `<button class="link-btn lb-fc" onclick="linkFromTB('fc',${si},${r.cardIdx})">🃏 カード：${flashcardsData.subjects[subj].cards[r.cardIdx].term}</button>`;
+  if (r.quizIdx >= 0) h += `<button class="link-btn lb-quiz" onclick="linkFromTB('quiz',${si},${r.quizIdx})">✏️ 問題演習</button>`;
+  if (r.kkHit) h += `<button class="link-btn lb-kk" onclick="linkFromTB('kakomon',${si},0)">📝 過去問</button>`;
+  h += `<button class="link-btn lb-yt" onclick="ytQuery(${subj},'${escAttr(sec.title)}')">▶ YouTube</button></div>`;
+  return h;
+}
+
+function activateTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  const idx = ['schedule','slides','flashcards','quiz','kakomon','calc','youtube','textbook','niji'].indexOf(tab);
+  if (idx >= 0) document.querySelectorAll('nav button')[idx].classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setActiveBtn(selector, idx) {
+  document.querySelectorAll(selector).forEach((b, i) => b.classList.toggle('active', i === idx));
+}
+
+function openSlideAt(subj, idx) {
+  activateTab('slides');
+  navSource = null;
+  setActiveBtn('#slideSubjectBtns button', subj);
+  currentSlideSubject = subj;
+  currentSlide = idx;
+  loadSlide();
+}
+
+function openCardAt(subj, idx) {
+  activateTab('flashcards');
+  fcFromSlide = false;
+  currentFCSubject = subj + 1;
+  setActiveBtn('#fcSubjectBtns button', currentFCSubject);
+  loadFC();
+  currentCard = idx;
+  showCard();
+  updateFCBackBtn();
+}
+
+function openQuizAt(subj, qIdx) {
+  activateTab('quiz');
+  quizFromSlide = false;
+  quizFromFC = false;
+  currentQuizSubject = subj + 1;
+  setActiveBtn('#quizSubjectBtns button', currentQuizSubject);
+  reloadCurrentSubject();
+  navigateToQuestion(quizData.subjects[subj].questions[qIdx]);
+  updateQuizBackBtn();
+}
+
+let kakomonNavTokens = null;
+function openKakomonFor(subj, tokens) {
+  activateTab('kakomon');
+  kakomonNavSource = null;
+  kakomonFromFC = false;
+  currentKakomonSubject = subj + 1;
+  setActiveBtn('#kakomonSubjectBtns button', currentKakomonSubject);
+  currentKakomonYear = 0;
+  setActiveBtn('#kakomonYearBtns button', 0);
+  kakomonNavTokens = tokens;
+  filterKakomonQuestions();
+}
+
+function openTextbookAt(subj, ch, sec) {
+  activateTab('textbook');
+  currentTBSubject = subj;
+  currentTBChapter = ch;
+  setActiveBtn('#tbSubjectBtns button', subj);
+  renderTBChapters();
+  setActiveBtn('#tbChapterBtns button', ch);
+  renderTBSections();
+  const el = document.getElementById('tbsec-' + sec);
+  if (el) {
+    setTimeout(() => { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+    el.classList.add('tb-flash');
+    setTimeout(() => el.classList.remove('tb-flash'), 2000);
+  }
+}
+
+function setNavBack(label, fn) {
+  navBack = { label, fn };
+  const el = document.getElementById('navBackBtn');
+  el.textContent = '← ' + label + 'に戻る';
+  el.style.display = 'block';
+}
+
+function clearNavBack() {
+  navBack = null;
+  const el = document.getElementById('navBackBtn');
+  if (el) el.style.display = 'none';
+}
+
+function doNavBack() {
+  const b = navBack;
+  clearNavBack();
+  if (b) b.fn();
+}
+
+function linkFromTB(kind, secIdx, target) {
+  const subj = currentTBSubject, ch = currentTBChapter;
+  const sec = textbookData[subj].chapters[ch].sections[secIdx];
+  if (kind === 'slide') openSlideAt(subj, target);
+  else if (kind === 'fc') openCardAt(subj, target);
+  else if (kind === 'quiz') openQuizAt(subj, target);
+  else if (kind === 'kakomon') openKakomonFor(subj, contentTokens(sec.title + ' ' + (sec.points || []).join(' ')));
+  setNavBack('テキスト「' + sec.title.slice(0, 18) + '」', () => openTextbookAt(subj, ch, secIdx));
+}
+
+// 各学習画面から「テキストで確認」へ。from: 戻り先の種類
+function linkToTB(subj, text, from) {
+  const loc = findTextbookSection(subj, text);
+  if (!loc) return;
+  let label, back;
+  if (from === 'slide') {
+    const s = currentSlideSubject, i = currentSlide;
+    label = 'スライド'; back = () => openSlideAt(s, i);
+  } else if (from === 'fc') {
+    const fs = currentFCSubject, c = currentCard;
+    label = 'フラッシュカード';
+    back = () => { activateTab('flashcards'); if (currentFCSubject !== fs) { currentFCSubject = fs; setActiveBtn('#fcSubjectBtns button', fs); loadFC(); } currentCard = c; showCard(); };
+  } else if (from === 'quiz') {
+    const qi = currentQuestion;
+    label = '問題演習'; back = () => { activateTab('quiz'); currentQuestion = qi; loadQuestion(); };
+  } else if (from === 'kakomon') {
+    const ki = currentKakomonQ;
+    label = '過去問'; back = () => { activateTab('kakomon'); currentKakomonQ = ki; loadKakomonQuestion(); };
+  } else {
+    label = 'YouTube検索'; back = () => activateTab('youtube');
+  }
+  openTextbookAt(subj, loc.ch, loc.sec);
+  setNavBack(label, back);
+}
+
+function tbButtonHtml(subj, text, from) {
+  const loc = findTextbookSection(subj, text);
+  if (!loc) return '';
+  const key = 'tbl' + (++tbLinkSeq);
+  tbLinkTexts[key] = text;
+  return `<button class="link-btn lb-tb" onclick="event.stopPropagation();linkToTB(${subj},tbLinkTexts['${key}'],'${from}')">📘 テキストで確認：${loc.title}</button>`;
+}
+let tbLinkSeq = 0;
+const tbLinkTexts = {};
+
+function ytButtonHtml(subj, topic) {
+  return `<button class="link-btn lb-yt" onclick="event.stopPropagation();ytQuery(${subj},'${escAttr(topic)}')">▶ YouTube</button>`;
+}
+
+function decorateYoutubeTab() {
+  document.querySelectorAll('#tab-youtube .yt-subject-block').forEach((block, subj) => {
+    block.querySelectorAll('.yt-btn').forEach(btn => {
+      const m = (btn.getAttribute('onclick') || '').match(/openYoutube\('([^']*)'\)/);
+      if (!m || btn.nextElementSibling?.classList.contains('lb-tb-mini')) return;
+      const loc = findTextbookSection(subj, m[1]);
+      if (!loc) return;
+      const b = document.createElement('button');
+      b.className = 'lb-tb-mini';
+      b.title = 'テキストで確認：' + loc.title;
+      b.textContent = '📘';
+      b.onclick = () => linkToTB(subj, m[1], 'youtube');
+      btn.after(b);
+    });
+  });
 }
 
 // ===================== GLOBAL SEARCH =====================
